@@ -63,9 +63,11 @@ class Program
 
         var implementationTasks = plan.steps.SelectMany(
             step => step.subtasks.Select(
-                async subtask => await CallFunction<string>(nameof(Developer), Developer.Implement, subtask.llm_prompt)));
+                async subtask => {
+                        var implementationResult = await CallFunction<string>(nameof(Developer), Developer.Implement, subtask.llm_prompt);
+                        await File.WriteAllTextAsync(Path.Combine(outputPath.FullName, $"{step}-{subtask}.txt"), implementationResult);
+                         return implementationResult; }));
         var implementations = await Task.WhenAll(implementationTasks);
-        await File.WriteAllTextAsync(Path.Combine(outputPath.FullName, "implementations.json"), JsonSerializer.Serialize(implementations));
     }
 
     public static async Task<T> CallWithFile<T>(string skillName, string functionName, string filePath)
