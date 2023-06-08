@@ -47,23 +47,32 @@ class Program
 
     public static async Task ChainFunctions(string file)
     {
+        var sandboxSkill = new SandboxSkill();
         var outputPath = Directory.CreateDirectory("output");
+
         var readme = await CallWithFile<string>(nameof(PM), PM.Readme , file);
-        await File.WriteAllTextAsync(Path.Combine(outputPath.FullName, "README.md"), readme);
+        await SaveToFile(Path.Combine(outputPath.FullName, "README.md"), readme);
 
         var script = await CallWithFile<string>(nameof(PM), PM.BootstrapProject, file);
-        await File.WriteAllTextAsync(Path.Combine(outputPath.FullName, "bootstrap.sh"), script);
+        await sandboxSkill.RunInDotnetAlpineAsync(script);
+        await SaveToFile(Path.Combine(outputPath.FullName, "bootstrap.sh"), script);
 
         var plan = await CallWithFile<DevLeadPlanResponse>(nameof(DevLead), DevLead.Plan, file);
-        await File.WriteAllTextAsync(Path.Combine(outputPath.FullName, "plan.json"), JsonSerializer.Serialize(plan));
+        await SaveToFile(Path.Combine(outputPath.FullName, "plan.json"), JsonSerializer.Serialize(plan));
 
         var implementationTasks = plan.steps.SelectMany(
-            step => step.subtasks.Select(
-                async subtask => {
-                        var implementationResult = await CallFunction<string>(nameof(Developer), Developer.Implement, subtask.llm_prompt);
-                        await File.WriteAllTextAsync(Path.Combine(outputPath.FullName, $"{step}-{subtask}.txt"), implementationResult);
-                         return implementationResult; }));
-        var implementations = await Task.WhenAll(implementationTasks);
+            (step) => step.subtasks.Select(
+                async (subtask) => {
+                        var implementationResult = await CallFunction<string>(nameof(Developer), Developer.Implement, subtask.LLM_prompt);
+                        await sandboxSkill.RunInDotnetAlpineAsync(implementationResult);
+                        await SaveToFile(Path.Combine(outputPath.FullName, $"{step.step}-{subtask.subtask}.sh"), implementationResult);
+                        return implementationResult; }));
+        await Task.WhenAll(implementationTasks);
+    }
+
+    public static async Task SaveToFile(string filePath, string content)
+    {
+        await File.WriteAllTextAsync(filePath, content);
     }
 
     public static async Task<T> CallWithFile<T>(string skillName, string functionName, string filePath)
