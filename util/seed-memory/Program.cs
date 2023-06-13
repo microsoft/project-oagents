@@ -1,11 +1,12 @@
 ﻿using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Text;
+using Microsoft.Extensions.Logging;
+using System.Text;
+using Microsoft.SemanticKernel.Connectors.Memory.Qdrant;
+using Microsoft.SemanticKernel.Connectors.AI.OpenAI.TextEmbedding;
+using Microsoft.SemanticKernel.Memory;
 
 class Program
 {
@@ -14,7 +15,6 @@ class Program
        var kernelSettings = KernelSettings.LoadSettings();
 
         var kernelConfig = new KernelConfig();
-        kernelConfig.AddCompletionBackend(kernelSettings);
 
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
         {
@@ -23,37 +23,43 @@ class Program
                 .AddConsole()
                 .AddDebug();
         });
+       
+        var memoryStore = new QdrantMemoryStore(new QdrantVectorDbClient("http://qdrant", 1536, port: 6333));
+        var embedingGeneration = new AzureTextEmbeddingGeneration(kernelSettings.EmbeddingDeploymentOrModelId, kernelSettings.Endpoint, kernelSettings.ApiKey);
+        var semanticTextMemory = new SemanticTextMemory(memoryStore, embedingGeneration);
 
         var kernel = new KernelBuilder()
                             .WithLogger(loggerFactory.CreateLogger<IKernel>())
+                            .WithAzureChatCompletionService(kernelSettings.DeploymentOrModelId, kernelSettings.Endpoint, kernelSettings.ApiKey, true, kernelSettings.ServiceId, true)
+                            .WithMemory(semanticTextMemory)
                             .WithConfiguration(kernelConfig).Build();
         await ImportDocumentAsync(kernel);
     }
 
-    public async Task ImportDocumentAsync(IKernel kernel)
+    public static async Task ImportDocumentAsync(IKernel kernel)
         {
             var wafFilePath = "azure-well-architected.pdf";
-            var fileContent = ReadPdfFile(formFile);
+            var fileContent = ReadPdfFile(wafFilePath);
             await ParseDocumentContentToMemoryAsync(kernel, fileContent, "waf", Guid.NewGuid().ToString());
         }
 
-    private string ReadPdfFile(IFormFile file)
+    private static string ReadPdfFile(string file)
         {
-            var fileContent = string.Empty;
-            using var pdfDocument = PdfDocument.Open(file.OpenReadStream());
+            var sb = new StringBuilder();
+            using var pdfDocument = PdfDocument.Open(File.OpenRead(file));
             foreach (var page in pdfDocument.GetPages())
             {
                 var text = ContentOrderTextExtractor.GetText(page);
-                fileContent += text;
+                sb.Append(text);
             }
 
-            return fileContent;
+            return sb.ToString();
         }
 
-    private async Task ParseDocumentContentToMemoryAsync(IKernel kernel, string content, string documentName, string memorySourceId)
+    private static async Task ParseDocumentContentToMemoryAsync(IKernel kernel, string content, string documentName, string memorySourceId)
         {
-            var lines = TextChunker.SplitPlainTextLines(content, this._options.DocumentLineSplitMaxTokens);
-            var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, this._options.DocumentParagraphSplitMaxLines);
+            var lines = TextChunker.SplitPlainTextLines(content, 30);
+            var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 100);
 
             for (var i = 0; i < paragraphs.Count; i++)
             {
@@ -61,14 +67,8 @@ class Program
                 await kernel.Memory.SaveInformationAsync(
                     collection: "waf",
                     text: paragraph,
-                    id: $"{memorySourceId}-{i}",
+                    id: $"{memorySourceId}_{i}",
                     description: $"Document: {documentName}");
             }
-
-            this._logger.LogInformation(
-                "Parsed {0} paragraphs from local file {1}",
-                paragraphs.Count,
-                documentName
-            );
         }
 }
