@@ -14,7 +14,7 @@ public static class Developer {
         Name = nameof(Implement),
         SkillName = nameof(Developer),
         Description = "From a description of a coding task out put the code or scripts necessary to complete the task.",
-        MaxTokens = 4096,
+        MaxTokens = 6500,
         Temperature = 0.0,
         TopP = 0.0,
         PPenalty = 0.0,

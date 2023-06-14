@@ -10,10 +10,10 @@ using Microsoft.SemanticKernel.Memory;
 
 class Program
 {
+    static string WafPath = "azure-well-architected.pdf";
     static async Task Main(string[] args)
     {
-       var kernelSettings = KernelSettings.LoadSettings();
-
+        var kernelSettings = KernelSettings.LoadSettings();
         var kernelConfig = new KernelConfig();
 
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
@@ -33,42 +33,44 @@ class Program
                             .WithAzureChatCompletionService(kernelSettings.DeploymentOrModelId, kernelSettings.Endpoint, kernelSettings.ApiKey, true, kernelSettings.ServiceId, true)
                             .WithMemory(semanticTextMemory)
                             .WithConfiguration(kernelConfig).Build();
-        await ImportDocumentAsync(kernel);
+        await ImportDocumentAsync(kernel, WafPath);
     }
 
-    public static async Task ImportDocumentAsync(IKernel kernel)
+    public static async Task ImportDocumentAsync(IKernel kernel, string filePath)
         {
-            var wafFilePath = "azure-well-architected.pdf";
-            var fileContent = ReadPdfFile(wafFilePath);
-            await ParseDocumentContentToMemoryAsync(kernel, fileContent, "waf", Guid.NewGuid().ToString());
+            await ReadAndStorePdfFile(kernel, filePath);
+            //await ParseDocumentContentToMemoryAsync(kernel, fileContent, filePath, Guid.NewGuid().ToString());
         }
 
-    private static string ReadPdfFile(string file)
+    private static async Task ReadAndStorePdfFile(IKernel kernel, string file)
         {
-            var sb = new StringBuilder();
             using var pdfDocument = PdfDocument.Open(File.OpenRead(file));
-            foreach (var page in pdfDocument.GetPages())
+            var pages = pdfDocument.GetPages();
+            foreach (var page in pages)
             {
                 var text = ContentOrderTextExtractor.GetText(page);
-                sb.Append(text);
-            }
-
-            return sb.ToString();
-        }
-
-    private static async Task ParseDocumentContentToMemoryAsync(IKernel kernel, string content, string documentName, string memorySourceId)
-        {
-            var lines = TextChunker.SplitPlainTextLines(content, 30);
-            var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 100);
-
-            for (var i = 0; i < paragraphs.Count; i++)
-            {
-                var paragraph = paragraphs[i];
+                var descr = text.Take(100);
                 await kernel.Memory.SaveInformationAsync(
-                    collection: "waf",
-                    text: paragraph,
-                    id: $"{memorySourceId}_{i}",
-                    description: $"Document: {documentName}");
+                    collection: "waf-pages",
+                    text: text,
+                    id: $"{Guid.NewGuid()}",
+                    description: $"Document: {descr}");
             }
         }
+
+    // private static async Task ParseDocumentContentToMemoryAsync(IKernel kernel, string content, string documentName, string memorySourceId)
+    //     {
+    //         var lines = TextChunker.SplitPlainTextLines(content, 30);
+    //         var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 100);
+
+    //         for (var i = 0; i < paragraphs.Count; i++)
+    //         {
+    //             var paragraph = paragraphs[i];
+    //             await kernel.Memory.SaveInformationAsync(
+    //                 collection: "waf",
+    //                 text: paragraph,
+    //                 id: $"{memorySourceId}_{i}",
+    //                 description: $"Document: {documentName}");
+    //         }
+    //     }
 }

@@ -16,7 +16,7 @@ public static class DevLead {
         Name = nameof(Plan),
         SkillName = nameof(DevLead),
         Description = "From a simple description of an application output a development plan for building the application.",
-        MaxTokens = 4096,
+        MaxTokens = 6500,
         Temperature = 0.0,
         TopP = 0.0,
         PPenalty = 0.0,
