@@ -26,10 +26,3 @@ services:
     image: qdrant/qdrant
     ports:
       - 6333:6333
-  qdrant-init:
-    build: 
-        context: ../
-        dockerfile: ./util/seed-memory/Dockerfile
-    init: true
-    depends_on:
-      - qdrant
