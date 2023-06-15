@@ -127,7 +127,8 @@ class Program
                                                    skillConfig.TopP, skillConfig.PPenalty, skillConfig.FPenalty);
 
         var context = new ContextVariables();
-        context.Set("input", input+wafContext);
+        context.Set("input", input);
+        context.Set("wafContext", wafContext);
 
         var answer = await kernel.RunAsync(context, function).ConfigureAwait(false);
         var result = typeof(T) != typeof(string) ? JsonSerializer.Deserialize<T>(answer.ToString()) : (T)(object)answer.ToString();

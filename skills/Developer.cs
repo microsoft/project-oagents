@@ -10,6 +10,7 @@ public static class Developer {
         Make specific choices about implementation. Do not offer a range of options.
         Use comments in the code to describe the intent. Do not include other text other than code and code comments.
         Input: {{$input}}
+        {{$wafContext}}
         """,
         Name = nameof(Implement),
         SkillName = nameof(Developer),

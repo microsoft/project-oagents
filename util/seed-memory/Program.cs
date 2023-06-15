@@ -38,13 +38,7 @@ class Program
 
     public static async Task ImportDocumentAsync(IKernel kernel, string filePath)
         {
-            await ReadAndStorePdfFile(kernel, filePath);
-            //await ParseDocumentContentToMemoryAsync(kernel, fileContent, filePath, Guid.NewGuid().ToString());
-        }
-
-    private static async Task ReadAndStorePdfFile(IKernel kernel, string file)
-        {
-            using var pdfDocument = PdfDocument.Open(File.OpenRead(file));
+             using var pdfDocument = PdfDocument.Open(File.OpenRead(filePath));
             var pages = pdfDocument.GetPages();
             foreach (var page in pages)
             {
@@ -57,20 +51,4 @@ class Program
                     description: $"Document: {descr}");
             }
         }
-
-    // private static async Task ParseDocumentContentToMemoryAsync(IKernel kernel, string content, string documentName, string memorySourceId)
-    //     {
-    //         var lines = TextChunker.SplitPlainTextLines(content, 30);
-    //         var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 100);
-
-    //         for (var i = 0; i < paragraphs.Count; i++)
-    //         {
-    //             var paragraph = paragraphs[i];
-    //             await kernel.Memory.SaveInformationAsync(
-    //                 collection: "waf",
-    //                 text: paragraph,
-    //                 id: $"{memorySourceId}_{i}",
-    //                 description: $"Document: {documentName}");
-    //         }
-    //     }
 }
