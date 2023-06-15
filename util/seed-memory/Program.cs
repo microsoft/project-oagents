@@ -7,10 +7,11 @@ using System.Text;
 using Microsoft.SemanticKernel.Connectors.Memory.Qdrant;
 using Microsoft.SemanticKernel.Connectors.AI.OpenAI.TextEmbedding;
 using Microsoft.SemanticKernel.Memory;
+using System.Reflection;
 
 class Program
 {
-    static string WafPath = "azure-well-architected.pdf";
+    static string WafFileName = "azure-well-architected.pdf";
     static async Task Main(string[] args)
     {
         var kernelSettings = KernelSettings.LoadSettings();
@@ -33,12 +34,14 @@ class Program
                             .WithAzureChatCompletionService(kernelSettings.DeploymentOrModelId, kernelSettings.Endpoint, kernelSettings.ApiKey, true, kernelSettings.ServiceId, true)
                             .WithMemory(semanticTextMemory)
                             .WithConfiguration(kernelConfig).Build();
-        await ImportDocumentAsync(kernel, WafPath);
+        await ImportDocumentAsync(kernel, WafFileName);
     }
 
-    public static async Task ImportDocumentAsync(IKernel kernel, string filePath)
+    public static async Task ImportDocumentAsync(IKernel kernel, string filename)
         {
-             using var pdfDocument = PdfDocument.Open(File.OpenRead(filePath));
+            var currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var filePath = Path.Combine(currentDirectory, filename);
+            using var pdfDocument = PdfDocument.Open(File.OpenRead(filePath));
             var pages = pdfDocument.GetPages();
             foreach (var page in pages)
             {
