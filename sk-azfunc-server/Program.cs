@@ -20,7 +20,8 @@ public static class Program
             .ConfigureAppConfiguration(configuration =>
             {
                 var config = configuration.SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true);
+                    .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+                    .AddEnvironmentVariables();
 
                 var builtConfig = config.Build();
             })
