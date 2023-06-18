@@ -71,10 +71,9 @@ public class ExecuteFunctionEndpoint
         
         var ghClient = await GetGitHubClient();
         var issueCommentResponse = await ghClient.Issue.Comment.Create("sk-dev-team", "issues", 1, "Hello from my GitHubApp Installation!");
-        var issueEvent = await JsonSerializer.DeserializeAsync<IssueEvent>(requestData.Body, s_jsonOptions).ConfigureAwait(false);
+        //var issueEvent = await JsonSerializer.DeserializeAsync<IssueEvent>(requestData.Body, s_jsonOptions).ConfigureAwait(false);
         
-        // try
-        // {
+        // TODO:
         //     // Get the payload
         //     // check what type it is
         //     // handle each type
@@ -102,14 +101,6 @@ public class ExecuteFunctionEndpoint
         //     var result = await this._kernel.RunAsync(context, function).ConfigureAwait(false);
 
         //     return await CreateResponseAsync(requestData, HttpStatusCode.OK, new ExecuteFunctionResponse() { Response = result.ToString() }).ConfigureAwait(false);
-        // }
-        // catch (Exception ex)
-        // {
-        //     // Log the contents of the request
-        //     var requestBody = await new StreamReader(requestData.Body).ReadToEndAsync();
-        //     Console.WriteLine($"Failed to deserialize request body: {requestBody}. Exception: {ex}");
-
-        //     return await CreateResponseAsync(requestData, HttpStatusCode.BadRequest, new ErrorResponse() { Message = $"Invalid request body." }).ConfigureAwait(false);
         // }
         return await CreateResponseAsync(requestData,HttpStatusCode.OK, new ExecuteFunctionResponse() { Response = JsonSerializer.Serialize(issueEvent) }).ConfigureAwait(false);
     }
