@@ -69,10 +69,10 @@ public class ExecuteFunctionEndpoint
         FunctionContext executionContext)
     {
         
-        var ghClient = await GetGitHubClient("key.pem", 1234, 1234);
-        var issueCommentResponse = await ghClient.Issue.Comment.Create("owner", "repo", 1, "Hello from my GitHubApp Installation!");
+        var ghClient = await GetGitHubClient();
+        var issueCommentResponse = await ghClient.Issue.Comment.Create("sk-dev-team", "issues", 1, "Hello from my GitHubApp Installation!");
         var issueEvent = await JsonSerializer.DeserializeAsync<IssueEvent>(requestData.Body, s_jsonOptions).ConfigureAwait(false);
-       
+        
         // try
         // {
         //     // Get the payload
@@ -111,14 +111,18 @@ public class ExecuteFunctionEndpoint
 
         //     return await CreateResponseAsync(requestData, HttpStatusCode.BadRequest, new ErrorResponse() { Message = $"Invalid request body." }).ConfigureAwait(false);
         // }
-        return await CreateResponseAsync(requestData,HttpStatusCode.OK, new ExecuteFunctionResponse() { Response = "ok" }).ConfigureAwait(false);
+        return await CreateResponseAsync(requestData,HttpStatusCode.OK, new ExecuteFunctionResponse() { Response = JsonSerializer.Serialize(issueEvent) }).ConfigureAwait(false);
     }
 
-    private static async Task<GitHubClient> GetGitHubClient(string keyPath,int appId,  int installationId)
+    private static async Task<GitHubClient> GetGitHubClient()
     {
+        var key = Environment.GetEnvironmentVariable("GH_APP_KEY", EnvironmentVariableTarget.Process);
+        var appId = int.Parse(Environment.GetEnvironmentVariable("GH_APP_ID", EnvironmentVariableTarget.Process));
+        var installationId = int.Parse(Environment.GetEnvironmentVariable("GH_INST_ID", EnvironmentVariableTarget.Process));
+        
         // Use GitHubJwt library to create the GitHubApp Jwt Token using our private certificate PEM file
         var generator = new GitHubJwt.GitHubJwtFactory(
-            new GitHubJwt.FilePrivateKeySource(keyPath),
+            new GitHubJwt.StringPrivateKeySource(key),
             new GitHubJwt.GitHubJwtFactoryOptions
             {
                 AppIntegrationId = appId, // The GitHub App Id
