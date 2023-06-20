@@ -22,6 +22,7 @@
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.10.0" OutputItemType="Analyzer" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.14.1" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.OpenApi" Version="2.0.0-preview2" />
+    <PackageReference Include="Octokit.Webhooks.AzureFunctions" Version="2.0.1" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.OpenApi" Version="2.0.0-preview2" TreatAsUsed="true" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="0.15.230609.2-preview" />
     <PackageReference Include="Octokit" Version="6.0.0" />
