@@ -8,6 +8,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Microsoft.SemanticKernel;
+using Octokit.Webhooks;
+using Octokit.Webhooks.AzureFunctions;
 
 namespace KernelHttpServer;
 
@@ -17,6 +19,7 @@ public static class Program
     {
         var host = new HostBuilder()
             .ConfigureFunctionsWorkerDefaults()
+            .ConfigureGitHubWebhooks()
             .ConfigureAppConfiguration(configuration =>
             {
                 var config = configuration.SetBasePath(Directory.GetCurrentDirectory())
@@ -29,7 +32,7 @@ public static class Program
             {
                 services.AddSingleton<IOpenApiConfigurationOptions>(_ => s_apiConfigOptions);
                 services.AddTransient((provider) => CreateKernel(provider));
-
+                services.AddScoped<WebhookEventProcessor, SKWebHookEventProcessor>();
 
                 // return JSON with expected lowercase naming
                 services.Configure<JsonSerializerOptions>(options =>
