@@ -54,8 +54,16 @@ public class SKWebHookEventProcessor : WebhookEventProcessor
                                                    skillConfig.Description, skillConfig.MaxTokens, skillConfig.Temperature,
                                                    skillConfig.TopP, skillConfig.PPenalty, skillConfig.FPenalty);
 
+        var interestingMemories = _kernel.Memory.SearchAsync("waf-pages", input, 2);
+        var wafContext = "Consider the following architectural guidelines:";
+        await foreach (var memory in interestingMemories)
+        {
+            wafContext += $"\n {memory.Metadata.Text}";
+        }
+
         var context = new ContextVariables();
         context.Set("input", input);
+        context.Set("wafContext", wafContext);
 
         var result = await _kernel.RunAsync(context, function).ConfigureAwait(false);
         return result.ToString();
