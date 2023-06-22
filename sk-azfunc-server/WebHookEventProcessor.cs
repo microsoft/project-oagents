@@ -47,6 +47,32 @@ public class SKWebHookEventProcessor : WebhookEventProcessor
         //     // deal with the side effects
     }
 
+    protected async override Task ProcessIssueCommentWebhookAsync(
+        WebhookHeaders headers,
+        IssueCommentEvent issueCommentEvent,
+        IssueCommentAction action)
+    {
+        // we only resond to non-bot comments
+        if (issueCommentEvent.Sender.Type.StringValue != "Bot")
+        {
+            var ghClient = await GetGitHubClient();
+            var org=issueCommentEvent.Organization.Login;
+            var repo = issueCommentEvent.Repository.Name;      
+            var issueId = issueCommentEvent.Issue.Number;
+            
+            
+            // Assumes the label follows the following convention: Skill.Function example: PM.Readme
+            var labels = issueCommentEvent.Issue.Labels.First().Name.Split(".");
+            var skillName =labels[0];
+            var functionName = labels[1];
+            var input = issueCommentEvent.Comment.Body;
+            var result = await RunSkill(skillName, functionName, input);
+
+            await ghClient.Issue.Comment.Create(org, repo, (int)issueId, result);
+        }
+        
+    }
+
     private async Task<string> RunSkill(string skillName, string functionName, string input)
     {
         var skillConfig = SemanticFunctionConfig.ForSkillAndFunction(skillName, functionName);
@@ -69,25 +95,7 @@ public class SKWebHookEventProcessor : WebhookEventProcessor
         return result.ToString();
     }
 
-    // protected async override Task ProcessIssueCommentWebhookAsync(
-    //     WebhookHeaders headers,
-    //     IssueCommentEvent issueCommentEvent,
-    //     IssueCommentAction action)
-    // {
-    //     var ghClient = await GetGitHubClient();
-    //     var org=issueCommentEvent.Organization.Login;
-    //     var repo = issueCommentEvent.Repository.Name;
-    //     var issueId = issueCommentEvent.Issue.Id;
-
-    //     // Assumes the label follows the following convention: Skill.Function example: PM.Readme
-    //     var labels = issueCommentEvent.Issue.Labels.First().Name.Split(".");
-    //     var skillName =labels[0];
-    //     var functionName = labels[1];
-    //     var input = issueCommentEvent.Comment.Body;
-    //     var result = await RunSkill(skillName, functionName, input);
-
-    //     await ghClient.Issue.Comment.Create(org, repo, (int)issueId, result);
-    // }
+    
 
     private static async Task<GitHubClient> GetGitHubClient()
     {
