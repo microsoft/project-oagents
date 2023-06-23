@@ -6,11 +6,13 @@ using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.IssueComment;
 using Octokit.Webhooks.Events.Issues;
+using Octokit.Webhooks.Models;
 using skills;
 
 public class SKWebHookEventProcessor : WebhookEventProcessor
 {
     private readonly IKernel _kernel;
+    private static HttpClient httpClient = new HttpClient();
 
     public SKWebHookEventProcessor(IKernel kernel)
     {
@@ -27,24 +29,32 @@ public class SKWebHookEventProcessor : WebhookEventProcessor
         var labels = issuesEvent.Issue.Labels.First().Name.Split(".");
         var skillName =labels[0];
         var functionName = labels[1];
-        var input = issuesEvent.Issue.Body;
-        var result = await RunSkill(skillName, functionName, input);
+        if (skillName == "Do" && functionName == "It")
+        {
+            await httpClient.PostAsync("http://localhost:7071/api/doit", null);
+        }
+        else
+        {
+            var input = issuesEvent.Issue.Body;
+            var result = await RunSkill(skillName, functionName, input);
 
-        await ghClient.Issue.Comment.Create(org, repo, (int)issueNumber, result);
+            await ghClient.Issue.Comment.Create(org, repo, (int)issueNumber, result);
 
-        // try
-        // {
-        //     // Get the payload
-        //     // check what type it is
-        //     // handle each type
-        //     // // issue opened
-        //         // read the issue object, the body has the input, the label has the skill
-        //     // // issue-comment created - edited
-        //        // this is a follow up of the previous action, the body and the label are important
-        //        // if the label is a Skill, take the body and run the skill, post the result as new comment 
-        //        // if the body is Yes/No, re-run the previous skill?
-        //     // run the skill and return the output as a new issue comment
-        //     // deal with the side effects
+            // try
+            // {
+            //     // Get the payload
+            //     // check what type it is
+            //     // handle each type
+            //     // // issue opened
+            //         // read the issue object, the body has the input, the label has the skill
+            //     // // issue-comment created - edited
+            //        // this is a follow up of the previous action, the body and the label are important
+            //        // if the label is a Skill, take the body and run the skill, post the result as new comment 
+            //        // if the body is Yes/No, re-run the previous skill?
+            //     // run the skill and return the output as a new issue comment
+            //     // deal with the side effects
+        }
+        
     }
 
     protected async override Task ProcessIssueCommentWebhookAsync(
@@ -53,7 +63,7 @@ public class SKWebHookEventProcessor : WebhookEventProcessor
         IssueCommentAction action)
     {
         // we only resond to non-bot comments
-        if (issueCommentEvent.Sender.Type.StringValue != "Bot")
+        if (issueCommentEvent.Sender.Type.Value != UserType.Bot)
         {
             var ghClient = await GetGitHubClient();
             var org=issueCommentEvent.Organization.Login;
@@ -67,10 +77,9 @@ public class SKWebHookEventProcessor : WebhookEventProcessor
             var functionName = labels[1];
             var input = issueCommentEvent.Comment.Body;
             var result = await RunSkill(skillName, functionName, input);
-
+            
             await ghClient.Issue.Comment.Create(org, repo, (int)issueId, result);
         }
-        
     }
 
     private async Task<string> RunSkill(string skillName, string functionName, string input)
