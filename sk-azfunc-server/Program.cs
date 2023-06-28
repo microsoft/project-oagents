@@ -22,7 +22,7 @@ public static class Program
     public static void Main()
     {
         var host = new HostBuilder()
-            .ConfigureFunctionsWorkerDefaults()
+            .ConfigureFunctionsWebApplication()
             .ConfigureGitHubWebhooks()
             .ConfigureAppConfiguration(configuration =>
             {
