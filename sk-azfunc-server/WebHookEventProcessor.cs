@@ -1,5 +1,11 @@
-﻿using Microsoft.SemanticKernel;
+﻿using System.Net.Http;
+using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Orchestration;
+using Newtonsoft.Json;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.IssueComment;
@@ -10,7 +16,7 @@ using skills;
 public partial class SKWebHookEventProcessor : WebhookEventProcessor
 {
     private readonly IKernel _kernel;
-    private static HttpClient httpClient = new HttpClient();
+    //private static HttpClient httpClient = new HttpClient();
 
     public SKWebHookEventProcessor(IKernel kernel)
     {
@@ -18,10 +24,12 @@ public partial class SKWebHookEventProcessor : WebhookEventProcessor
     }
     protected async override Task ProcessIssuesWebhookAsync(WebhookHeaders headers, IssuesEvent issuesEvent, IssuesAction action)
     {
+        var httpClient =  new HttpClient();
         var ghClient = await GithubService.GetGitHubClient();
         var org = issuesEvent.Organization.Login;
         var repo = issuesEvent.Repository.Name;
         var issueNumber = issuesEvent.Issue.Number;
+        var input = issuesEvent.Issue.Body;
         if (issuesEvent.Action == IssuesAction.Opened)
         {
             // Assumes the label follows the following convention: Skill.Function example: PM.Readme
@@ -30,11 +38,18 @@ public partial class SKWebHookEventProcessor : WebhookEventProcessor
             var functionName = labels[1];
             if (skillName == "Do" && functionName == "It")
             {
-                await httpClient.PostAsync("http://localhost:7071/api/doit", null);
+                var issueOrchestrationRequest = new IssueOrchestrationRequest {
+                    Number = issueNumber,
+                    Org = org,
+                    Repo = repo,
+                    Input = input
+                };
+                var content = new StringContent(JsonConvert.SerializeObject(issueOrchestrationRequest), Encoding.UTF8, "application/json");
+                _ = await httpClient.PostAsync("http://localhost:7071/api/doit", content);
             }
             else
             {
-                var input = issuesEvent.Issue.Body;
+               
                 var result = await RunSkill(skillName, functionName, input);
 
                 await ghClient.Issue.Comment.Create(org, repo, (int)issueNumber, result);
