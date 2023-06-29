@@ -16,7 +16,7 @@ using skills;
 public partial class SKWebHookEventProcessor : WebhookEventProcessor
 {
     private readonly IKernel _kernel;
-    //private static HttpClient httpClient = new HttpClient();
+    private static HttpClient httpClient = new HttpClient();
 
     public SKWebHookEventProcessor(IKernel kernel)
     {
@@ -24,7 +24,6 @@ public partial class SKWebHookEventProcessor : WebhookEventProcessor
     }
     protected async override Task ProcessIssuesWebhookAsync(WebhookHeaders headers, IssuesEvent issuesEvent, IssuesAction action)
     {
-        var httpClient =  new HttpClient();
         var ghClient = await GithubService.GetGitHubClient();
         var org = issuesEvent.Organization.Login;
         var repo = issuesEvent.Repository.Name;
@@ -69,9 +68,17 @@ public partial class SKWebHookEventProcessor : WebhookEventProcessor
                 //     // deal with the side effects
             }
         }
-        else if (issuesEvent.Action == IssuesAction.Closed)
+        else if (issuesEvent.Action == IssuesAction.Closed && issuesEvent.Sender.Type == UserType.Bot)
         {
+            var issueOrchestrationRequest = new IssueOrchestrationRequest {
+                    Number = issueNumber,
+                    Org = org,
+                    Repo = repo,
+                    Input = input
+                };
 
+                var content = new StringContent(JsonConvert.SerializeObject(issueOrchestrationRequest), Encoding.UTF8, "application/json");
+                _ = await httpClient.PostAsync("http://localhost:7071/api/close", content);     
         }
     }
 
