@@ -26,20 +26,35 @@ namespace SK.DevTeam
             return "";
         }
 
+
+        [Function("CloseSubOrchestration")]
+        public static async Task Close(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "close")] HttpRequest req,
+            [DurableClient] DurableTaskClient client)
+        {
+            var request =  await req.ReadFromJsonAsync<IssueOrchestrationRequest>();
+            await client.RaiseEventAsync(instanceId, "Approval", true);
+        }
+
         [Function(nameof(IssueOrchestration))]
         public static async Task<List<string>> RunOrchestrator(
             [OrchestrationTrigger] TaskOrchestrationContext context, IssueOrchestrationRequest request)
         {
             ILogger logger = context.CreateReplaySafeLogger(nameof(IssueOrchestration));
+           
             var outputs = new List<string>();
 
-            // Get input
-            await context.CallSubOrchestratorAsync(nameof(CreateReadme), request);
-            var devleadResponse = await context.CallSubOrchestratorAsync<DevLeadPlanResponse>(nameof(CreatePlan), request);
-            foreach(var step in devleadResponse.steps)
-            {
-                await context.CallSubOrchestratorAsync(nameof(Implement), request);
-            }
+            var readmeTask = context.CallSubOrchestratorAsync(nameof(CreateReadme), request);
+            var planTask =  context.CallSubOrchestratorAsync<DevLeadPlanResponse>(nameof(CreatePlan), request);
+            await Task.WhenAll(readmeTask, planTask);
+            var implementationTasks = planTask.Result.steps.SelectMany(s => s.subtasks.Select(st => 
+                        context.CallSubOrchestratorAsync(nameof(Implement), new IssueOrchestrationRequest{
+                            Number = request.Number,
+                            Org = request.Org,
+                            Repo = request.Repo,
+                            Input = st.LLM_prompt
+                        })));
+            await Task.WhenAll(implementationTasks);
             return outputs;
         }
 
@@ -48,12 +63,19 @@ namespace SK.DevTeam
         [OrchestrationTrigger] TaskOrchestrationContext context, IssueOrchestrationRequest request)
         {
             // call activity to create new issue
-            var newIssue = await context.CallActivityAsync<NewIssue>(nameof(CreateIssue), new NewIssueRequest{
+            var newIssue = await context.CallActivityAsync<Issue>(nameof(CreateIssue), new NewIssueRequest{
                 IssueRequest = request,
                 Skill = nameof(skills.PM),
                 Function = nameof(skills.PM.Readme)
             });
-            
+            bool approved = await context.WaitForExternalEvent<bool>("IssueClosed");
+
+            var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
+                Org = request.Org,
+                Repo = request.Repo,
+                Number = newIssue.Number
+            });
+
             // Create a new issue, with the input and label PM.Readme
             // Connect the new issue with the parent issue (create a new comment with this one?)
             // webhook will deal with the flow of iterating the output
@@ -70,6 +92,8 @@ namespace SK.DevTeam
                 Skill = nameof(skills.DevLead),
                 Function = nameof(skills.DevLead.Plan)
             });
+
+            bool approved = await context.WaitForExternalEvent<bool>("IssueClosed");
             // Connect the new issue with the parent issue (create a new comment with this one?)
             // webhook will deal with the flow of iterating the output
             // when the new issue is closed, the sub-orchestration finishes
@@ -82,28 +106,63 @@ namespace SK.DevTeam
         [OrchestrationTrigger] TaskOrchestrationContext context, IssueOrchestrationRequest request)
         {
             // Create a new issue, with the input and label Developer.Implement
-            var newIssue = await context.CallActivityAsync<NewIssue>(nameof(CreateIssue), new NewIssueRequest{
+            var newIssue = await context.CallActivityAsync<Issue>(nameof(CreateIssue), new NewIssueRequest{
                 IssueRequest = request,
                 Skill = nameof(skills.Developer),
                 Function = nameof(skills.Developer.Implement)
             });
             
+            bool approved = await context.WaitForExternalEvent<bool>("IssueClosed");
+
+            var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
+                Org = request.Org,
+                Repo = request.Repo,
+                Number = newIssue.Number
+            });
             // Connect the new issue with the parent issue (create a new comment with this one?)
             // webhook will deal with the flow of iterating the output
             // when the new issue is closed, the output of that issue run in sandbox, commiting to a new PR
         }
 
         [Function(nameof(CreateIssue))]
-        public static async Task<NewIssue> CreateIssue([ActivityTrigger] NewIssueRequest request, FunctionContext executionContext)
+        public static async Task<Issue> CreateIssue([ActivityTrigger] NewIssueRequest request, FunctionContext executionContext)
         {
+            
             var ghClient = await GithubService.GetGitHubClient();
             var newIssue = new NewIssue($"{request.Function} chain") {
-                Body = request.IssueRequest.Input
+                Body = request.IssueRequest.Input,
+                
             };
+            
+            // TODO: add the orchestration id as label?
             newIssue.Labels.Add($"{request.Skill}.{request.Function}");
             var issue = await ghClient.Issue.Create(request.IssueRequest.Org,request.IssueRequest.Repo, newIssue);
             await ghClient.Issue.Comment.Create(request.IssueRequest.Org,request.IssueRequest.Repo, (int)request.IssueRequest.Number, $"#{issue.Number} tracks {request.Skill}.{request.Function}");
-            return newIssue;
+            return issue;
+        }
+
+        [Function(nameof(GetLastComment))]
+        public static async Task<IssueComment> GetLastComment([ActivityTrigger] IssueOrchestrationRequest request, FunctionContext executionContext)
+        {
+            var ghClient = await GithubService.GetGitHubClient();
+            var icOptions = new IssueCommentRequest {
+                Direction = SortDirection.Descending
+            };
+            var apiOptions = new ApiOptions {
+                PageCount = 1,
+                PageSize = 1,
+                StartPage = 1
+            };
+            var comments = await ghClient.Issue.Comment.GetAllForIssue(request.Org, request.Repo, (int)request.Number, icOptions, apiOptions); 
+            return comments.First();
+        }
+
+        [Function(nameof(RunInSandbox))]
+        public static async Task<IssueComment> RunInSandbox([ActivityTrigger] IssueOrchestrationRequest request, FunctionContext executionContext)
+        {
+            
+            //TODO
+            return default;
         }
     }
 }
