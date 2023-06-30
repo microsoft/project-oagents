@@ -68,7 +68,7 @@ public partial class SKWebHookEventProcessor : WebhookEventProcessor
                 //     // deal with the side effects
             }
         }
-        else if (issuesEvent.Action == IssuesAction.Closed && issuesEvent.Sender.Type == UserType.Bot)
+        else if (issuesEvent.Action == IssuesAction.Closed && issuesEvent.Issue.User.Type == UserType.Bot)
         {
             var issueOrchestrationRequest = new IssueOrchestrationRequest {
                     Number = issueNumber,
@@ -76,6 +76,8 @@ public partial class SKWebHookEventProcessor : WebhookEventProcessor
                     Repo = repo,
                     Input = input
                 };
+
+                var metadata = await httpClient.GetFromJsonAsync<IssueMetadata>($"http://localhost:7071/api/metadata/{issueNumber}"); 
 
                 var content = new StringContent(JsonConvert.SerializeObject(issueOrchestrationRequest), Encoding.UTF8, "application/json");
                 _ = await httpClient.PostAsync("http://localhost:7071/api/close", content);     
