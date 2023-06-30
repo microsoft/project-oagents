@@ -33,8 +33,21 @@ namespace SK.DevTeam
             [DurableClient] DurableTaskClient client)
         {
             var request =  await req.ReadFromJsonAsync<IssueOrchestrationRequest>();
+            
+            var instanceId = "";
             await client.RaiseEventAsync(instanceId, "Approval", true);
         }
+
+        [Function(nameof(GetMetadata))]
+        public static async Task<IssueMetadata> GetMetadata(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "metadata/{number}")] HttpRequest req, long number,
+            [CosmosDBInput("dev-db", "devs", Connection= "CosmosConnectionString", SqlQuery = "SELECT top 1 * FROM c where c.number = {number}")] IssueMetadata metadata,
+            FunctionContext executionContext)
+        {
+            return metadata;
+        }
+
+
 
         [Function(nameof(IssueOrchestration))]
         public static async Task<List<string>> RunOrchestrator(
@@ -63,18 +76,25 @@ namespace SK.DevTeam
         [OrchestrationTrigger] TaskOrchestrationContext context, IssueOrchestrationRequest request)
         {
             // call activity to create new issue
-            var newIssue = await context.CallActivityAsync<Issue>(nameof(CreateIssue), new NewIssueRequest{
+            var newIssueNumber = await context.CallActivityAsync<long>(nameof(CreateIssue), new NewIssueRequest{
                 IssueRequest = request,
                 Skill = nameof(skills.PM),
                 Function = nameof(skills.PM.Readme)
             });
-            bool approved = await context.WaitForExternalEvent<bool>("IssueClosed");
-
-            var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
-                Org = request.Org,
-                Repo = request.Repo,
-                Number = newIssue.Number
+            var metadata = await context.CallActivityAsync<IssueMetadata>(nameof(SaveMetadata), new IssueMetadata {
+                Number = newIssueNumber,
+                InstanceId = context.InstanceId,
+                Id = Guid.NewGuid().ToString()
             });
+
+            
+            //bool approved = await context.WaitForExternalEvent<bool>("IssueClosed");
+
+            // var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
+            //     Org = request.Org,
+            //     Repo = request.Repo,
+            //     Number = newIssue.Number
+            // });
 
             // Create a new issue, with the input and label PM.Readme
             // Connect the new issue with the parent issue (create a new comment with this one?)
@@ -87,13 +107,20 @@ namespace SK.DevTeam
         [OrchestrationTrigger] TaskOrchestrationContext context, IssueOrchestrationRequest request)
         {
             // Create a new issue, with the input and label DevLead.Plan
-            var newIssue = await context.CallActivityAsync<NewIssue>(nameof(CreateIssue), new NewIssueRequest{
+            var newIssueNumber = await context.CallActivityAsync<long>(nameof(CreateIssue), new NewIssueRequest{
                 IssueRequest = request,
                 Skill = nameof(skills.DevLead),
                 Function = nameof(skills.DevLead.Plan)
             });
 
-            bool approved = await context.WaitForExternalEvent<bool>("IssueClosed");
+            var metadata = await context.CallActivityAsync<IssueMetadata>(nameof(SaveMetadata), new IssueMetadata {
+                Number = newIssueNumber,
+                InstanceId = context.InstanceId,
+                Id = Guid.NewGuid().ToString()
+            });
+
+
+            //bool approved = await context.WaitForExternalEvent<bool>("IssueClosed");
             // Connect the new issue with the parent issue (create a new comment with this one?)
             // webhook will deal with the flow of iterating the output
             // when the new issue is closed, the sub-orchestration finishes
@@ -106,26 +133,33 @@ namespace SK.DevTeam
         [OrchestrationTrigger] TaskOrchestrationContext context, IssueOrchestrationRequest request)
         {
             // Create a new issue, with the input and label Developer.Implement
-            var newIssue = await context.CallActivityAsync<Issue>(nameof(CreateIssue), new NewIssueRequest{
+            var newIssueNumber = await context.CallActivityAsync<long>(nameof(CreateIssue), new NewIssueRequest{
                 IssueRequest = request,
                 Skill = nameof(skills.Developer),
                 Function = nameof(skills.Developer.Implement)
             });
             
-            bool approved = await context.WaitForExternalEvent<bool>("IssueClosed");
-
-            var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
-                Org = request.Org,
-                Repo = request.Repo,
-                Number = newIssue.Number
+            var metadata = await context.CallActivityAsync<IssueMetadata>(nameof(SaveMetadata), new IssueMetadata {
+                Number = newIssueNumber,
+                InstanceId = context.InstanceId,
+                Id = Guid.NewGuid().ToString()
             });
+
+
+            // bool approved = await context.WaitForExternalEvent<bool>("IssueClosed");
+
+            // var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
+            //     Org = request.Org,
+            //     Repo = request.Repo,
+            //     Number = newIssue.Number
+            // });
             // Connect the new issue with the parent issue (create a new comment with this one?)
             // webhook will deal with the flow of iterating the output
             // when the new issue is closed, the output of that issue run in sandbox, commiting to a new PR
         }
 
         [Function(nameof(CreateIssue))]
-        public static async Task<Issue> CreateIssue([ActivityTrigger] NewIssueRequest request, FunctionContext executionContext)
+        public static async Task<long> CreateIssue([ActivityTrigger] NewIssueRequest request, FunctionContext executionContext)
         {
             
             var ghClient = await GithubService.GetGitHubClient();
@@ -138,7 +172,7 @@ namespace SK.DevTeam
             newIssue.Labels.Add($"{request.Skill}.{request.Function}");
             var issue = await ghClient.Issue.Create(request.IssueRequest.Org,request.IssueRequest.Repo, newIssue);
             await ghClient.Issue.Comment.Create(request.IssueRequest.Org,request.IssueRequest.Repo, (int)request.IssueRequest.Number, $"#{issue.Number} tracks {request.Skill}.{request.Function}");
-            return issue;
+            return issue.Number;
         }
 
         [Function(nameof(GetLastComment))]
@@ -160,10 +194,21 @@ namespace SK.DevTeam
         [Function(nameof(RunInSandbox))]
         public static async Task<IssueComment> RunInSandbox([ActivityTrigger] IssueOrchestrationRequest request, FunctionContext executionContext)
         {
-            
             //TODO
             return default;
         }
+
+
+        [Function(nameof(SaveMetadata))]
+        [CosmosDBOutput("dev-db","devs", CreateIfNotExists = true, Connection = "CosmosConnectionString", PartitionKey = "/id")]
+        public static async Task<object> SaveMetadata(
+            [ActivityTrigger] IssueMetadata metadata,
+            FunctionContext executionContext)
+        {
+            return metadata;
+        }
+
+       
     }
 }
 
@@ -172,4 +217,13 @@ public class NewIssueRequest
     public IssueOrchestrationRequest IssueRequest { get; set; }
     public string Skill { get; set; }
     public string Function { get; set; }
+}
+
+public class IssueMetadata
+{
+    public long Number { get; set; }
+
+    public string InstanceId { get; set; }
+
+    public string Id { get; set; }
 }
