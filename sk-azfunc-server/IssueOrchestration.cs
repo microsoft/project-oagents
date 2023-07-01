@@ -4,7 +4,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+
 using Octokit;
 
 namespace SK.DevTeam
@@ -39,15 +39,17 @@ namespace SK.DevTeam
         }
 
         [Function(nameof(GetMetadata))]
-        public static async Task<IssueMetadata> GetMetadata(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "metadata/{number}")] HttpRequest req, long number,
-            [CosmosDBInput("dev-db", "devs", Connection= "CosmosConnectionString", SqlQuery = "SELECT top 1 * FROM c where c.number = {number}")] IssueMetadata metadata,
+        public static IssueMetadata GetMetadata(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "metadata/{number:int}")] HttpRequest req,
+            [CosmosDBInput(
+                databaseName:"dev-db",
+                collectionName:"devs",
+                ConnectionStringSetting= "CosmosConnectionString",
+                SqlQuery= "SELECT * FROM c where c.number = StringToNumber({number})")] IEnumerable<IssueMetadata> items,
             FunctionContext executionContext)
         {
-            return metadata;
+            return items.First();
         }
-
-
 
         [Function(nameof(IssueOrchestration))]
         public static async Task<List<string>> RunOrchestrator(
@@ -200,7 +202,7 @@ namespace SK.DevTeam
 
 
         [Function(nameof(SaveMetadata))]
-        [CosmosDBOutput("dev-db","devs", CreateIfNotExists = true, Connection = "CosmosConnectionString", PartitionKey = "/id")]
+        [CosmosDBOutput("dev-db","devs", CreateIfNotExists = true, ConnectionStringSetting = "CosmosConnectionString", PartitionKey = "/id")]
         public static async Task<object> SaveMetadata(
             [ActivityTrigger] IssueMetadata metadata,
             FunctionContext executionContext)
