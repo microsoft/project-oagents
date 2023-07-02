@@ -1,16 +1,18 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask;
 using Microsoft.DurableTask.Client;
 using Microsoft.Extensions.Logging;
-
+using Newtonsoft.Json;
 using Octokit;
 
 namespace SK.DevTeam
 {
     public static class IssueOrchestration
     {
+        public static string IssueClosed = "IssueClosed";
          [Function("IssueOrchestrationStart")]
         public static async Task<string> HttpStart(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "doit")] HttpRequest req,
@@ -26,20 +28,8 @@ namespace SK.DevTeam
             return "";
         }
 
-
-        [Function("CloseSubOrchestration")]
-        public static async Task Close(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "close")] HttpRequest req,
-            [DurableClient] DurableTaskClient client)
-        {
-            var request =  await req.ReadFromJsonAsync<IssueOrchestrationRequest>();
-            
-            var instanceId = "";
-            await client.RaiseEventAsync(instanceId, "Approval", true);
-        }
-
         [Function(nameof(GetMetadata))]
-        public static IssueMetadata GetMetadata(
+        public static IActionResult GetMetadata(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "metadata/{number:int}")] HttpRequest req,
             [CosmosDBInput(
                 databaseName:"dev-db",
@@ -48,8 +38,19 @@ namespace SK.DevTeam
                 SqlQuery= "SELECT * FROM c where c.number = StringToNumber({number})")] IEnumerable<IssueMetadata> items,
             FunctionContext executionContext)
         {
-            return items.First();
+            return new OkObjectResult(items.First());
         }
+
+        [Function("CloseSubOrchestration")]
+        public static async Task Close(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "close")] HttpRequest req,
+            [DurableClient] DurableTaskClient client)
+        {
+            var request =  await req.ReadFromJsonAsync<CloseIssueRequest>();
+            await client.RaiseEventAsync(request.InstanceId, IssueClosed, true);
+        }
+
+        
 
         [Function(nameof(IssueOrchestration))]
         public static async Task<List<string>> RunOrchestrator(
@@ -90,13 +91,13 @@ namespace SK.DevTeam
             });
 
             
-            //bool approved = await context.WaitForExternalEvent<bool>("IssueClosed");
+            bool issueClosed = await context.WaitForExternalEvent<bool>(IssueClosed);
 
-            // var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
-            //     Org = request.Org,
-            //     Repo = request.Repo,
-            //     Number = newIssue.Number
-            // });
+            var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
+                Org = request.Org,
+                Repo = request.Repo,
+                Number = newIssueNumber
+            });
 
             // Create a new issue, with the input and label PM.Readme
             // Connect the new issue with the parent issue (create a new comment with this one?)
@@ -121,12 +122,19 @@ namespace SK.DevTeam
                 Id = Guid.NewGuid().ToString()
             });
 
+            bool issueClosed = await context.WaitForExternalEvent<bool>(IssueClosed);
 
-            //bool approved = await context.WaitForExternalEvent<bool>("IssueClosed");
+            var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
+                Org = request.Org,
+                Repo = request.Repo,
+                Number = newIssueNumber
+            });
+
+            var plan = JsonConvert.DeserializeObject<DevLeadPlanResponse>(lastComment.Body);
             // Connect the new issue with the parent issue (create a new comment with this one?)
             // webhook will deal with the flow of iterating the output
             // when the new issue is closed, the sub-orchestration finishes
-            return default;
+            return plan;
         }
 
 
@@ -148,13 +156,13 @@ namespace SK.DevTeam
             });
 
 
-            // bool approved = await context.WaitForExternalEvent<bool>("IssueClosed");
+            bool issueClosed = await context.WaitForExternalEvent<bool>(IssueClosed);
 
-            // var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
-            //     Org = request.Org,
-            //     Repo = request.Repo,
-            //     Number = newIssue.Number
-            // });
+            var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
+                Org = request.Org,
+                Repo = request.Repo,
+                Number = newIssueNumber
+            });
             // Connect the new issue with the parent issue (create a new comment with this one?)
             // webhook will deal with the flow of iterating the output
             // when the new issue is closed, the output of that issue run in sandbox, commiting to a new PR
@@ -203,7 +211,7 @@ namespace SK.DevTeam
 
         [Function(nameof(SaveMetadata))]
         [CosmosDBOutput("dev-db","devs", CreateIfNotExists = true, ConnectionStringSetting = "CosmosConnectionString", PartitionKey = "/id")]
-        public static async Task<object> SaveMetadata(
+        public static IssueMetadata SaveMetadata(
             [ActivityTrigger] IssueMetadata metadata,
             FunctionContext executionContext)
         {
@@ -221,8 +229,14 @@ public class NewIssueRequest
     public string Function { get; set; }
 }
 
+public class CloseIssueRequest 
+{
+    public string InstanceId { get; set; }
+}
+
 public class IssueMetadata
 {
+
     public long Number { get; set; }
 
     public string InstanceId { get; set; }
