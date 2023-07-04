@@ -50,8 +50,6 @@ namespace SK.DevTeam
             await client.RaiseEventAsync(request.InstanceId, IssueClosed, true);
         }
 
-        
-
         [Function(nameof(IssueOrchestration))]
         public static async Task<List<string>> RunOrchestrator(
             [OrchestrationTrigger] TaskOrchestrationContext context, IssueOrchestrationRequest request)
@@ -59,8 +57,7 @@ namespace SK.DevTeam
             ILogger logger = context.CreateReplaySafeLogger(nameof(IssueOrchestration));
            
             var outputs = new List<string>();
-
-            var readmeTask = context.CallSubOrchestratorAsync(nameof(CreateReadme), request);
+            var readmeTask = context.CallSubOrchestratorAsync<string>(nameof(CreateReadme), request);
             var planTask =  context.CallSubOrchestratorAsync<DevLeadPlanResponse>(nameof(CreatePlan), request);
             await Task.WhenAll(readmeTask, planTask);
             var implementationTasks = planTask.Result.steps.SelectMany(s => s.subtasks.Select(st => 
@@ -75,7 +72,7 @@ namespace SK.DevTeam
         }
 
         [Function(nameof(CreateReadme))]
-        public static async Task CreateReadme(
+        public static async Task<string> CreateReadme(
         [OrchestrationTrigger] TaskOrchestrationContext context, IssueOrchestrationRequest request)
         {
             // call activity to create new issue
@@ -93,16 +90,18 @@ namespace SK.DevTeam
             
             bool issueClosed = await context.WaitForExternalEvent<bool>(IssueClosed);
 
-            var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
+            var lastComment = await context.CallActivityAsync<string>(nameof(GetLastComment), new IssueOrchestrationRequest {
                 Org = request.Org,
                 Repo = request.Repo,
                 Number = newIssueNumber
             });
-
+            
             // Create a new issue, with the input and label PM.Readme
             // Connect the new issue with the parent issue (create a new comment with this one?)
             // webhook will deal with the flow of iterating the output
             // when the new issue is closed, the output of that issue run in sandbox, commiting to a new PR
+                
+            return lastComment;
         }
 
          [Function(nameof(CreatePlan))]
@@ -124,13 +123,13 @@ namespace SK.DevTeam
 
             bool issueClosed = await context.WaitForExternalEvent<bool>(IssueClosed);
 
-            var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
+            var lastComment = await context.CallActivityAsync<string>(nameof(GetLastComment), new IssueOrchestrationRequest {
                 Org = request.Org,
                 Repo = request.Repo,
                 Number = newIssueNumber
             });
 
-            var plan = JsonConvert.DeserializeObject<DevLeadPlanResponse>(lastComment.Body);
+            var plan = JsonConvert.DeserializeObject<DevLeadPlanResponse>(lastComment);
             // Connect the new issue with the parent issue (create a new comment with this one?)
             // webhook will deal with the flow of iterating the output
             // when the new issue is closed, the sub-orchestration finishes
@@ -139,7 +138,7 @@ namespace SK.DevTeam
 
 
          [Function(nameof(Implement))]
-        public static async Task Implement(
+        public static async Task<string> Implement(
         [OrchestrationTrigger] TaskOrchestrationContext context, IssueOrchestrationRequest request)
         {
             // Create a new issue, with the input and label Developer.Implement
@@ -158,7 +157,7 @@ namespace SK.DevTeam
 
             bool issueClosed = await context.WaitForExternalEvent<bool>(IssueClosed);
 
-            var lastComment = await context.CallActivityAsync<IssueComment>(nameof(GetLastComment), new IssueOrchestrationRequest {
+            var lastComment = await context.CallActivityAsync<string>(nameof(GetLastComment), new IssueOrchestrationRequest {
                 Org = request.Org,
                 Repo = request.Repo,
                 Number = newIssueNumber
@@ -166,6 +165,7 @@ namespace SK.DevTeam
             // Connect the new issue with the parent issue (create a new comment with this one?)
             // webhook will deal with the flow of iterating the output
             // when the new issue is closed, the output of that issue run in sandbox, commiting to a new PR
+            return lastComment;
         }
 
         [Function(nameof(CreateIssue))]
@@ -186,7 +186,7 @@ namespace SK.DevTeam
         }
 
         [Function(nameof(GetLastComment))]
-        public static async Task<IssueComment> GetLastComment([ActivityTrigger] IssueOrchestrationRequest request, FunctionContext executionContext)
+        public static async Task<string> GetLastComment([ActivityTrigger] IssueOrchestrationRequest request, FunctionContext executionContext)
         {
             var ghClient = await GithubService.GetGitHubClient();
             var icOptions = new IssueCommentRequest {
@@ -198,7 +198,7 @@ namespace SK.DevTeam
                 StartPage = 1
             };
             var comments = await ghClient.Issue.Comment.GetAllForIssue(request.Org, request.Repo, (int)request.Number, icOptions, apiOptions); 
-            return comments.First();
+            return comments.First().Body;
         }
 
         [Function(nameof(RunInSandbox))]
