@@ -482,7 +482,9 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
-
+__azurite**
+__blob**
+__queue**
 # SQLite workflows DB
 elsa.sqlite.*
 
