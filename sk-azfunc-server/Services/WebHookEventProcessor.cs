@@ -16,16 +16,17 @@ public class SKWebHookEventProcessor : WebhookEventProcessor
     private readonly IKernel _kernel;
     private readonly ILogger<SKWebHookEventProcessor> _logger;
     private static HttpClient httpClient = new HttpClient();
+    private readonly GithubService _ghService;
 
-    public SKWebHookEventProcessor(IKernel kernel, ILogger<SKWebHookEventProcessor> logger)
+    public SKWebHookEventProcessor(IKernel kernel, ILogger<SKWebHookEventProcessor> logger, GithubService ghService)
     {
         _kernel = kernel;
         _logger = logger;
+        _ghService = ghService;
     }
     protected override async Task ProcessIssuesWebhookAsync(WebhookHeaders headers, IssuesEvent issuesEvent, IssuesAction action)
     {
-
-        var ghClient = await GithubService.GetGitHubClient();
+        var ghClient = await _ghService.GetGitHubClient();
         var org = issuesEvent.Organization.Login;
         var repo = issuesEvent.Repository.Name;
         var issueNumber = issuesEvent.Issue.Number;
@@ -74,7 +75,7 @@ public class SKWebHookEventProcessor : WebhookEventProcessor
         // we only resond to non-bot comments
         if (issueCommentEvent.Sender.Type.Value != UserType.Bot)
         {
-            var ghClient = await GithubService.GetGitHubClient();
+            var ghClient = await _ghService.GetGitHubClient();
             var org = issueCommentEvent.Organization.Login;
             var repo = issueCommentEvent.Repository.Name;
             var issueId = issueCommentEvent.Issue.Number;

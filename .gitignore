@@ -493,3 +493,4 @@ elsa.sqlite.*
 
 # ignore local elsa-core src
 elsa-core/
+local.settings.json

@@ -6,14 +6,20 @@ using Octokit;
 
 namespace SK.DevTeam
 {
-    public static class IssuesActivities
-    {
-        public static string IssueClosed = "IssueClosed";
+    public class IssuesActivities
+    {  
+        private readonly GithubService _ghService;
+        public IssuesActivities(GithubService githubService)
+        {
+            _ghService = githubService;
+        }
+
+        public string IssueClosed = "IssueClosed";
 
         [Function(nameof(CreateIssue))]
-        public static async Task<NewIssueResponse> CreateIssue([ActivityTrigger] NewIssueRequest request, FunctionContext executionContext)
+        public async Task<NewIssueResponse> CreateIssue([ActivityTrigger] NewIssueRequest request, FunctionContext executionContext)
         {
-            var ghClient = await GithubService.GetGitHubClient();
+            var ghClient = await _ghService.GetGitHubClient();
             var newIssue = new NewIssue($"{request.Function} chain for #{request.IssueRequest.Number}")
             {
                 Body = request.IssueRequest.Input,
@@ -32,13 +38,13 @@ namespace SK.DevTeam
         }
 
         [Function("CloseSubOrchestration")]
-        public static async Task Close(
+        public async Task Close(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "close")] HttpRequest req,
             [DurableClient] DurableTaskClient client)
         {
             var request = await req.ReadFromJsonAsync<CloseIssueRequest>();
 
-            var ghClient = await GithubService.GetGitHubClient();
+            var ghClient = await _ghService.GetGitHubClient();
             var comment = await ghClient.Issue.Comment.Get(request.Org, request.Repo, request.CommentId);
             var updatedComment = comment.Body.Replace("[ ]", "[x]");
             await ghClient.Issue.Comment.Update(request.Org, request.Repo, request.CommentId, updatedComment);
@@ -47,9 +53,9 @@ namespace SK.DevTeam
         }
 
         [Function(nameof(GetLastComment))]
-        public static async Task<string> GetLastComment([ActivityTrigger] IssueOrchestrationRequest request, FunctionContext executionContext)
+        public async Task<string> GetLastComment([ActivityTrigger] IssueOrchestrationRequest request, FunctionContext executionContext)
         {
-            var ghClient = await GithubService.GetGitHubClient();
+            var ghClient = await _ghService.GetGitHubClient();
             var icOptions = new IssueCommentRequest
             {
                 Direction = SortDirection.Descending

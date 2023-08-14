@@ -39,7 +39,8 @@
 				"ms-dotnettools.csdevkit",
 				"Azurite.azurite",
 				"ms-dotnettools.csharp",
-				"ms-semantic-kernel.semantic-kernel"
+				"ms-semantic-kernel.semantic-kernel",
+				"GitHub.copilot-chat"
 			]
 		}
 	}

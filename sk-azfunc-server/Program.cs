@@ -36,7 +36,18 @@ public static class Program
             {
                 services.AddSingleton<IOpenApiConfigurationOptions>(_ => s_apiConfigOptions);
                 services.AddTransient((provider) => CreateKernel(provider));
+                services.AddScoped<GithubService>();
                 services.AddScoped<WebhookEventProcessor, SKWebHookEventProcessor>();
+                services.AddOptions<GithubOptions>()
+                    .Configure<IConfiguration>((settings, configuration) =>
+                    {
+                        configuration.GetSection("GithubOptions").Bind(settings);
+                    });
+                services.AddOptions<AzureOptions>()
+                    .Configure<IConfiguration>((settings, configuration) =>
+                    {
+                        configuration.GetSection("AzureOptions").Bind(settings);
+                    });
 
                 // return JSON with expected lowercase naming
                 services.Configure<JsonSerializerOptions>(options =>
