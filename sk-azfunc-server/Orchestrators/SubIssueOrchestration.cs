@@ -117,6 +117,7 @@ namespace SK.DevTeam
                  var runScriptResponse = await context.CallActivityAsync<bool>(nameof(PullRequestActivities.RunInSandbox),request);
             }
 
+            // this is not ideal, as the script might be still running and there might be files that are not yet generated
             var commitResponse = await context.CallActivityAsync<bool>(nameof(PullRequestActivities.CommitToGithub), new GHCommitRequest{
                 IssueOrchestrationId = request.IssueOrchestrationId,
                 SubOrchestrationId = request.SubOrchestrationId,

@@ -58,7 +58,7 @@ namespace SK.DevTeam
                             Number = request.Number,
                             Org = request.Org,
                             Repo = request.Repo,
-                            Input = st.LLM_prompt,
+                            Input = st.prompt,
                             },
                             InstanceId = context.InstanceId })));
 

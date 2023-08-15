@@ -11,40 +11,26 @@ public static class DevLead {
         In each LLM prompt restrict the model from outputting other text that is not in the form of code or code comments. 
         Please output a JSON array data structure with a list of steps and a description of each step, and the steps or subtasks that each requires, and the LLM prompts for each subtask. 
         Example: 
-        [
             {
-                "step": "Step 1",
-                "description": "This is the first step",
-                "subtasks": [
+                "steps": [
                     {
-                        "subtask": "Subtask 1",
-                        "description": "This is the first subtask",
-                        "prompt": "Write the code to do the first subtask"
-                    },
-                    {
-                        "subtask": "Subtask 2",
-                        "description": "This is the second subtask",
-                        "prompt": "Write the code to do the second subtask"
-                    }
-                ]
-            },
-            {
-                "step": "Step 2",
-                "description": "This is the second step",
-                "subtasks": [
-                    {
-                        "subtask": "Subtask 1",
-                        "description": "This is the first subtask",
-                        "prompt": "Write the code to do the first subtask"
-                    },
-                    {
-                        "subtask": "Subtask 2",
-                        "description": "This is the second subtask",
-                        "prompt": "Write the code to do the second subtask"
+                        "step": "1",
+                        "description": "This is the first step",
+                        "subtasks": [
+                            {
+                            "subtask": "Subtask 1",
+                                "description": "This is the first subtask",
+                                "prompt": "Write the code to do the first subtask"
+                            },
+                            {
+                                "subtask": "Subtask 2",
+                                "description": "This is the second subtask",
+                                "prompt": "Write the code to do the second subtask"
+                            }
+                        ]
                     }
                 ]
             }
-        ]
         Do not output any other text. 
         Input: {{$input}}
         {{$wafContext}}
