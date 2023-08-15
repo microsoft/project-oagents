@@ -1,17 +1,12 @@
 ﻿using System.Text.Json;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Abstractions;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Configurations;
-using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.AI.OpenAI.TextEmbedding;
 using Microsoft.SemanticKernel.Connectors.Memory.Qdrant;
 using Microsoft.SemanticKernel.Memory;
-using Octokit;
 using Octokit.Webhooks;
 using Octokit.Webhooks.AzureFunctions;
 
@@ -34,7 +29,6 @@ public static class Program
             })
             .ConfigureServices(services =>
             {
-                services.AddSingleton<IOpenApiConfigurationOptions>(_ => s_apiConfigOptions);
                 services.AddTransient((provider) => CreateKernel(provider));
                 services.AddScoped<GithubService>();
                 services.AddScoped<WebhookEventProcessor, SKWebHookEventProcessor>();
@@ -85,28 +79,4 @@ public static class Program
                             .WithMemory(semanticTextMemory)
                             .WithConfiguration(kernelConfig).Build();
     }
-
-    private static readonly OpenApiConfigurationOptions s_apiConfigOptions = new()
-    {
-        Info = new OpenApiInfo()
-        {
-            Version = "1.0.0",
-            Title = "Semantic Kernel Azure Functions Starter",
-            Description = "Azure Functions starter application for the [Semantic Kernel](https://github.com/microsoft/semantic-kernel).",
-            Contact = new OpenApiContact()
-            {
-                Name = "Issues",
-                Url = new Uri("https://github.com/microsoft/semantic-kernel-starters/issues"),
-            },
-            License = new OpenApiLicense()
-            {
-                Name = "MIT",
-                Url = new Uri("https://github.com/microsoft/semantic-kernel-starters/blob/main/LICENSE"),
-            }
-        },
-        Servers = DefaultOpenApiConfigurationOptions.GetHostNames(),
-        OpenApiVersion = OpenApiVersionType.V2,
-        ForceHttps = false,
-        ForceHttp = false,
-    };
 }

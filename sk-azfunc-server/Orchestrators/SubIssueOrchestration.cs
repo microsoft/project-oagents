@@ -22,7 +22,10 @@ namespace SK.DevTeam
                 Id = Guid.NewGuid().ToString(),
                 CommentId = newIssueResponse.CommentId,
                 Org = request.IssueRequest.Org,
-                Repo = request.IssueRequest.Repo
+                Repo = request.IssueRequest.Repo,
+                PartitionKey =$"{request.IssueRequest.Org}{request.IssueRequest.Repo}{newIssueResponse.Number}",
+                RowKey = $"{request.IssueRequest.Org}{request.IssueRequest.Repo}{newIssueResponse.Number}"
+
             });
             bool issueClosed = await context.WaitForExternalEvent<bool>(IssueClosed);
             var lastComment = await context.CallActivityAsync<string>(nameof(IssuesActivities.GetLastComment), new IssueOrchestrationRequest {

@@ -59,7 +59,7 @@ public class SKWebHookEventProcessor : WebhookEventProcessor
         else if (issuesEvent.Action == IssuesAction.Closed && issuesEvent.Issue.User.Type.Value == UserType.Bot)
         {
             // TODO: remove hardcoded url, read from config
-            var metadata = await httpClient.GetFromJsonAsync<IssueMetadata>($"http://localhost:7071/api/metadata/{issueNumber}");
+            var metadata = await httpClient.GetFromJsonAsync<IssueMetadata>($"http://localhost:7071/api/metadata/{org}{repo}{issueNumber}");
             var closeIssueRequest = new CloseIssueRequest { InstanceId = metadata.InstanceId, CommentId = metadata.CommentId, Org = org, Repo = repo };
             var content = new StringContent(JsonConvert.SerializeObject(closeIssueRequest), Encoding.UTF8, "application/json");
             // TODO: remove hardcoded url, read from config

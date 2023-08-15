@@ -92,7 +92,7 @@ class Program
                     {
                         try
                         {
-                            implementationResult = await CallFunction<string>(nameof(Developer), Developer.Implement, subtask.LLM_prompt, maxRetry);
+                            implementationResult = await CallFunction<string>(nameof(Developer), Developer.Implement, subtask.prompt, maxRetry);
                             break;
                         }
                         catch (Exception ex)

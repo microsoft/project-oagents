@@ -8,19 +8,15 @@ namespace SK.DevTeam
     {
         [Function(nameof(GetMetadata))]
         public static IActionResult GetMetadata(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "metadata/{number:int}")] HttpRequest req,
-            [CosmosDBInput(
-                databaseName:"dev-db",
-                collectionName:"devs",
-                ConnectionStringSetting= "CosmosConnectionString",
-                SqlQuery= "SELECT * FROM c where c.number = StringToNumber({number})")] IEnumerable<IssueMetadata> items,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "metadata/{key}")] HttpRequest req,
+            [TableInput("Metadata",partitionKey:"{key}" , rowKey: "{key}", Connection = "AzureWebJobsStorage")] IssueMetadata metadata,
             FunctionContext executionContext)
         {
-            return new OkObjectResult(items.First());
+            return new OkObjectResult(metadata);
         }
 
         [Function(nameof(SaveMetadata))]
-        [CosmosDBOutput("dev-db", "devs", CreateIfNotExists = true, ConnectionStringSetting = "CosmosConnectionString", PartitionKey = "/id")]
+        [TableOutput("Metadata", Connection = "AzureWebJobsStorage")]
         public static IssueMetadata SaveMetadata(
             [ActivityTrigger] IssueMetadata metadata,
             FunctionContext executionContext)
