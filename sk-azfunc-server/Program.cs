@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.AI.OpenAI.TextEmbedding;
 using Microsoft.SemanticKernel.Connectors.Memory.Qdrant;
@@ -42,6 +43,16 @@ public static class Program
                     {
                         configuration.GetSection("AzureOptions").Bind(settings);
                     });
+                services.AddOptions<OpenAIOptions>()
+                    .Configure<IConfiguration>((settings, configuration) =>
+                    {
+                        configuration.GetSection("OpenAIOptions").Bind(settings);
+                    });
+                services.AddOptions<QdrantOptions>()
+                    .Configure<IConfiguration>((settings, configuration) =>
+                    {
+                        configuration.GetSection("QdrantOptions").Bind(settings);
+                    });
 
                 // return JSON with expected lowercase naming
                 services.Configure<JsonSerializerOptions>(options =>
@@ -56,26 +67,26 @@ public static class Program
 
     private static IKernel CreateKernel(IServiceProvider provider)
     {
-        var kernelSettings = KernelSettings.LoadSettings();
+        var openAiConfig = provider.GetService<IOptions<OpenAIOptions>>().Value;
+        var qdrantConfig = provider.GetService<IOptions<QdrantOptions>>().Value;
 
         var kernelConfig = new KernelConfig();
 
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
         {
             builder
-                .SetMinimumLevel(kernelSettings.LogLevel ?? LogLevel.Warning)
+                .SetMinimumLevel(LogLevel.Debug)
                 .AddConsole()
                 .AddDebug();
         });
 
-        // TODO: load the quadrant config from environment variables
-        var memoryStore = new QdrantMemoryStore(new QdrantVectorDbClient("http://qdrant:6333", 1536));
-        var embedingGeneration = new AzureTextEmbeddingGeneration(kernelSettings.EmbeddingDeploymentOrModelId, kernelSettings.Endpoint, kernelSettings.ApiKey);
+        var memoryStore = new QdrantMemoryStore(new QdrantVectorDbClient(qdrantConfig.Endpoint, qdrantConfig.VectorSize));
+        var embedingGeneration = new AzureTextEmbeddingGeneration(openAiConfig.EmbeddingDeploymentOrModelId, openAiConfig.Endpoint, openAiConfig.ApiKey);
         var semanticTextMemory = new SemanticTextMemory(memoryStore, embedingGeneration);
 
         return new KernelBuilder()
                             .WithLogger(loggerFactory.CreateLogger<IKernel>())
-                            .WithAzureChatCompletionService(kernelSettings.DeploymentOrModelId, kernelSettings.Endpoint, kernelSettings.ApiKey, true, kernelSettings.ServiceId, true)
+                            .WithAzureChatCompletionService(openAiConfig.DeploymentOrModelId, openAiConfig.Endpoint, openAiConfig.ApiKey, true, openAiConfig.ServiceId, true)
                             .WithMemory(semanticTextMemory)
                             .WithConfiguration(kernelConfig).Build();
     }

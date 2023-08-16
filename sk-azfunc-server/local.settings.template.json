@@ -5,9 +5,8 @@
   },
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "AzureWebJobsStorage": "UseDevelopmentStorage",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "AzureWebJobsFeatureFlags": "EnableHttpProxying",
-    "CosmosConnectionString": "",
     "SANDBOX_IMAGE" : "mcr.microsoft.com/dotnet/sdk:7.0",
     "GithubOptions:AppKey": "",
     "GithubOptions:AppId": "",
@@ -17,6 +16,15 @@
     "AzureOptions:ContainerInstancesResourceGroup":"",
     "AzureOptions:FilesShareName":"",
     "AzureOptions:FilesAccountName":"",
-    "AzureOptions:FilesAccountKey":""
+    "AzureOptions:FilesAccountKey":"",
+    "OpenAIOptions:ServiceType":"",
+    "OpenAIOptions:ServiceId":"",
+    "OpenAIOptions:DeploymentOrModelId":"",
+    "OpenAIOptions:EmbeddingDeploymentOrModelId":"",
+    "OpenAIOptions:Endpoint":"",
+    "OpenAIOptions:ApiKey":"",
+    "QdrantOptions:Endpoint":"http://qdrant:6333",
+    "QdrantOptions:VectorSize":"1536"
   }
 }
+
