@@ -33,7 +33,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 }
 
 // The application backend
-module skfunc './app/sk-azfunc-server.bicep' = {
+module skfunc './app/sk-func.bicep' = {
   name: 'skfunc'
   scope: rg
   params: {
@@ -80,6 +80,15 @@ module appServicePlan './core/host/appserviceplan.bicep' = {
       name: 'Y1'
       tier: 'Dynamic'
     }
+  }
+}
+
+module qdrant 'qdrant.bicep' = {
+  name: 'qdrant-deploy'
+  scope: rg
+  params: {
+    location: location
+    environmentName: environmentName
   }
 }
 
