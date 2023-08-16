@@ -493,4 +493,6 @@ elsa.sqlite.*
 
 # ignore local elsa-core src
 elsa-core/
-local.settings.json
+sk-azfunc-server/local.settings.json
+.azure
+temp
