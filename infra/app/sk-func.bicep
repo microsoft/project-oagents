@@ -7,7 +7,7 @@ param applicationInsightsName string = ''
 param appServicePlanId string
 @secure()
 param appSettings object = {}
-param serviceName string = 'api'
+param serviceName string = 'sk-func'
 param storageAccountName string
 
 module api '../core/host/functions.bicep' = {

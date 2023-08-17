@@ -25,7 +25,7 @@ class Program
                 .AddDebug();
         });
        
-        var memoryStore = new QdrantMemoryStore(new QdrantVectorDbClient("http://qdrant", 1536, port: 6333));
+        var memoryStore = new QdrantMemoryStore(new QdrantVectorDbClient("http://qdrant:6333", 1536));
         var embedingGeneration = new AzureTextEmbeddingGeneration(kernelSettings.EmbeddingDeploymentOrModelId, kernelSettings.Endpoint, kernelSettings.ApiKey);
         var semanticTextMemory = new SemanticTextMemory(memoryStore, embedingGeneration);
 
