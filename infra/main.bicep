@@ -114,12 +114,14 @@ module appServicePlan './core/host/appserviceplan.bicep' = {
   }
 }
 
+var appName = !empty(apiServiceName) ? apiServiceName : '${abbrs.webSitesFunctions}api-${resourceToken}'
+
 // The application backend
 module skfunc './app/sk-func.bicep' = {
   name: 'skfunc'
   scope: rg
   params: {
-    name: !empty(apiServiceName) ? apiServiceName : '${abbrs.webSitesFunctions}api-${resourceToken}'
+    name: appName
     location: location
     tags: tags
     applicationInsightsName: monitoring.outputs.applicationInsightsName
@@ -136,19 +138,18 @@ module skfunc './app/sk-func.bicep' = {
       'AzureOptions__ContainerInstancesResourceGroup': rg.name
       'AzureOptions__FilesShareName': aciShare
       'AzureOptions__FilesAccountName': storage.outputs.name
+      'AzureOptions__FunctionsFqdn': 'https://${appName}.azurewebsites.net'
       'OpenAIOptions__ServiceType': openAIServiceType
       'OpenAIOptions__ServiceId': openAIServiceId
       'OpenAIOptions__DeploymentOrModelId': openAIDeploymentId
       'OpenAIOptions__EmbeddingDeploymentOrModelId': openAIEmbeddingId
       'OpenAIOptions__Endpoint': openAIEndpoint
       'OpenAIOptions__ApiKey': openAIKey
-      'QdrantOptions__Endpoint':'${qdrant.outputs.fqdn}:6333'
+      'QdrantOptions__Endpoint':'https://${qdrant.outputs.fqdn}'
       'QdrantOptions__VectorSize':'1536'
     }
   }
 }
-
-
 
 // App outputs
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = monitoring.outputs.applicationInsightsConnectionString
