@@ -24,7 +24,7 @@ param networkAcls object = {
 @allowed([ 'Enabled', 'Disabled' ])
 param publicNetworkAccess string = 'Enabled'
 param sku object = { name: 'Standard_LRS' }
-param fileShareName string
+param fileShares array = []
 
 resource storage 'Microsoft.Storage/storageAccounts@2022-05-01' = {
   name: name
@@ -56,13 +56,12 @@ resource storage 'Microsoft.Storage/storageAccounts@2022-05-01' = {
       }
     }]
   }
-  resource fileServices 'fileServices' = if (!empty(containers)) {
+  resource fileServices 'fileServices' = if (!empty(fileShares)) {
     name: 'default'
-    resource share 'shares' = {
-      name: fileShareName
-    }
-  }
-
+    resource share 'shares' = [for fileShare in fileShares: {
+      name: fileShare
+    }]
+  } 
 }
 
 output name string = storage.name

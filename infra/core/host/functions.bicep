@@ -42,6 +42,7 @@ param scmDoBuildDuringDeployment bool = true
 param use32BitWorkerProcess bool = false
 param healthCheckPath string = ''
 
+
 module functions 'appservice.bicep' = {
   name: '${name}-functions'
   params: {
@@ -57,6 +58,7 @@ module functions 'appservice.bicep' = {
         AzureWebJobsStorage: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
         FUNCTIONS_EXTENSION_VERSION: extensionVersion
         FUNCTIONS_WORKER_RUNTIME: runtimeName
+        'AzureOptions__FilesAccountKey': storage.listKeys().keys[0].value
       })
     clientAffinityEnabled: clientAffinityEnabled
     enableOryxBuild: enableOryxBuild

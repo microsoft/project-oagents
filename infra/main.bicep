@@ -9,10 +9,18 @@ param environmentName string
 @description('Primary location for all resources')
 param location string
 
-// Optional parameters to override the default azd resource naming conventions. Update the main.parameters.json file to provide values. e.g.,:
-// "resourceGroupName": {
-//      "value": "myGroupName"
-// }
+@secure()
+param githubAppKey string
+param githubAppId string
+param githubAppInstallationId string
+param openAIServiceType string
+param openAIServiceId string
+param openAIDeploymentId string
+param openAIEmbeddingId string
+param openAIEndpoint string
+@secure()
+param openAIKey string
+
 param apiServiceName string = ''
 param applicationInsightsDashboardName string = ''
 param applicationInsightsName string = ''
@@ -20,6 +28,12 @@ param appServicePlanName string = ''
 param logAnalyticsName string = ''
 param resourceGroupName string = ''
 param storageAccountName string = ''
+param containerAppsEnvironmentName string = ''
+param containerRegistryName string = ''
+
+
+var aciShare = 'acishare'
+var qdrantShare = 'qdrantshare'
 
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
@@ -32,39 +46,56 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: tags
 }
 
-// The application backend
-module skfunc './app/sk-func.bicep' = {
-  name: 'skfunc'
+module storage './core/storage/storage-account.bicep' = {
+  name: 'storage'
   scope: rg
   params: {
-    name: !empty(apiServiceName) ? apiServiceName : '${abbrs.webSitesFunctions}api-${resourceToken}'
+    name: !empty(storageAccountName) ? storageAccountName : '${abbrs.storageStorageAccounts}${resourceToken}'
     location: location
     tags: tags
-    applicationInsightsName: monitoring.outputs.applicationInsightsName
-    appServicePlanId: appServicePlan.outputs.id
-    storageAccountName: storage.outputs.name
-    appSettings: {
-      SANDBOX_IMAGE: 'mcr.microsoft.com/dotnet/sdk:7.0'
-      AzureWebJobsFeatureFlags: 'EnableHttpProxying'
-      'GithubOptions:AppKey': ''
-      'GithubOptions:AppId': ''
-      'GithubOptions:InstallationId': ''
-      'AzureOptions:SubscriptionId': ''
-      'AzureOptions:Location': ''
-      'AzureOptions:ContainerInstancesResourceGroup': ''
-      'AzureOptions:FilesShareName': ''
-      'AzureOptions:FilesAccountName': ''
-      'AzureOptions:FilesAccountKey': ''
-      'OpenAIOptions:ServiceType': ''
-      'OpenAIOptions:ServiceId': ''
-      'OpenAIOptions:DeploymentOrModelId': ''
-      'OpenAIOptions:EmbeddingDeploymentOrModelId': ''
-      'OpenAIOptions:Endpoint': ''
-      'OpenAIOptions:ApiKey': ''
-      'QdrantOptions:Endpoint':'http://qdrant:6333'
-      'QdrantOptions:VectorSize':'1536'
+    fileShares: [ 
+      aciShare
+      qdrantShare
+   ]
+  }
+}
 
-    }
+// Monitor application with Azure Monitor
+module monitoring './core/monitor/monitoring.bicep' = {
+  name: 'monitoring'
+  scope: rg
+  params: {
+    location: location
+    tags: tags
+    logAnalyticsName: !empty(logAnalyticsName) ? logAnalyticsName : '${abbrs.operationalInsightsWorkspaces}${resourceToken}'
+    applicationInsightsName: !empty(applicationInsightsName) ? applicationInsightsName : '${abbrs.insightsComponents}${resourceToken}'
+    applicationInsightsDashboardName: !empty(applicationInsightsDashboardName) ? applicationInsightsDashboardName : '${abbrs.portalDashboards}${resourceToken}'
+  }
+}
+
+// Container apps host (including container registry)
+module containerApps './core/host/container-apps.bicep' = {
+  name: 'container-apps'
+  scope: rg
+  params: {
+    name: 'app'
+    location: location
+    tags: tags
+    containerAppsEnvironmentName: !empty(containerAppsEnvironmentName) ? containerAppsEnvironmentName : '${abbrs.appManagedEnvironments}${resourceToken}'
+    containerRegistryName: !empty(containerRegistryName) ? containerRegistryName : '${abbrs.containerRegistryRegistries}${resourceToken}'
+    logAnalyticsWorkspaceName: monitoring.outputs.logAnalyticsWorkspaceName
+    applicationInsightsName: monitoring.outputs.applicationInsightsName
+  }
+}
+
+module qdrant './core/database/qdrant/qdrant-aca.bicep' = {
+  name: 'qdrant-deploy'
+  scope: rg
+  params: {
+    location: location
+    containerAppsEnvironmentName: containerApps.outputs.environmentName
+    shareName: qdrantShare
+    storageName: storage.outputs.name
   }
 }
 
@@ -83,42 +114,44 @@ module appServicePlan './core/host/appserviceplan.bicep' = {
   }
 }
 
-module qdrant 'qdrant.bicep' = {
-  name: 'qdrant-deploy'
+// The application backend
+module skfunc './app/sk-func.bicep' = {
+  name: 'skfunc'
   scope: rg
   params: {
+    name: !empty(apiServiceName) ? apiServiceName : '${abbrs.webSitesFunctions}api-${resourceToken}'
     location: location
-    environmentName: environmentName
+    tags: tags
+    applicationInsightsName: monitoring.outputs.applicationInsightsName
+    appServicePlanId: appServicePlan.outputs.id
+    storageAccountName: storage.outputs.name
+    appSettings: {
+      SANDBOX_IMAGE: 'mcr.microsoft.com/dotnet/sdk:7.0'
+      AzureWebJobsFeatureFlags: 'EnableHttpProxying'
+      'GithubOptions__AppKey': githubAppKey
+      'GithubOptions__AppId': githubAppId
+      'GithubOptions__InstallationId': githubAppInstallationId
+      'AzureOptions__SubscriptionId': subscription().subscriptionId
+      'AzureOptions__Location': location
+      'AzureOptions__ContainerInstancesResourceGroup': rg.name
+      'AzureOptions__FilesShareName': aciShare
+      'AzureOptions__FilesAccountName': storage.outputs.name
+      'OpenAIOptions__ServiceType': openAIServiceType
+      'OpenAIOptions__ServiceId': openAIServiceId
+      'OpenAIOptions__DeploymentOrModelId': openAIDeploymentId
+      'OpenAIOptions__EmbeddingDeploymentOrModelId': openAIEmbeddingId
+      'OpenAIOptions__Endpoint': openAIEndpoint
+      'OpenAIOptions__ApiKey': openAIKey
+      'QdrantOptions__Endpoint':'${qdrant.outputs.fqdn}:6333'
+      'QdrantOptions__VectorSize':'1536'
+    }
   }
 }
 
-// Backing storage for Azure functions backend API
-module storage './core/storage/storage-account.bicep' = {
-  name: 'storage'
-  scope: rg
-  params: {
-    name: !empty(storageAccountName) ? storageAccountName : '${abbrs.storageStorageAccounts}${resourceToken}'
-    location: location
-    tags: tags
-    fileShareName: 'acishare'
-  }
-}
-
-// Monitor application with Azure Monitor
-module monitoring './core/monitor/monitoring.bicep' = {
-  name: 'monitoring'
-  scope: rg
-  params: {
-    location: location
-    tags: tags
-    logAnalyticsName: !empty(logAnalyticsName) ? logAnalyticsName : '${abbrs.operationalInsightsWorkspaces}${resourceToken}'
-    applicationInsightsName: !empty(applicationInsightsName) ? applicationInsightsName : '${abbrs.insightsComponents}${resourceToken}'
-    applicationInsightsDashboardName: !empty(applicationInsightsDashboardName) ? applicationInsightsDashboardName : '${abbrs.portalDashboards}${resourceToken}'
-  }
-}
 
 
 // App outputs
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = monitoring.outputs.applicationInsightsConnectionString
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
+
