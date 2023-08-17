@@ -6,5 +6,5 @@ public class AzureOptions
     public string FilesShareName { get; set; }
     public string FilesAccountName { get; set; }
     public string FilesAccountKey { get; set; }
-    public object FunctionsFqdn { get; set; }
+    public string FunctionsFqdn { get; set; }
 }

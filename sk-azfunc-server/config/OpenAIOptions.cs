@@ -1,6 +1,6 @@
 public class OpenAIOptions
 {
-    public string ServiceType { get; set; } 
+    public string ServiceType { get; set; }
     public string ServiceId { get; set; }
     public string DeploymentOrModelId { get; set; }
     public string EmbeddingDeploymentOrModelId { get; set; }

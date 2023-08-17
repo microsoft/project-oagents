@@ -1,4 +1,4 @@
-public class IssueOrchestrationRequest 
+public class IssueOrchestrationRequest
 {
     public string Org { get; set; }
     public string Repo { get; set; }

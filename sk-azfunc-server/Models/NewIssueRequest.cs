@@ -1,4 +1,4 @@
-public class NewIssueRequest 
+public class NewIssueRequest
 {
     public IssueOrchestrationRequest IssueRequest { get; set; }
     public string Skill { get; set; }

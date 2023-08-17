@@ -17,6 +17,7 @@
     "AzureOptions:FilesShareName":"",
     "AzureOptions:FilesAccountName":"",
     "AzureOptions:FilesAccountKey":"",
+    "AzureOptions:FunctionsFqdn":"http://localhost:7071",
     "OpenAIOptions:ServiceType":"",
     "OpenAIOptions:ServiceId":"",
     "OpenAIOptions:DeploymentOrModelId":"",

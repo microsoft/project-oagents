@@ -1,4 +1,4 @@
-public class CloseIssueRequest 
+public class CloseIssueRequest
 {
     public string InstanceId { get; set; }
     public int CommentId { get; set; }
