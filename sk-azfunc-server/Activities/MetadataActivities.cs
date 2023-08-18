@@ -9,7 +9,7 @@ namespace SK.DevTeam
         [Function(nameof(GetMetadata))]
         public static IActionResult GetMetadata(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "metadata/{key}")] HttpRequest req,
-            [TableInput("Metadata",partitionKey:"{key}" , rowKey: "{key}", Connection = "AzureWebJobsStorage")] IssueMetadata metadata,
+            [TableInput("Metadata", partitionKey: "{key}", rowKey: "{key}", Connection = "AzureWebJobsStorage")] IssueMetadata metadata,
             FunctionContext executionContext)
         {
             return new OkObjectResult(metadata);

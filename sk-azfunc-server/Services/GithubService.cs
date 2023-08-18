@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Octokit;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2007: Do not directly await a Task", Justification = "Durable functions")]
 public class GithubService
 {
     private readonly GithubOptions _githubSettings;

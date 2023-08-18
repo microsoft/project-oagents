@@ -5,6 +5,7 @@
   },
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "FUNCTIONS_FQDN": "localhost:7071",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "AzureWebJobsFeatureFlags": "EnableHttpProxying",
     "SANDBOX_IMAGE" : "mcr.microsoft.com/dotnet/sdk:7.0",
@@ -17,7 +18,6 @@
     "AzureOptions:FilesShareName":"",
     "AzureOptions:FilesAccountName":"",
     "AzureOptions:FilesAccountKey":"",
-    "AzureOptions:FunctionsFqdn":"http://localhost:7071",
     "OpenAIOptions:ServiceType":"",
     "OpenAIOptions:ServiceId":"",
     "OpenAIOptions:DeploymentOrModelId":"",

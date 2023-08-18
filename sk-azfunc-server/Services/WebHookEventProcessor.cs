@@ -12,20 +12,20 @@ using Octokit.Webhooks.Models;
 using Microsoft.SKDevTeam;
 using Microsoft.Extensions.Options;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2007: Do not directly await a Task", Justification = "Durable functions")]
 public class SKWebHookEventProcessor : WebhookEventProcessor
 {
     private readonly IKernel _kernel;
     private readonly ILogger<SKWebHookEventProcessor> _logger;
-    private static HttpClient httpClient = new HttpClient();
     private readonly GithubService _ghService;
-    private readonly AzureOptions _azureOptions;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public SKWebHookEventProcessor(IKernel kernel, ILogger<SKWebHookEventProcessor> logger, GithubService ghService, IOptions<AzureOptions> azureOptions)
+    public SKWebHookEventProcessor(IKernel kernel, ILogger<SKWebHookEventProcessor> logger, GithubService ghService, IHttpClientFactory httpContextFactory)
     {
         _kernel = kernel;
         _logger = logger;
         _ghService = ghService;
-        _azureOptions = azureOptions.Value;
+        _httpClientFactory = httpContextFactory;
     }
     protected override async Task ProcessIssuesWebhookAsync(WebhookHeaders headers, IssuesEvent issuesEvent, IssuesAction action)
     {
@@ -50,8 +50,9 @@ public class SKWebHookEventProcessor : WebhookEventProcessor
                     Input = input
                 };
                 var content = new StringContent(JsonConvert.SerializeObject(issueOrchestrationRequest), Encoding.UTF8, "application/json");
-                // TODO: remove hardcoded url, read from config
-                _ = await httpClient.PostAsync("${_azureOptions.FunctionsFqdn}/api/doit", content);
+                var httpClient = _httpClientFactory.CreateClient("FunctionsClient");
+                await httpClient.PostAsync("doit", content);
+
             }
             else
             {
@@ -61,12 +62,11 @@ public class SKWebHookEventProcessor : WebhookEventProcessor
         }
         else if (issuesEvent.Action == IssuesAction.Closed && issuesEvent.Issue.User.Type.Value == UserType.Bot)
         {
-            // TODO: remove hardcoded url, read from config
-            var metadata = await httpClient.GetFromJsonAsync<IssueMetadata>($"{_azureOptions.FunctionsFqdn}/api/metadata/{org}{repo}{issueNumber}");
+            var httpClient = _httpClientFactory.CreateClient("FunctionsClient");
+            var metadata = await httpClient.GetFromJsonAsync<IssueMetadata>($"metadata/{org}{repo}{issueNumber}");
             var closeIssueRequest = new CloseIssueRequest { InstanceId = metadata.InstanceId, CommentId = metadata.CommentId, Org = org, Repo = repo };
             var content = new StringContent(JsonConvert.SerializeObject(closeIssueRequest), Encoding.UTF8, "application/json");
-            // TODO: remove hardcoded url, read from config
-            _ = await httpClient.PostAsync($"{_azureOptions.FunctionsFqdn}/api/close", content);
+            _ = await httpClient.PostAsync("close", content);
         }
     }
 

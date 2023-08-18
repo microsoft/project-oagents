@@ -5,6 +5,7 @@
   },
   "Values": {
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "FUNCTIONS_FQDN": "http://localhost:7071",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "AzureWebJobsFeatureFlags": "EnableHttpProxying",
     "SANDBOX_IMAGE" : "mcr.microsoft.com/dotnet/sdk:7.0",

@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -53,11 +54,31 @@ public static class Program
                     {
                         configuration.GetSection("QdrantOptions").Bind(settings);
                     });
-
+                services.AddApplicationInsightsTelemetryWorkerService();
+                services.ConfigureFunctionsApplicationInsights();
                 // return JSON with expected lowercase naming
                 services.Configure<JsonSerializerOptions>(options =>
                 {
                     options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                });
+
+
+                services.AddHttpClient("FunctionsClient", client =>
+                {
+                    var fqdn = Environment.GetEnvironmentVariable("FUNCTIONS_FQDN", EnvironmentVariableTarget.Process);
+                    client.BaseAddress = new Uri($"{fqdn}/api/");
+                });
+            })
+            .ConfigureLogging(logging =>
+            {
+                logging.Services.Configure<LoggerFilterOptions>(options =>
+                {
+                    LoggerFilterRule defaultRule = options.Rules.FirstOrDefault(rule => rule.ProviderName
+                        == "Microsoft.Extensions.Logging.ApplicationInsights.ApplicationInsightsLoggerProvider");
+                    if (defaultRule is not null)
+                    {
+                        options.Rules.Remove(defaultRule);
+                    }
                 });
             })
             .Build();

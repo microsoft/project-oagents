@@ -14,6 +14,7 @@ using Octokit.Helpers;
 
 namespace SK.DevTeam
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2007: Do not directly await a Task", Justification = "Durable functions")]
     public class PullRequestActivities
     {
         private readonly AzureOptions _azSettings;
@@ -34,17 +35,18 @@ namespace SK.DevTeam
 
             var share = new ShareClient(connectionString, _azSettings.FilesShareName);
             await share.CreateIfNotExistsAsync();
-
+            await share.GetDirectoryClient($"{request.Directory}").CreateIfNotExistsAsync();
+    
             var parentDir = share.GetDirectoryClient(parentDirName);
             await parentDir.CreateIfNotExistsAsync();
 
             var directory = parentDir.GetSubdirectoryClient(request.SubOrchestrationId);
             await directory.CreateIfNotExistsAsync();
-            
+
             var file = directory.GetFileClient(fileName);
             // hack to enable script to save files in the same directory
             var cwdHack = "#!/bin/bash\n cd $(dirname $0)";
-            var output = request.Extension == "sh"? request.Output.Replace("#!/bin/bash",cwdHack): request.Output;
+            var output = request.Extension == "sh" ? request.Output.Replace("#!/bin/bash", cwdHack) : request.Output;
             using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(output)))
             {
                 await file.CreateAsync(stream.Length);
@@ -52,7 +54,7 @@ namespace SK.DevTeam
                     new HttpRange(0, stream.Length),
                     stream);
             }
-            
+
             return true;
         }
 
@@ -80,7 +82,7 @@ namespace SK.DevTeam
             var client = new ArmClient(new DefaultAzureCredential());
 
             var containerGroupName = $"sk-sandbox-{request.SubOrchestrationId}";
-            var containerName =  $"sk-sandbox-{request.SubOrchestrationId}";
+            var containerName = $"sk-sandbox-{request.SubOrchestrationId}";
             var image = Environment.GetEnvironmentVariable("SANDBOX_IMAGE", EnvironmentVariableTarget.Process);
 
             var resourceGroupResourceId = ResourceGroupResource.CreateResourceIdentifier(_azSettings.SubscriptionId, _azSettings.ContainerInstancesResourceGroup);
@@ -89,7 +91,7 @@ namespace SK.DevTeam
             var scriptPath = $"/azfiles/output/{request.IssueOrchestrationId}/{request.SubOrchestrationId}/run.sh";
 
             var collection = resourceGroupResource.GetContainerGroups();
-            
+
             var data = new ContainerGroupData(new AzureLocation(_azSettings.Location), new ContainerInstanceContainer[]
             {
                     new ContainerInstanceContainer(containerName,image,new ContainerResourceRequirements(new ContainerResourceRequestsContent(1.5,1)))
@@ -103,8 +105,8 @@ namespace SK.DevTeam
                             }
                         },
                     }}, ContainerInstanceOperatingSystemType.Linux)
-                                {
-                                    Volumes =
+            {
+                Volumes =
                                     {
                                         new ContainerVolume("azfiles")
                                         {
@@ -114,10 +116,10 @@ namespace SK.DevTeam
                                             },
                                         },
                                     },
-                                    RestartPolicy = ContainerGroupRestartPolicy.Never,
-                                    Sku = ContainerGroupSku.Standard,
-                                    Priority = ContainerGroupPriority.Regular
-                                };
+                RestartPolicy = ContainerGroupRestartPolicy.Never,
+                Sku = ContainerGroupSku.Standard,
+                Priority = ContainerGroupPriority.Regular
+            };
             await collection.CreateOrUpdateAsync(WaitUntil.Completed, containerGroupName, data);
             // TODO: schedule containerGroup for deletion (separate az function)
             return true;
@@ -128,7 +130,7 @@ namespace SK.DevTeam
         {
             var connectionString = $"DefaultEndpointsProtocol=https;AccountName={_azSettings.FilesAccountName};AccountKey={_azSettings.FilesAccountKey};EndpointSuffix=core.windows.net";
             var ghClient = await _ghService.GetGitHubClient();
-            
+
             var dirName = $"{request.Directory}/{request.IssueOrchestrationId}/{request.SubOrchestrationId}";
             var share = new ShareClient(connectionString, _azSettings.FilesShareName);
             var directory = share.GetDirectoryClient(dirName);
@@ -138,7 +140,7 @@ namespace SK.DevTeam
             while (remaining.Count > 0)
             {
                 var dir = remaining.Dequeue();
-                
+
                 await foreach (var item in dir.GetFilesAndDirectoriesAsync())
                 {
                     if (!item.IsDirectory && item.Name != "run.sh") // we don't want the generated script in the PR
@@ -150,7 +152,7 @@ namespace SK.DevTeam
                         using (var reader = new StreamReader(fileStream, Encoding.UTF8))
                         {
                             var value = reader.ReadToEnd();
-                            
+
                             await ghClient.Repository.Content.CreateFile(
                                     request.Org, request.Repo, filePath,
                                     new CreateFileRequest($"Commit message", value, request.Branch)); // TODO: add more meaningfull commit message
@@ -160,7 +162,7 @@ namespace SK.DevTeam
                         remaining.Enqueue(dir.GetSubdirectoryClient(item.Name));
                 }
             }
-           
+
             return true;
         }
     }

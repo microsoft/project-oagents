@@ -6,8 +6,9 @@ using Octokit;
 
 namespace SK.DevTeam
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2007: Do not directly await a Task", Justification = "Durable functions")]
     public class IssuesActivities
-    {  
+    {
         private readonly GithubService _ghService;
         public IssuesActivities(GithubService githubService)
         {
@@ -66,7 +67,7 @@ namespace SK.DevTeam
                 PageSize = 1,
                 StartPage = 1
             };
-            
+
             var comments = await ghClient.Issue.Comment.GetAllForIssue(request.Org, request.Repo, (int)request.Number, icOptions, apiOptions);
             return comments.First().Body;
         }

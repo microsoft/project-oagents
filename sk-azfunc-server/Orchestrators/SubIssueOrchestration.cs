@@ -4,55 +4,61 @@ using Microsoft.SKDevTeam;
 
 namespace SK.DevTeam
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2007: Do not directly await a Task", Justification = "Durable functions")]
     public static class SubIssueOrchestration
     {
         public static string IssueClosed = "IssueClosed";
-        
+
         private static async Task<SkillResponse<string>> CallSkill(TaskOrchestrationContext context, SkillRequest request)
         {
-            var newIssueResponse = await context.CallActivityAsync<NewIssueResponse>(nameof(IssuesActivities.CreateIssue), new NewIssueRequest{
+            var newIssueResponse = await context.CallActivityAsync<NewIssueResponse>(nameof(IssuesActivities.CreateIssue), new NewIssueRequest
+            {
                 IssueRequest = request.IssueRequest,
                 Skill = request.Skill,
                 Function = request.Function
             });
 
-            var metadata = await context.CallActivityAsync<IssueMetadata>(nameof(MetadataActivities.SaveMetadata), new IssueMetadata {
+            var metadata = await context.CallActivityAsync<IssueMetadata>(nameof(MetadataActivities.SaveMetadata), new IssueMetadata
+            {
                 Number = newIssueResponse.Number,
                 InstanceId = context.InstanceId,
                 Id = Guid.NewGuid().ToString(),
                 CommentId = newIssueResponse.CommentId,
                 Org = request.IssueRequest.Org,
                 Repo = request.IssueRequest.Repo,
-                PartitionKey =$"{request.IssueRequest.Org}{request.IssueRequest.Repo}{newIssueResponse.Number}",
+                PartitionKey = $"{request.IssueRequest.Org}{request.IssueRequest.Repo}{newIssueResponse.Number}",
                 RowKey = $"{request.IssueRequest.Org}{request.IssueRequest.Repo}{newIssueResponse.Number}"
 
             });
             bool issueClosed = await context.WaitForExternalEvent<bool>(IssueClosed);
-            var lastComment = await context.CallActivityAsync<string>(nameof(IssuesActivities.GetLastComment), new IssueOrchestrationRequest {
+            var lastComment = await context.CallActivityAsync<string>(nameof(IssuesActivities.GetLastComment), new IssueOrchestrationRequest
+            {
                 Org = request.IssueRequest.Org,
                 Repo = request.IssueRequest.Repo,
                 Number = newIssueResponse.Number
             });
-            
-            return new SkillResponse<string> { Output = lastComment, SuborchestrationId = context.InstanceId};
+
+            return new SkillResponse<string> { Output = lastComment, SuborchestrationId = context.InstanceId };
         }
 
         [Function(nameof(CreateReadme))]
         public static async Task<SkillResponse<string>> CreateReadme(
         [OrchestrationTrigger] TaskOrchestrationContext context, IssueOrchestrationRequest request)
         {
-            return await CallSkill(context, new SkillRequest {
+            return await CallSkill(context, new SkillRequest
+            {
                 IssueRequest = request,
                 Skill = nameof(PM),
                 Function = nameof(PM.Readme)
-            } );
+            });
         }
 
         [Function(nameof(CreatePlan))]
         public static async Task<SkillResponse<string>> CreatePlan(
         [OrchestrationTrigger] TaskOrchestrationContext context, IssueOrchestrationRequest request)
         {
-            return await CallSkill(context, new SkillRequest {
+            return await CallSkill(context, new SkillRequest
+            {
                 IssueRequest = request,
                 Skill = nameof(DevLead),
                 Function = nameof(DevLead.Plan)
@@ -63,7 +69,8 @@ namespace SK.DevTeam
         public static async Task<SkillResponse<string>> Implement(
         [OrchestrationTrigger] TaskOrchestrationContext context, IssueOrchestrationRequest request)
         {
-            return await CallSkill(context, new SkillRequest {
+            return await CallSkill(context, new SkillRequest
+            {
                 IssueRequest = request,
                 Skill = nameof(Developer),
                 Function = nameof(Developer.Implement)
@@ -75,7 +82,8 @@ namespace SK.DevTeam
         [OrchestrationTrigger] TaskOrchestrationContext context, RunAndSaveRequest request)
         {
             var implementResult = await context.CallSubOrchestratorAsync<SkillResponse<string>>(nameof(Implement), request.Request);
-            await context.CallSubOrchestratorAsync<string>(nameof(AddToPR), new AddToPRRequest {
+            await context.CallSubOrchestratorAsync<string>(nameof(AddToPR), new AddToPRRequest
+            {
                 Output = implementResult.Output,
                 IssueOrchestrationId = request.InstanceId,
                 SubOrchestrationId = implementResult.SuborchestrationId,
@@ -91,7 +99,8 @@ namespace SK.DevTeam
         [OrchestrationTrigger] TaskOrchestrationContext context, RunAndSaveRequest request)
         {
             var readmeResult = await context.CallSubOrchestratorAsync<SkillResponse<string>>(nameof(CreateReadme), request.Request);
-            context.CallSubOrchestratorAsync<string>(nameof(AddToPR), new AddToPRRequest {
+            context.CallSubOrchestratorAsync<string>(nameof(AddToPR), new AddToPRRequest
+            {
                 Output = readmeResult.Output,
                 IssueOrchestrationId = request.InstanceId,
                 SubOrchestrationId = readmeResult.SuborchestrationId,
@@ -106,22 +115,24 @@ namespace SK.DevTeam
         public static async Task<string> AddToPR(
         [OrchestrationTrigger] TaskOrchestrationContext context, AddToPRRequest request)
         {
-            var saveScriptResponse = await context.CallActivityAsync<bool>(nameof(PullRequestActivities.SaveOutput), new SaveOutputRequest{
+            var saveScriptResponse = await context.CallActivityAsync<bool>(nameof(PullRequestActivities.SaveOutput), new SaveOutputRequest
+            {
                 Output = request.Output,
                 IssueOrchestrationId = request.IssueOrchestrationId,
                 SubOrchestrationId = request.SubOrchestrationId,
                 Extension = request.Extension,
                 Directory = "output",
-                FileName = request.RunInSandbox? "run": "readme"
+                FileName = request.RunInSandbox ? "run" : "readme"
             });
 
             if (request.RunInSandbox)
             {
-                 var runScriptResponse = await context.CallActivityAsync<bool>(nameof(PullRequestActivities.RunInSandbox),request);
+                var runScriptResponse = await context.CallActivityAsync<bool>(nameof(PullRequestActivities.RunInSandbox), request);
             }
 
             // this is not ideal, as the script might be still running and there might be files that are not yet generated
-            var commitResponse = await context.CallActivityAsync<bool>(nameof(PullRequestActivities.CommitToGithub), new GHCommitRequest{
+            var commitResponse = await context.CallActivityAsync<bool>(nameof(PullRequestActivities.CommitToGithub), new GHCommitRequest
+            {
                 IssueOrchestrationId = request.IssueOrchestrationId,
                 SubOrchestrationId = request.SubOrchestrationId,
                 Directory = "output",

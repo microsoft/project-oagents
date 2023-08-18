@@ -130,6 +130,7 @@ module skfunc './app/sk-func.bicep' = {
     appSettings: {
       SANDBOX_IMAGE: 'mcr.microsoft.com/dotnet/sdk:7.0'
       AzureWebJobsFeatureFlags: 'EnableHttpProxying'
+      FUNCTIONS_FQDN: 'https://${appName}.azurewebsites.net'
       'GithubOptions__AppKey': githubAppKey
       'GithubOptions__AppId': githubAppId
       'GithubOptions__InstallationId': githubAppInstallationId
@@ -138,7 +139,6 @@ module skfunc './app/sk-func.bicep' = {
       'AzureOptions__ContainerInstancesResourceGroup': rg.name
       'AzureOptions__FilesShareName': aciShare
       'AzureOptions__FilesAccountName': storage.outputs.name
-      'AzureOptions__FunctionsFqdn': 'https://${appName}.azurewebsites.net'
       'OpenAIOptions__ServiceType': openAIServiceType
       'OpenAIOptions__ServiceId': openAIServiceId
       'OpenAIOptions__DeploymentOrModelId': openAIDeploymentId

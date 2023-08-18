@@ -9,6 +9,7 @@ using static SK.DevTeam.SubIssueOrchestration;
 
 namespace SK.DevTeam
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2007: Do not directly await a Task", Justification = "Durable functions")]
     public static class IssueOrchestration
     {
         [Function("IssueOrchestrationStart")]
@@ -18,7 +19,7 @@ namespace SK.DevTeam
             FunctionContext executionContext)
         {
             ILogger logger = executionContext.GetLogger("IssueOrchestration_HttpStart");
-            var request =  await req.ReadFromJsonAsync<IssueOrchestrationRequest>();
+            var request = await req.ReadFromJsonAsync<IssueOrchestrationRequest>();
             string instanceId = await client.ScheduleNewOrchestrationInstanceAsync(
                 nameof(IssueOrchestration), request);
 
@@ -33,34 +34,39 @@ namespace SK.DevTeam
             var logger = context.CreateReplaySafeLogger(nameof(IssueOrchestration));
             var outputs = new List<string>();
 
-            var newGHBranchRequest = new GHNewBranch {
+            var newGHBranchRequest = new GHNewBranch
+            {
                 Org = request.Org,
                 Repo = request.Repo,
                 Branch = request.Branch,
                 Number = request.Number
             };
-            
+
             var newBranch = await context.CallActivityAsync<bool>(nameof(PullRequestActivities.CreateBranch), newGHBranchRequest);
 
-            var readmeTask = await context.CallSubOrchestratorAsync<bool>(nameof(ReadmeAndSave), new RunAndSaveRequest{
+            var readmeTask = await context.CallSubOrchestratorAsync<bool>(nameof(ReadmeAndSave), new RunAndSaveRequest
+            {
                 Request = request,
                 InstanceId = context.InstanceId
             });
 
             var newPR = await context.CallActivityAsync<bool>(nameof(PullRequestActivities.CreatePR), newGHBranchRequest);
-            
-            var planTask =  await context.CallSubOrchestratorAsync<SkillResponse<string>>(nameof(CreatePlan), request);
+
+            var planTask = await context.CallSubOrchestratorAsync<SkillResponse<string>>(nameof(CreatePlan), request);
             var plan = JsonSerializer.Deserialize<DevLeadPlanResponse>(planTask.Output);
-            
-            var implementationTasks = plan.steps.SelectMany(s => s.subtasks.Select(st => 
-                        context.CallSubOrchestratorAsync<bool>(nameof(ImplementAndSave), new RunAndSaveRequest {
-                            Request = new IssueOrchestrationRequest{
-                            Number = request.Number,
-                            Org = request.Org,
-                            Repo = request.Repo,
-                            Input = st.prompt,
+
+            var implementationTasks = plan.steps.SelectMany(s => s.subtasks.Select(st =>
+                        context.CallSubOrchestratorAsync<bool>(nameof(ImplementAndSave), new RunAndSaveRequest
+                        {
+                            Request = new IssueOrchestrationRequest
+                            {
+                                Number = request.Number,
+                                Org = request.Org,
+                                Repo = request.Repo,
+                                Input = st.prompt,
                             },
-                            InstanceId = context.InstanceId })));
+                            InstanceId = context.InstanceId
+                        })));
 
             await Task.WhenAll(implementationTasks);
             return outputs;
