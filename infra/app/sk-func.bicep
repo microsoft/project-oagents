@@ -25,6 +25,18 @@ module api '../core/host/functions.bicep' = {
     runtimeVersion: '7.0'
     storageAccountName: storageAccountName
     scmDoBuildDuringDeployment: false
+    managedIdentity: true
+  }
+}
+
+var contributorRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+
+resource rgContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(subscription().id, resourceGroup().id, contributorRole)
+  properties: {
+    roleDefinitionId: contributorRole
+    principalType: 'ServicePrincipal'
+    principalId: api.outputs.identityPrincipalId
   }
 }
 

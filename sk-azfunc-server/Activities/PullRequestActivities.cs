@@ -36,7 +36,7 @@ namespace SK.DevTeam
             var share = new ShareClient(connectionString, _azSettings.FilesShareName);
             await share.CreateIfNotExistsAsync();
             await share.GetDirectoryClient($"{request.Directory}").CreateIfNotExistsAsync();
-    
+
             var parentDir = share.GetDirectoryClient(parentDirName);
             await parentDir.CreateIfNotExistsAsync();
 
