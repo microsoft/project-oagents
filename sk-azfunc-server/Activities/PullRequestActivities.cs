@@ -122,6 +122,8 @@ namespace SK.DevTeam
             };
             await collection.CreateOrUpdateAsync(WaitUntil.Completed, containerGroupName, data);
             // TODO: schedule containerGroup for deletion (separate az function)
+            // TODO: add logic that waits for Termination of the container and notifies the orchestrator. so it can get ALL the output files in the CommitToGithub action!
+            
             return true;
         }
 
