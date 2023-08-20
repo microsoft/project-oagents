@@ -128,7 +128,8 @@ namespace SK.DevTeam
 
             if (request.RunInSandbox)
             {
-                var newRequest = new RunInSandboxRequest {
+                var newRequest = new RunInSandboxRequest
+                {
                     PrRequest = request,
                     SanboxOrchestrationId = context.InstanceId
                 };

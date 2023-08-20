@@ -5,6 +5,7 @@ using Microsoft.Azure.Functions.Worker;
 
 namespace SK.DevTeam
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2007: Do not directly await a Task", Justification = "Durable functions")]
     public static class MetadataActivities
     {
         [Function(nameof(GetMetadata))]
@@ -20,7 +21,7 @@ namespace SK.DevTeam
         }
 
         [Function(nameof(SaveMetadata))]
-        
+
         public static async Task<IssueMetadata> SaveMetadata(
             [ActivityTrigger] IssueMetadata metadata,
             [TableInput("Metadata", Connection = "AzureWebJobsStorage")] TableClient client,

@@ -1,9 +1,7 @@
-using Azure.Data.Tables;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask.Client;
-using Microsoft.Extensions.Options;
 using Octokit;
 
 namespace SK.DevTeam
@@ -12,7 +10,6 @@ namespace SK.DevTeam
     public class IssuesActivities
     {
         private readonly GithubService _ghService;
-        private readonly AzureOptions _azOptions;
 
         public IssuesActivities(GithubService githubService)
         {
@@ -55,7 +52,7 @@ namespace SK.DevTeam
             await client.RaiseEventAsync(request.InstanceId, SubIssueOrchestration.IssueClosed, true);
         }
 
-        
+
 
         [Function(nameof(GetLastComment))]
         public async Task<string> GetLastComment([ActivityTrigger] IssueOrchestrationRequest request, FunctionContext executionContext)

@@ -85,9 +85,9 @@ namespace SK.DevTeam
         }
 
         [Function(nameof(RunInSandbox))]
-        
+
         public async Task<bool> RunInSandbox(
-            [ActivityTrigger] RunInSandboxRequest request, 
+            [ActivityTrigger] RunInSandboxRequest request,
             [TableInput("ContainersMetadata", Connection = "AzureWebJobsStorage")] TableClient tableClient,
             FunctionContext executionContext)
         {
@@ -197,7 +197,7 @@ namespace SK.DevTeam
         [Function(nameof(Terminated))]
         public async Task<ContainerInstanceMetadata> Terminated(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "container/{name}/terminate")] HttpRequest req,
-            [TableInput("ContainersMetadata",  Connection = "AzureWebJobsStorage")] TableClient tableClient,
+            [TableInput("ContainersMetadata", Connection = "AzureWebJobsStorage")] TableClient tableClient,
             [DurableClient] DurableTaskClient client)
         {
             var containerGroupName = req.RouteValues["name"].ToString();
@@ -224,11 +224,11 @@ namespace SK.DevTeam
             var resourceGroupResource = client.GetResourceGroupResource(resourceGroupResourceId);
 
             var collection = resourceGroupResource.GetContainerGroups();
-            
+
             foreach (var cg in collection.GetAll())
             {
                 var c = await cg.GetAsync();
-                if ( c.Value.Data.ProvisioningState == "Succeeded" 
+                if (c.Value.Data.ProvisioningState == "Succeeded"
                 && c.Value.Data.Containers.First().InstanceView.CurrentState.State == "Terminated")
                 {
                     await cg.DeleteAsync(WaitUntil.Started);
