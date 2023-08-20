@@ -10,7 +10,6 @@ using Octokit.Webhooks.Events.IssueComment;
 using Octokit.Webhooks.Events.Issues;
 using Octokit.Webhooks.Models;
 using Microsoft.SKDevTeam;
-using Microsoft.Extensions.Options;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2007: Do not directly await a Task", Justification = "Durable functions")]
 public class SKWebHookEventProcessor : WebhookEventProcessor
@@ -64,7 +63,7 @@ public class SKWebHookEventProcessor : WebhookEventProcessor
         {
             var httpClient = _httpClientFactory.CreateClient("FunctionsClient");
             var metadata = await httpClient.GetFromJsonAsync<IssueMetadata>($"metadata/{org}{repo}{issueNumber}");
-            var closeIssueRequest = new CloseIssueRequest { InstanceId = metadata.InstanceId, CommentId = metadata.CommentId, Org = org, Repo = repo };
+            var closeIssueRequest = new CloseIssueRequest { InstanceId = metadata.InstanceId, CommentId = metadata.CommentId.Value, Org = org, Repo = repo };
             var content = new StringContent(JsonConvert.SerializeObject(closeIssueRequest), Encoding.UTF8, "application/json");
             _ = await httpClient.PostAsync("close", content);
         }

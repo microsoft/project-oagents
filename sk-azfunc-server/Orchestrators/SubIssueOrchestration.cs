@@ -8,6 +8,7 @@ namespace SK.DevTeam
     public static class SubIssueOrchestration
     {
         public static string IssueClosed = "IssueClosed";
+        public static string ContainerTerminated = "ContainerTerminated";
 
         private static async Task<SkillResponse<string>> CallSkill(TaskOrchestrationContext context, SkillRequest request)
         {
@@ -27,8 +28,8 @@ namespace SK.DevTeam
                 Org = request.IssueRequest.Org,
                 Repo = request.IssueRequest.Repo,
                 PartitionKey = $"{request.IssueRequest.Org}{request.IssueRequest.Repo}{newIssueResponse.Number}",
-                RowKey = $"{request.IssueRequest.Org}{request.IssueRequest.Repo}{newIssueResponse.Number}"
-
+                RowKey = $"{request.IssueRequest.Org}{request.IssueRequest.Repo}{newIssueResponse.Number}",
+                Timestamp = DateTimeOffset.UtcNow
             });
             bool issueClosed = await context.WaitForExternalEvent<bool>(IssueClosed);
             var lastComment = await context.CallActivityAsync<string>(nameof(IssuesActivities.GetLastComment), new IssueOrchestrationRequest
@@ -127,7 +128,12 @@ namespace SK.DevTeam
 
             if (request.RunInSandbox)
             {
-                var runScriptResponse = await context.CallActivityAsync<bool>(nameof(PullRequestActivities.RunInSandbox), request);
+                var newRequest = new RunInSandboxRequest {
+                    PrRequest = request,
+                    SanboxOrchestrationId = context.InstanceId
+                };
+                var runScriptResponse = await context.CallActivityAsync<bool>(nameof(PullRequestActivities.RunInSandbox), newRequest);
+                bool containerTerminated = await context.WaitForExternalEvent<bool>(ContainerTerminated);
             }
 
             // this is not ideal, as the script might be still running and there might be files that are not yet generated

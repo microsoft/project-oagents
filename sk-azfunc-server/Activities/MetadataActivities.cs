@@ -1,3 +1,4 @@
+using Azure.Data.Tables;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -7,20 +8,25 @@ namespace SK.DevTeam
     public static class MetadataActivities
     {
         [Function(nameof(GetMetadata))]
-        public static IActionResult GetMetadata(
+        public static async Task<IActionResult> GetMetadata(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "metadata/{key}")] HttpRequest req,
-            [TableInput("Metadata", partitionKey: "{key}", rowKey: "{key}", Connection = "AzureWebJobsStorage")] IssueMetadata metadata,
+            [TableInput("Metadata", Connection = "AzureWebJobsStorage")] TableClient client,
             FunctionContext executionContext)
         {
+            var key = req.RouteValues["key"].ToString();
+            var metadataResponse = await client.GetEntityAsync<IssueMetadata>(key, key);
+            var metadata = metadataResponse.Value;
             return new OkObjectResult(metadata);
         }
 
         [Function(nameof(SaveMetadata))]
-        [TableOutput("Metadata", Connection = "AzureWebJobsStorage")]
-        public static IssueMetadata SaveMetadata(
+        
+        public static async Task<IssueMetadata> SaveMetadata(
             [ActivityTrigger] IssueMetadata metadata,
+            [TableInput("Metadata", Connection = "AzureWebJobsStorage")] TableClient client,
             FunctionContext executionContext)
         {
+            await client.UpsertEntityAsync(metadata);
             return metadata;
         }
     }

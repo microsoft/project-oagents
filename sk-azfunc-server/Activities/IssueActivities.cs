@@ -1,7 +1,9 @@
+using Azure.Data.Tables;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.DurableTask.Client;
+using Microsoft.Extensions.Options;
 using Octokit;
 
 namespace SK.DevTeam
@@ -10,12 +12,12 @@ namespace SK.DevTeam
     public class IssuesActivities
     {
         private readonly GithubService _ghService;
+        private readonly AzureOptions _azOptions;
+
         public IssuesActivities(GithubService githubService)
         {
             _ghService = githubService;
         }
-
-        public string IssueClosed = "IssueClosed";
 
         [Function(nameof(CreateIssue))]
         public async Task<NewIssueResponse> CreateIssue([ActivityTrigger] NewIssueRequest request, FunctionContext executionContext)
@@ -50,8 +52,10 @@ namespace SK.DevTeam
             var updatedComment = comment.Body.Replace("[ ]", "[x]");
             await ghClient.Issue.Comment.Update(request.Org, request.Repo, request.CommentId, updatedComment);
 
-            await client.RaiseEventAsync(request.InstanceId, IssueClosed, true);
+            await client.RaiseEventAsync(request.InstanceId, SubIssueOrchestration.IssueClosed, true);
         }
+
+        
 
         [Function(nameof(GetLastComment))]
         public async Task<string> GetLastComment([ActivityTrigger] IssueOrchestrationRequest request, FunctionContext executionContext)
