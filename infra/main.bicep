@@ -35,6 +35,9 @@ param containerRegistryName string = ''
 var aciShare = 'acishare'
 var qdrantShare = 'qdrantshare'
 
+var metadataTable = 'Metadata'
+var containerMetadataTable = 'ContainersMetadata'
+
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
@@ -57,6 +60,10 @@ module storage './core/storage/storage-account.bicep' = {
       aciShare
       qdrantShare
    ]
+   tables: [ 
+    metadataTable
+    containerMetadataTable
+    ]
   }
 }
 
