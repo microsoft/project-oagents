@@ -46,10 +46,38 @@ Hit F5 and go to the Ports tab in your codespace, make sure you make the `:7071`
 
 Copy the local address (it will look something like https://foo-bar-7071.preview.app.github.dev) and append `/api/github/webhooks` at the end. Using this value, update the Github App's webhook URL and you are ready to go!
 
+Before you go and have the best of times, there is one last thing left to do - load the Well Architected Framework into the Vector DB. 
+
+For that, we have [Qdrant](https://qdrant.tech/) setup in the Codespace and a project in the `util` folder, called `seed-memory`. We need to fill in the `appsettings.json` file in the `config` folder with the OpenAI details and the Qdrant endpoint, then just run the loader with `dotnet run` and you are ready to go.
 
 ## How do I deploy this to Azure?
 
+This repo is setup to use  [azd](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/overview) to work with the Azure bits. `azd` is installed in the codespace.
+
+Let's start by logging in to Azure using
 ```bash
 azd auth login
-azd up
 ```
+
+After we've logged in, we need to create a new environment and setup the OpenAI and GithubApp config.
+
+```bash
+azd env new dev
+azd env set -e dev GH_APP_ID replace_with_gh_app_id
+azd env set -e dev GH_APP_INST_ID replace_with_inst_id
+azd env set -e dev GH_APP_KEY replace_with_gh_app_key
+azd env set -e dev OAI_DEPLOYMENT_ID replace_with_deployment_id
+azd env set -e dev OAI_EMBEDDING_ID replace_with_embedding_id
+azd env set -e dev OAI_ENDPOINT replace_with_oai_endpoint
+azd env set -e dev OAI_KEY replace_with_oai_key
+azd env set -e dev OAI_SERVICE_ID replace_with_oai_service_id
+azd env set -e dev OAI_SERVICE_TYPE AzureOpenAI
+```
+
+Now that we have all that setup, the only thing left to do is run
+
+```
+azd up -e dev
+```
+
+and wait for the azure components to be provisioned and the app deployed.
