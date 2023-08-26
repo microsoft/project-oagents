@@ -46,9 +46,9 @@ Hit F5 and go to the Ports tab in your codespace, make sure you make the `:7071`
 
 Copy the local address (it will look something like https://foo-bar-7071.preview.app.github.dev) and append `/api/github/webhooks` at the end. Using this value, update the Github App's webhook URL and you are ready to go!
 
-Before you go and have the best of times, there is one last thing left to do - load the Well Architected Framework into the Vector DB. 
+Before you go and have the best of times, there is one last thing left to do [load the WAF into the vector DB](#load-the-waf-into-qdrant)
 
-For that, we have [Qdrant](https://qdrant.tech/) setup in the Codespace and a project in the `util` folder, called `seed-memory`. We need to fill in the `appsettings.json` file in the `config` folder with the OpenAI details and the Qdrant endpoint, then just run the loader with `dotnet run` and you are ready to go.
+
 
 ## How do I deploy this to Azure?
 
@@ -81,3 +81,10 @@ azd up -e dev
 ```
 
 and wait for the azure components to be provisioned and the app deployed.
+
+As the last step, we also need to [load the WAF into the vector DB](#load-the-waf-into-qdrant)
+
+### Load the WAF into Qdrant. 
+
+If you are running the app locally, we have [Qdrant](https://qdrant.tech/) setup in the Codespace and if you are running in Azure, Qdrant is deployed to ACA.
+The loader is a project in the `util` folder, called `seed-memory`. We need to fill in the `appsettings.json` file in the `config` folder with the OpenAI details and the Qdrant endpoint, then just run the loader with `dotnet run` and you are ready to go.
