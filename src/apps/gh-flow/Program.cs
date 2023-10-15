@@ -7,6 +7,7 @@ using Microsoft.SemanticKernel.Connectors.Memory.Qdrant;
 using Microsoft.SemanticKernel.Memory;
 using Octokit.Webhooks;
 using Octokit.Webhooks.AspNetCore;
+using Orleans.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<WebhookEventProcessor, GithubWebHookProcessor>();
@@ -49,28 +50,57 @@ builder.Services.AddSingleton<IManageGithub, GithubService>();
 
 builder.Host.UseOrleans(siloBuilder =>
 {
-    var connectionString = builder.Configuration.GetValue<string>("AzureOptions:CosmosConnectionString");
-    siloBuilder.UseCosmosReminderService( o => 
+    if (builder.Environment.IsDevelopment())
     {
-            o.ConfigureCosmosClient(connectionString);
-            o.ContainerName = "devteam";
-            o.DatabaseName = "reminders";
-            o.IsResourceCreationEnabled = true;
-    });
-    siloBuilder.AddCosmosGrainStorage(
-        name: "messages",
-        configureOptions: o =>
+        var connectionString = builder.Configuration.GetValue<string>("AzureOptions:CosmosConnectionString");
+        siloBuilder.UseCosmosReminderService( o => 
         {
-            o.ConfigureCosmosClient(connectionString);
-            o.ContainerName = "devteam";
-            o.DatabaseName = "persistence";
-            o.IsResourceCreationEnabled = true;
+                o.ConfigureCosmosClient(connectionString);
+                o.ContainerName = "devteam";
+                o.DatabaseName = "reminders";
+                o.IsResourceCreationEnabled = true;
         });
-    siloBuilder.UseLocalhostClustering();
+        siloBuilder.AddCosmosGrainStorage(
+            name: "messages",
+            configureOptions: o =>
+            {
+                o.ConfigureCosmosClient(connectionString);
+                o.ContainerName = "devteam";
+                o.DatabaseName = "persistence";
+                o.IsResourceCreationEnabled = true;
+            });
+        siloBuilder.UseLocalhostClustering();
+    }
+    else
+    {
+        var cosmosDbconnectionString = builder.Configuration.GetValue<string>("AzureOptions:CosmosConnectionString");
+        siloBuilder.Configure<ClusterOptions>(options =>
+        {
+            options.ClusterId = "ai-dev-cluster";
+            options.ServiceId = "ai-dev-cluster";
+        });
+        siloBuilder.UseCosmosClustering(
+            options => options.ConfigureCosmosClient(cosmosDbconnectionString));
+        
+        siloBuilder.UseCosmosReminderService( o => 
+        {
+                o.ConfigureCosmosClient(cosmosDbconnectionString);
+                o.ContainerName = "devteam";
+                o.DatabaseName = "reminders";
+                o.IsResourceCreationEnabled = true;
+        });
+        siloBuilder.AddCosmosGrainStorage(
+            name: "messages",
+            configureOptions: o =>
+            {
+                o.ConfigureCosmosClient(cosmosDbconnectionString);
+                o.ContainerName = "devteam";
+                o.DatabaseName = "persistence";
+                o.IsResourceCreationEnabled = true;
+            });
+    }    
+   
 });
-
-
-
 
 builder.Services.Configure<JsonSerializerOptions>(options =>
 {
