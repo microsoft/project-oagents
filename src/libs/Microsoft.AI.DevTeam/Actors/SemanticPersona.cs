@@ -1,3 +1,5 @@
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Orchestration;
 using Orleans.Runtime;
 
 namespace Microsoft.AI.DevTeam;
@@ -16,6 +18,18 @@ public abstract class SemanticPersona : Grain, IChatHistory
     public async Task<string> GetLastMessage()
     {
         return _state.State.History.Last().Message;
+    }
+
+    protected async Task AddWafContext(IKernel kernel, string ask, ContextVariables context)
+    {
+        var interestingMemories = kernel.Memory.SearchAsync("waf-pages", ask, 2);
+        var wafContext = "Consider the following architectural guidelines:";
+        await foreach (var memory in interestingMemories)
+        {
+            wafContext += $"\n {memory.Metadata.Text}";
+        }
+
+        context.Set("wafContext", wafContext);
     }
 }
 

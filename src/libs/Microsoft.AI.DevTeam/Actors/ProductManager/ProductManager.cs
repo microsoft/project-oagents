@@ -25,6 +25,7 @@ public class ProductManager : SemanticPersona, IManageProduct
             Order = _state.State.History.Count + 1,
             UserType = ChatUserType.User
         });
+        await AddWafContext(_kernel, ask, context);
         context.Set("input", ask);
 
         var result = await _kernel.RunAsync(context, function);
