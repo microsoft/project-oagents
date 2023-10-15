@@ -1,10 +1,10 @@
 using System.Text.Json;
+using Microsoft.AI.DevTeam;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.AI.OpenAI.TextEmbedding;
 using Microsoft.SemanticKernel.Connectors.Memory.Qdrant;
 using Microsoft.SemanticKernel.Memory;
-using MS.AI.DevTeam;
 using Octokit.Webhooks;
 using Octokit.Webhooks.AspNetCore;
 

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\libs\MS.AI.DevTeam\MS.AI.DevTeam.csproj" />
+    <ProjectReference Include="..\..\libs\Microsoft.AI.DevTeam\Microsoft.AI.DevTeam.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
