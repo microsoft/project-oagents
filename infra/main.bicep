@@ -31,6 +31,7 @@ param storageAccountName string = ''
 param containerAppsEnvironmentName string = ''
 param containerRegistryName string = ''
 param ghFlowServiceName string = ''
+param cosmosAccountName string = ''
 
 
 var aciShare = 'acishare'
@@ -162,6 +163,19 @@ module qdrant './core/database/qdrant/qdrant-aca.bicep' = {
 //   }
 // }
 
+
+// The application database
+module cosmos './app/db.bicep' = {
+  name: 'cosmos'
+  scope: rg
+  params: {
+    accountName: !empty(cosmosAccountName) ? cosmosAccountName : '${abbrs.documentDBDatabaseAccounts}${resourceToken}'
+    databaseName: 'devteam'
+    location: location
+    tags: tags
+  }
+}
+
 module ghFlow './app/gh-flow.bicep' = {
   name: 'gh-flow'
   scope: rg
@@ -186,6 +200,7 @@ module ghFlow './app/gh-flow.bicep' = {
     openAIServiceType: openAIServiceType
     qdrantEndpoint: 'https://${qdrant.outputs.fqdn}'
     rgName: rg.name
+    cosmosAccountName: cosmos.outputs.accountName
   }
 }
 

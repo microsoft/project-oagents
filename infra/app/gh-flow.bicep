@@ -11,6 +11,7 @@ param sandboxImage string = 'mcr.microsoft.com/dotnet/sdk:7.0'
 param containerAppsEnvironmentName string
 param containerRegistryName string
 param storageAccountName string
+param cosmosAccountName string
 
 @secure()
 param githubAppKey string
@@ -26,7 +27,6 @@ param openAIEndpoint string
 @secure()
 param openAIKey string
 param qdrantEndpoint string
-param cosmosDb
 
 resource ghFlowIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: identityName
@@ -39,6 +39,10 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
 
 resource storage 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
   name: storageAccountName
+}
+
+resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' existing = {
+  name: cosmosAccountName
 }
 
 module app '../core/host/container-app.bicep' = {
@@ -100,7 +104,7 @@ module app '../core/host/container-app.bicep' = {
       }
       {
         name: 'AzureOptions__CosmosConnectionString'
-        value: storageAccountName
+        value: cosmos.listKeys().primaryMasterKey
       }
       {
         name: 'OpenAIOptions__ServiceType'

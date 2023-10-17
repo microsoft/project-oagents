@@ -9,5 +9,6 @@
     "webServerFarms": "plan-",
     "webSitesFunctions": "func-",
     "appContainerApps": "ca-",
-    "managedIdentityUserAssignedIdentities": "id-"
+    "managedIdentityUserAssignedIdentities": "id-",
+    "documentDBDatabaseAccounts":"cosmos-"
 }
