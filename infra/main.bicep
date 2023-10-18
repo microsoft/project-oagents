@@ -204,8 +204,15 @@ module ghFlow './app/gh-flow.bicep' = {
   }
 }
 
+// Data outputs
+output AZURE_COSMOS_ENDPOINT string = cosmos.outputs.endpoint
+output AZURE_COSMOS_CONNECTION_STRING_KEY string = cosmos.outputs.connectionStringKey
+output AZURE_COSMOS_DATABASE_NAME string = cosmos.outputs.databaseName
+
 // App outputs
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = monitoring.outputs.applicationInsightsConnectionString
+output AZURE_CONTAINER_ENVIRONMENT_NAME string = containerApps.outputs.environmentName
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerApps.outputs.registryLoginServer
+output AZURE_CONTAINER_REGISTRY_NAME string = containerApps.outputs.registryName
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId
-

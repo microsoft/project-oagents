@@ -50,14 +50,15 @@ builder.Services.AddSingleton<IManageGithub, GithubService>();
 
 builder.Host.UseOrleans(siloBuilder =>
 {
+    
     if (builder.Environment.IsDevelopment())
     {
         var connectionString = builder.Configuration.GetValue<string>("AzureOptions:CosmosConnectionString");
         siloBuilder.UseCosmosReminderService( o => 
         {
                 o.ConfigureCosmosClient(connectionString);
-                o.ContainerName = "devteam";
-                o.DatabaseName = "reminders";
+                o.ContainerName = "reminders";
+                o.DatabaseName = "devteam";
                 o.IsResourceCreationEnabled = true;
         });
         siloBuilder.AddCosmosGrainStorage(
@@ -65,8 +66,8 @@ builder.Host.UseOrleans(siloBuilder =>
             configureOptions: o =>
             {
                 o.ConfigureCosmosClient(connectionString);
-                o.ContainerName = "devteam";
-                o.DatabaseName = "persistence";
+                o.ContainerName = "persistence";
+                o.DatabaseName = "devteam";
                 o.IsResourceCreationEnabled = true;
             });
         siloBuilder.UseLocalhostClustering();
@@ -79,8 +80,22 @@ builder.Host.UseOrleans(siloBuilder =>
             options.ClusterId = "ai-dev-cluster";
             options.ServiceId = "ai-dev-cluster";
         });
-        siloBuilder.UseCosmosClustering(
-            options => options.ConfigureCosmosClient(cosmosDbconnectionString));
+        siloBuilder.Configure<SiloMessagingOptions>(options =>
+        {
+            options.ResponseTimeout = TimeSpan.FromMinutes(3);
+            options.SystemResponseTimeout = TimeSpan.FromMinutes(3);
+        });
+         siloBuilder.Configure<ClientMessagingOptions>(options =>
+        {
+            options.ResponseTimeout = TimeSpan.FromMinutes(3);
+        });
+        siloBuilder.UseCosmosClustering( o =>
+            {
+                o.ConfigureCosmosClient(cosmosDbconnectionString);
+                o.ContainerName = "devteam";
+                o.DatabaseName = "clustering";
+                o.IsResourceCreationEnabled = true;
+            });
         
         siloBuilder.UseCosmosReminderService( o => 
         {

@@ -55,8 +55,8 @@ module app '../core/host/container-app.bicep' = {
     identityName: ghFlowIdentity.name
     containerAppsEnvironmentName: containerAppsEnvironmentName
     containerRegistryName: containerRegistryName
-    containerCpuCoreCount: '1.0'
-    containerMemory: '2.0Gi'
+    containerCpuCoreCount: '2.0'
+    containerMemory: '4.0Gi'
     env: [
       {
         name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
@@ -104,7 +104,7 @@ module app '../core/host/container-app.bicep' = {
       }
       {
         name: 'AzureOptions__CosmosConnectionString'
-        value: cosmos.listKeys().primaryMasterKey
+        value: cosmos.listConnectionStrings().connectionStrings[0].connectionString
       }
       {
         name: 'OpenAIOptions__ServiceType'
