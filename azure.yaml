@@ -8,7 +8,3 @@ services:
     host: containerapp
     docker:
       context: ../../../
-  # sk-func:
-  #   project: ./src/apps/gh-flow-df
-  #   language: dotnet
-  #   host: function

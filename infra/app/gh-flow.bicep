@@ -45,6 +45,17 @@ resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' existing = {
   name: cosmosAccountName
 }
 
+var contributorRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+
+resource rgContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(subscription().id, resourceGroup().id, contributorRole)
+  properties: {
+    roleDefinitionId: contributorRole
+    principalType: 'ServicePrincipal'
+    principalId: app.outputs.identityPrincipalId
+  }
+}
+
 module app '../core/host/container-app.bicep' = {
   name: '${serviceName}-ghflow'
   params: {
@@ -85,6 +96,10 @@ module app '../core/host/container-app.bicep' = {
       {
         name: 'AzureOptions__Location'
         value: location
+      }
+      {
+        name: 'AzureOptions__ManagedIdentity'
+        value: ghFlowIdentity.properties.clientId
       }
       {
         name: 'AzureOptions__ContainerInstancesResourceGroup'

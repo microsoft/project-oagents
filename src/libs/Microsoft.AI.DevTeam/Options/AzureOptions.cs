@@ -8,4 +8,5 @@ public class AzureOptions
     public string FilesAccountKey { get; set; }
     public string CosmosConnectionString { get; set; }
     public string SandboxImage { get; set; }
+    public string ManagedIdentity { get; set; }
 }

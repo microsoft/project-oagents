@@ -46,7 +46,10 @@ public class AzureService : IManageAzure
 
     public async Task RunInSandbox(SandboxRequest request)
     {
-        var client = new ArmClient(new DefaultAzureCredential());
+        var client = string.IsNullOrEmpty(_azSettings.ManagedIdentity) ?
+                        new ArmClient(new AzureCliCredential())
+                      : new ArmClient(new ManagedIdentityCredential(_azSettings.ManagedIdentity));
+
         var runId = $"sk-sandbox-{request.Org}-{request.Repo}-{request.ParentIssueNumber}-{request.IssueNumber}";
         var resourceGroupResourceId = ResourceGroupResource.CreateResourceIdentifier(_azSettings.SubscriptionId, _azSettings.ContainerInstancesResourceGroup);
         var resourceGroupResource = client.GetResourceGroupResource(resourceGroupResourceId);
