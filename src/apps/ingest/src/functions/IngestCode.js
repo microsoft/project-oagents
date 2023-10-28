@@ -21,8 +21,7 @@ namespace Foo
           return DateTime.Now.ToString("MM/dd/yyyy");
       }
   }
-}
-`;
+}`;
 const tree = parser.parse(sourceCode);
 
 app.http("IngestCode", {

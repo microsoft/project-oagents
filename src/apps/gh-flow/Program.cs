@@ -128,6 +128,7 @@ app.UseRouting();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapGitHubWebhooks();
+    endpoints.MapControllers();
 });
 
 app.Run();
