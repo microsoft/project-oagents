@@ -12,6 +12,8 @@ using Orleans.Configuration;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<WebhookEventProcessor, GithubWebHookProcessor>();
 builder.Services.AddTransient(CreateKernel);
+builder.Services.AddControllers();
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton(s =>
 {
@@ -130,6 +132,9 @@ app.UseEndpoints(endpoints =>
     endpoints.MapGitHubWebhooks();
     endpoints.MapControllers();
 });
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.Run();
 

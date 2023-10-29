@@ -72,6 +72,13 @@ public class GithubService : IManageGithub
         await _ghClient.Git.Reference.CreateBranch(request.Org, request.Repo, request.Branch, ghRepo.DefaultBranch);
     }
 
+    public async Task<string> GetMainLanguage(string org, string repo)
+    {
+        var languages = await _ghClient.Repository.GetAllLanguages(org, repo);
+        var mainLanguage = languages.OrderByDescending(l => l.NumberOfBytes).First();
+        return mainLanguage.Name;
+    }
+
     public async Task<NewIssueResponse> CreateIssue(CreateIssueRequest request)
     {
         var newIssue = new NewIssue($"{request.Label} chain for #{request.ParentNumber}")
@@ -108,6 +115,22 @@ public class GithubService : IManageGithub
     {
         await _ghClient.Issue.Comment.Create(request.Org, request.Repo, request.Number, request.Content);
     }
+
+    public async Task<IEnumerable<FileResponse>> GetFiles(string org, string repo, string path, Func<RepositoryContent,bool> filter)
+    {
+        var files = await _ghClient.Repository.Content.GetAllContents(org, repo, path);
+        return files.Where(filter).Select(f => new FileResponse
+        {
+            Name = f.Name,
+            Content = f.Content
+        });
+    }
+}
+
+public class FileResponse
+{
+    public string Name { get; set; }
+    public string Content { get; set; }
 }
 
 public interface IManageGithub
