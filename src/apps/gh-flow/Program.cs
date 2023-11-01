@@ -12,8 +12,6 @@ using Orleans.Configuration;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<WebhookEventProcessor, GithubWebHookProcessor>();
 builder.Services.AddTransient(CreateKernel);
-builder.Services.AddControllers();
-builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton(s =>
 {
@@ -45,9 +43,15 @@ builder.Services.AddOptions<QdrantOptions>()
     {
         configuration.GetSection("QdrantOptions").Bind(settings);
     });
+builder.Services.AddOptions<ServiceOptions>()
+    .Configure<IConfiguration>((settings, configuration) =>
+    {
+        configuration.GetSection("ServiceOptions").Bind(settings);
+    });
 
 builder.Services.AddSingleton<IManageAzure, AzureService>();
 builder.Services.AddSingleton<IManageGithub, GithubService>();
+builder.Services.AddSingleton<IAnalyzeCode, CodeAnalyzer>();
 
 
 builder.Host.UseOrleans(siloBuilder =>
@@ -130,11 +134,8 @@ app.UseRouting();
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapGitHubWebhooks();
-    endpoints.MapControllers();
 });
 
-app.UseSwagger();
-app.UseSwaggerUI();
 
 app.Run();
 
