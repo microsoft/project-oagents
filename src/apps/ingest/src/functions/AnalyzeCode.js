@@ -5,30 +5,16 @@ const CSharp = require("tree-sitter-c-sharp");
 const {Query, QueryCursor} = Parser
 const parser = new Parser();
 parser.setLanguage(CSharp);
-const sourceCode = `
-namespace Foo
-{
-  // a class modeling a Dog
-  public class Dog {
-      private string name;
-      // method that gets the name of the Dog
-      public string GetName(){
-          return name;
-      }
-      // a static method getting the current date
-      public static string GetDate()
-      {
-          return DateTime.Now.ToString("MM/dd/yyyy");
-      }
-  }
-}`;
-const tree = parser.parse(sourceCode);
+
+
 
 app.http("AnalyzeCode", {
   methods: ["POST"],
   authLevel: "anonymous",
   handler: async (request, context) => {
     context.log(`Http function processed request for url "${request.url}"`);
+    const sourceCode = request.body.json();
+    const tree = parser.parse(sourceCode.Content);
     const query = new Query(CSharp, `((comment) @method-comment
                                       (method_declaration) @method-declaration )`);
     
@@ -47,7 +33,7 @@ app.http("AnalyzeCode", {
       }
         items.push(item);
     }
-    var result = JSON.stringify(items);
-    return { body: result};
+    
+    return { jsonBody: items};
   },
 });

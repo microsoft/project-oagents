@@ -20,7 +20,7 @@ public class Ingester : SemanticPersona, IIngestRepo
     public async Task IngestionFlow(string org, string repo, string branch)
     {
         var language = await _ghService.GetMainLanguage(org, repo);
-        var files = await _ghService.GetFiles(org, repo, "", branch, Language.Filters[language]);
+        var files = await _ghService.GetFiles(org, repo, branch, Language.Filters[language]);
         foreach (var file in files)
         {
             var codeAnalysis = await _codeAnalyzer.Analyze(file.Content);

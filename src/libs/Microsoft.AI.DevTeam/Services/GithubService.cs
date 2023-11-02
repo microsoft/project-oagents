@@ -116,9 +116,10 @@ public class GithubService : IManageGithub
         await _ghClient.Issue.Comment.Create(request.Org, request.Repo, request.Number, request.Content);
     }
 
-    public async Task<IEnumerable<FileResponse>> GetFiles(string org, string repo, string path, string branch, Func<RepositoryContent,bool> filter)
+    public async Task<IEnumerable<FileResponse>> GetFiles(string org, string repo, string branch, Func<RepositoryContent,bool> filter)
     {
-        var files = await _ghClient.Repository.Content.GetAllContentsByRef(org, repo, path, branch);
+        var files = await _ghClient.Repository.Content.GetAllContentsByRef(org, repo, branch);
+        
         return files.Where(filter).Select(f => new FileResponse
         {
             Name = f.Name,
@@ -143,7 +144,7 @@ public interface IManageGithub
     Task CommitToBranch(CommitRequest request);
 
     Task PostComment(PostCommentRequest request);
-    Task<IEnumerable<FileResponse>> GetFiles(string org, string repo, string path, string branch, Func<RepositoryContent,bool> filter);
+    Task<IEnumerable<FileResponse>> GetFiles(string org, string repo, string branch, Func<RepositoryContent,bool> filter);
     Task<string> GetMainLanguage(string org, string repo);
 }
 

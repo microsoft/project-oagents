@@ -12,6 +12,7 @@ using Orleans.Configuration;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<WebhookEventProcessor, GithubWebHookProcessor>();
 builder.Services.AddTransient(CreateKernel);
+builder.Services.AddHttpClient();
 
 builder.Services.AddSingleton(s =>
 {
