@@ -118,13 +118,30 @@ public class GithubService : IManageGithub
 
     public async Task<IEnumerable<FileResponse>> GetFiles(string org, string repo, string branch, Func<RepositoryContent,bool> filter)
     {
-        var files = await _ghClient.Repository.Content.GetAllContentsByRef(org, repo, branch);
-        
-        return files.Where(filter).Select(f => new FileResponse
+        var items = await _ghClient.Repository.Content.GetAllContentsByRef(org, repo, branch);
+        return await CollectFiles(org, repo, branch, items, filter);
+    }
+
+    private async Task<IEnumerable<FileResponse>> CollectFiles(string org, string repo, string branch, IReadOnlyList<RepositoryContent> items,  Func<RepositoryContent,bool> filter)
+    {
+        var result = new List<FileResponse>();
+        foreach(var item in items)
         {
-            Name = f.Name,
-            Content = f.Content
-        });
+            if (item.Type == ContentType.File && filter(item))
+            {
+                result.Add(new FileResponse
+                {
+                    Name = item.Name,
+                    Content = item.Content
+                });
+            }
+            else if (item.Type == ContentType.Dir)
+            {
+               var subItems = await _ghClient.Repository.Content.GetAllContentsByRef(org, repo,item.Path, branch);
+               result.AddRange(await CollectFiles(org, repo, branch, subItems, filter));
+            }
+        }
+        return result;
     }
 }
 
