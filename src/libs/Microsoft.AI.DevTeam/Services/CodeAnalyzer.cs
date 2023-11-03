@@ -1,4 +1,6 @@
 using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Octokit.Internal;
 
@@ -6,7 +8,7 @@ namespace Microsoft.AI.DevTeam;
 
 public interface IAnalyzeCode 
 {
-    Task<CodeAnalysis> Analyze(string content);
+    Task<IEnumerable<CodeAnalysis>> Analyze(string content);
 }
 public class CodeAnalyzer : IAnalyzeCode
 {
@@ -17,14 +19,17 @@ public class CodeAnalyzer : IAnalyzeCode
     {
         _serviceOptions = serviceOptions.Value;
         _httpClient = httpClient;
+         _httpClient.BaseAddress = new Uri(_serviceOptions.IngesterUrl);
         
     }
-    public async Task<CodeAnalysis> Analyze(string content)
+    public async Task<IEnumerable<CodeAnalysis>> Analyze(string content)
     {
-        _httpClient.BaseAddress = new Uri(_serviceOptions.IngesterUrl);
         var request = new CodeAnalysisRequest { Content = content };
-        var response = await _httpClient.PostAsJsonAsync("AnalyzeCode", request);
-        return await response.Content.ReadFromJsonAsync<CodeAnalysis>();
+        var body = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+        var response = await _httpClient.PostAsync("api/AnalyzeCode", body);
+        var stringResult = await response.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<IEnumerable<CodeAnalysis>>(stringResult);
+        return result;
     }
 }
 

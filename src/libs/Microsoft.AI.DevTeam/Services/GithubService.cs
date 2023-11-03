@@ -12,13 +12,15 @@ public class GithubService : IManageGithub
 {
     private readonly GitHubClient _ghClient;
     private readonly AzureOptions _azSettings;
-    private readonly ILogger<GithubService> logger;
+    private readonly ILogger<GithubService> _logger;
+    private readonly HttpClient _httpClient;
 
-    public GithubService(GitHubClient ghClient, IOptions<AzureOptions> azOptions, ILogger<GithubService> logger)
+    public GithubService(GitHubClient ghClient, IOptions<AzureOptions> azOptions, ILogger<GithubService> logger, HttpClient httpClient)
     {
         _ghClient = ghClient;
         _azSettings = azOptions.Value;
-        this.logger = logger;
+        _logger = logger;
+        _httpClient = httpClient;
     }
 
     public async Task CommitToBranch(CommitRequest request)
@@ -55,7 +57,7 @@ public class GithubService : IManageGithub
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError(ex, $"Error while uploading file {item.Name}");
+                        _logger.LogError(ex, $"Error while uploading file {item.Name}");
                     }
                 }
                 else if (item.IsDirectory)
@@ -129,10 +131,11 @@ public class GithubService : IManageGithub
         {
             if (item.Type == ContentType.File && filter(item))
             {
+               var content = await _httpClient.GetStringAsync(item.DownloadUrl);
                 result.Add(new FileResponse
                 {
                     Name = item.Name,
-                    Content = item.Content
+                    Content = content
                 });
             }
             else if (item.Type == ContentType.Dir)

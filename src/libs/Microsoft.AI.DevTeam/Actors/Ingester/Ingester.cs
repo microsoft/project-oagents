@@ -24,7 +24,9 @@ public class Ingester : SemanticPersona, IIngestRepo
         foreach (var file in files)
         {
             var codeAnalysis = await _codeAnalyzer.Analyze(file.Content);
-            await _kernel.Memory.SaveInformationAsync(MemorySegment, codeAnalysis.CodeBlock, Guid.NewGuid().ToString(), codeAnalysis.Meaning);
+            codeAnalysis.ToList()
+            .ForEach(async c => 
+            await _kernel.Memory.SaveInformationAsync(MemorySegment, c.CodeBlock, Guid.NewGuid().ToString(), c.Meaning));
         }
     }
 }
