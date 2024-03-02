@@ -1,7 +1,7 @@
 
-# sk-dev-team
+# AI Dev team
 
-# Build a Virtual AI Dev Team using Semantic Kernel Skills
+Build a Virtual AI Dev Team using Semantic Kernel Skills
 
 # Goal
 
@@ -10,77 +10,16 @@ The system will present a view that facilitates chain-of-thought coordination ac
 
 ## Status
 
-* You can iterate on building a workflow for your semantic kernel ai dev skills using Elsa Workflows designer and run these workflows to see the results.  The workflows do not yet support adding memory context. 
-* You can use the CLI project to run the SK dev skills from the command line. The CLI supports using the [Microsoft Azure Well-Architected Frameworl](https://learn.microsoft.com/en-us/azure/well-architected/) as memory context for the skill invocations. 
+### TODO
 
 ## Trying it out
 
-### Elsa.SemanticKernel
+Check [the getting started guide](./docs/github-flow-getting-started.md)
 
-SemanticKernel Activity Provider for Elsa Workflows 3.x
 
-The project supports running [Microsoft Semantic Kernel](https://github.com/microsoft/semantic-kernel) Skills as workflows using [Elsa Workflows](https://v3.elsaworkflows.io).  You can build the workflows as .NET code or in the visual designer.
-To run the designer:
+## How to run SK plugins with Elsa workflows
 
-```bash
-> cd WorkflowsApp
-> cp .env_example .env
-# Edit the .env file to choose your AI model, add your API Endpoint, and secrets.
-> . ./.env
-> dotnet build
-> dotnet run
-# Open browser to the URI in the console output
-```
-
-By Default you can use "admin" and "password" to login. Please review [Workflow Security](https://v3.elsaworkflows.io/docs/installation/aspnet-apps-workflow-server) for into on securing the app, using API tokens, and more.
-
-To [invoke](https://v3.elsaworkflows.io/docs/guides/invoking-workflows) a workflow, first it must be "Published". If your workflow has a trigger activity, you can use that. When your workflow is ready, click the "Publish" button. You can also execute the workflow using the API. Then, find the Workflow Definition ID. From a command line, you can use "curl":
-
-```bash
-> curl --location 'https://localhost:5001/elsa/api/workflow-definitions/{workflow_definition_id}/execute' \
---header 'Content-Type: application/json' \
---header 'Authorization: ApiKey {api_key}' \
---data '{
-}'
-```
-
-Once you have the app runing locally, you can login (admin/password - see the [Elsa Workflows](https://v3.elsaworkflows.io) for info about securing). Then you can click "new workflow" to begin building your workflow with semantic kernel skills.
-
-1. Drag workflow Activity blocks into the designer, and examine the settings.
-2. Connect the Activities to specify an order of operations.
-3. You can use Workfflow Variables to pass state between activities.
-   1. Create a Workflow Variable, "MyVariable"
-   2. Click on the Activity that you want to use to populate the variable.
-   3. In the Settings box for the Activity, Click "Output"
-   4. Set the "Output" to the variable chosen.
-   5. Click the Activity that will use the variable. Click on "Settings".
-   6. Find the text box representing the variable that you want to populate, in this case usually "input".
-   7. Click the "..." widget above the text box, and select "javascript"
-   8. Set the value of the text box to
-
-   ```javascript
-   `${getMyVariable()}`
-   ```
-
-   9. Run the workflow.
-
-## Via CLI
-
-The easiest way to run the project is in Codespaces. Codespaces will start a qdrant instance for you.
-
-1. Create a new codespace from the *code* button on the main branch.
-2. Once the code space setup is finished, from the terminal:
-
-```bash
-> cd cli
-cli> cp ../WorkflowsApp/.env_example . 
-# Edit the .env file to choose your AI model, add your API Endpoint, and secrets.
-cli> bash .env
-cli> dotnet build
-cli> dotnet run --file util/ToDoListSamplePrompt.txt do it
-```
-
-You will find the output in the *output/* directory.
+Check [the Workflows page](./docs/elsa-workflows.md)
 
 ## Proposed UX
 
@@ -107,21 +46,7 @@ You will find the output in the *output/* directory.
 
 ## Proposed Architecture
 
-* SK Kernel Service – ASP.NET Core Service with REST API
-* SK Skills:
-  * PM Skill – generates pot, word docs, describing app,
-  * Designer Skill – mockups?
-  * Architect Skill – proposes overall arch
-  * DevLead Skill – proposes task breakdown
-  * CoderSkill – builds code modules for each task
-  * ReviewerSkill – improves code modules
-  * TestSkill – writes tests
-  * Etc
-* Web app: prompt front end and wizard style editor of app
-* Build service sandboxes – using branches and actions/pipelines 1st draft; Alternate – ephemeral build containers
-* Logging service streaming back to azure logs analytics, app insights, and teams channel
-* Deployment service – actions/pipelines driven
-* Azure Dev Skill – lean into azure integrations – crawl the azure estate to inventory a tenant’s existing resources to memory and help inform new code. Eg: you have a large azure sql estate? Ok, most likely you want to wire your new app to one of those dbs, etc….
+[Github flow architecture](./docs/github-flow-architecture.md)
 
 # Contributing
 

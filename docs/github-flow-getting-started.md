@@ -27,7 +27,6 @@ In order for us to know which skill and persona we need to talk with, we are usi
 
 The default bunch of skills and personnas are as follows:
 - PM.Readme
-- PM.BootstrapProject
 - Do.It
 - DevLead.Plan
 - Developer.Implement
@@ -47,7 +46,6 @@ Hit F5 and go to the Ports tab in your codespace, make sure you make the `:7071`
 Copy the local address (it will look something like https://foo-bar-7071.preview.app.github.dev) and append `/api/github/webhooks` at the end. Using this value, update the Github App's webhook URL and you are ready to go!
 
 Before you go and have the best of times, there is one last thing left to do [load the WAF into the vector DB](#load-the-waf-into-qdrant)
-
 
 
 ## How do I deploy this to Azure?
