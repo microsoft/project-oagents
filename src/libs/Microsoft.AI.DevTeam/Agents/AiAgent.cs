@@ -6,14 +6,14 @@ using Orleans.Runtime;
 
 namespace Microsoft.AI.DevTeam;
 
-public abstract class AiAgent : Agent
+public abstract class AiAgent<T> : Agent where T : AgentState
 {
      public AiAgent(
-         [PersistentState("state", "messages")] IPersistentState<AgentState> state)
+         [PersistentState("state", "messages")] IPersistentState<T> state)
     {
         _state = state;
     }
-    protected readonly IPersistentState<AgentState> _state;
+    protected readonly IPersistentState<T> _state;
     protected async Task<ContextVariables> CreateWafContext(ISemanticTextMemory memory, string ask)
     {
         var context = new ContextVariables();
@@ -51,7 +51,6 @@ public abstract class AiAgent : Agent
     }
 }
 
-
 [Serializable]
 public class ChatHistoryItem
 {
@@ -64,7 +63,6 @@ public class ChatHistoryItem
 public class AgentState
 {
     public List<ChatHistoryItem> History { get; set; }
-    public string Understanding { get; set; }
 }
 
 public enum ChatUserType

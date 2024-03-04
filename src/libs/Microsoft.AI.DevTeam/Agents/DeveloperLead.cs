@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace Microsoft.AI.DevTeam;
 [ImplicitStreamSubscription(Consts.MainNamespace)]
-public class DeveloperLead : AiAgent, ILeadDevelopers
+public class DeveloperLead : AiAgent<AgentState>, ILeadDevelopers
 {
     private readonly IKernel _kernel;
     private readonly ISemanticTextMemory _memory;

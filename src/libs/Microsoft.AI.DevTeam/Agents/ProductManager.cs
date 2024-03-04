@@ -8,7 +8,7 @@ using Orleans.Streams;
 namespace Microsoft.AI.DevTeam;
 
 [ImplicitStreamSubscription(Consts.MainNamespace)]
-public class ProductManager : AiAgent, IManageProducts
+public class ProductManager : AiAgent<AgentState>, IManageProducts
 {
     private readonly IKernel _kernel;
     private readonly ISemanticTextMemory _memory;

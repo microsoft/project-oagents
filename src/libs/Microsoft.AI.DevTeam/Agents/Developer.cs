@@ -10,13 +10,13 @@ using Orleans.Streams;
 namespace Microsoft.AI.DevTeam;
 
 [ImplicitStreamSubscription(Consts.MainNamespace)]
-public class Dev : AiAgent, IDevelopApps
+public class Dev : AiAgent<DeveloperState>, IDevelopApps
 {
     private readonly IKernel _kernel;
     private readonly ISemanticTextMemory _memory;
     private readonly ILogger<Dev> _logger;
 
-    public Dev([PersistentState("state", "messages")] IPersistentState<AgentState> state, IKernel kernel, ISemanticTextMemory memory, ILogger<Dev> logger) : base(state)
+    public Dev([PersistentState("state", "messages")] IPersistentState<DeveloperState> state, IKernel kernel, ISemanticTextMemory memory, ILogger<Dev> logger) : base(state)
     {
         _kernel = kernel;
         _memory = memory;
@@ -105,6 +105,11 @@ public class Dev : AiAgent, IDevelopApps
             return default;
         }
     }
+}
+
+public class DeveloperState : AgentState
+{
+    public string Understanding { get; set; }
 }
 
 public interface IDevelopApps
