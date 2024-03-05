@@ -1,20 +1,22 @@
+using Microsoft.AI.DevTeam.Abstractions;
 using Microsoft.AI.DevTeam.Skills;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
+using Microsoft.SemanticKernel.Orchestration;
 using Orleans.Runtime;
 using Orleans.Streams;
 
 namespace Microsoft.AI.DevTeam;
 
 [ImplicitStreamSubscription(Consts.MainNamespace)]
-public class ProductManager : AiAgent<AgentState>, IManageProducts
+public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
 {
     private readonly IKernel _kernel;
     private readonly ISemanticTextMemory _memory;
     private readonly ILogger<ProductManager> _logger;
 
-    public ProductManager([PersistentState("state", "messages")] IPersistentState<AgentState> state, IKernel kernel, ISemanticTextMemory memory, ILogger<ProductManager> logger) : base(state)
+    public ProductManager([PersistentState("state", "messages")] IPersistentState<AgentState<ProductManagerState>> state, IKernel kernel, ISemanticTextMemory memory, ILogger<ProductManager> logger) : base(state)
     {
         _kernel = kernel;
         _memory = memory;
@@ -61,7 +63,8 @@ public class ProductManager : AiAgent<AgentState>, IManageProducts
     {
         try
         {
-            return await CallFunction(PM.Readme, ask, _kernel, _memory);
+            var context = new ContextVariables(ask);
+            return await CallFunction(PM.Readme, ask, context, _kernel, _memory);
         }
         catch (Exception ex)
         {
@@ -74,4 +77,11 @@ public class ProductManager : AiAgent<AgentState>, IManageProducts
 public interface IManageProducts
 {
     public Task<string> CreateReadme(string ask);
+}
+
+[GenerateSerializer]
+public class ProductManagerState
+{
+    [Id(0)]
+    public string Capabilities { get; set; }
 }

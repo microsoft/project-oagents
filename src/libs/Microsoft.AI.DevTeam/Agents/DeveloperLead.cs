@@ -1,27 +1,26 @@
+using Microsoft.AI.DevTeam.Abstractions;
 using Microsoft.AI.DevTeam.Skills;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
+using Microsoft.SemanticKernel.Orchestration;
 using Orleans.Runtime;
 using Orleans.Streams;
 using System.Text.Json;
 
 namespace Microsoft.AI.DevTeam;
 [ImplicitStreamSubscription(Consts.MainNamespace)]
-public class DeveloperLead : AiAgent<AgentState>, ILeadDevelopers
+public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
 {
     private readonly IKernel _kernel;
     private readonly ISemanticTextMemory _memory;
     private readonly ILogger<DeveloperLead> _logger;
 
-    private readonly IManageGithub _ghService;
-
-    public DeveloperLead([PersistentState("state", "messages")] IPersistentState<AgentState> state, IKernel kernel, ISemanticTextMemory memory, ILogger<DeveloperLead> logger, IManageGithub ghService) : base(state)
+    public DeveloperLead([PersistentState("state", "messages")] IPersistentState<AgentState<DeveloperLeadState>> state, IKernel kernel, ISemanticTextMemory memory, ILogger<DeveloperLead> logger) : base(state)
     {
         _kernel = kernel;
         _memory = memory;
         _logger = logger;
-        _ghService = ghService;
     }
 
     public async override Task HandleEvent(Event item, StreamSequenceToken? token)
@@ -65,7 +64,10 @@ public class DeveloperLead : AiAgent<AgentState>, ILeadDevelopers
     {
         try
         {
-            return await CallFunction(DevLead.Plan, ask, _kernel, _memory);
+            // TODO: Ask the architect for the existing high level architecture
+            // as well as the file structure
+            var context = new ContextVariables(ask);
+            return await CallFunction(DevLead.Plan, ask,context, _kernel, _memory);
         }
         catch (Exception ex)
         {
@@ -107,6 +109,7 @@ public class Subtask
     public string prompt { get; set; }
 }
 
-
-
-
+public class DeveloperLeadState
+{
+    public string Plan { get; set; }
+}

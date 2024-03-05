@@ -136,20 +136,6 @@ public class GithubService : IManageGithub
         }
     }
 
-    public async Task MarkTaskComplete(string org, string repo, int commentId)
-    {
-        try
-        {
-            var comment = await _ghClient.Issue.Comment.Get(org, repo, commentId);
-            var updatedComment = comment.Body.Replace("[ ]", "[x]");
-            await _ghClient.Issue.Comment.Update(org, repo, commentId, updatedComment);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error marking task complete");
-        }
-    }
-
     public async Task PostComment(string org, string repo, long issueNumber, string comment)
     {
         try
@@ -217,7 +203,6 @@ public class FileResponse
 public interface IManageGithub
 {
     Task<int> CreateIssue(string org, string repo, string input, string function, long parentNumber);
-    Task MarkTaskComplete(string org, string repo, int commentId);
 
     Task CreatePR(string org, string repo, long number, string branch);
     Task CreateBranch(string org, string repo, string branch);
@@ -226,13 +211,4 @@ public interface IManageGithub
     Task PostComment(string org, string repo, long issueNumber, string comment);
     Task<IEnumerable<FileResponse>> GetFiles(string org, string repo, string branch, Func<RepositoryContent, bool> filter);
     Task<string> GetMainLanguage(string org, string repo);
-}
-
-[GenerateSerializer]
-public class NewIssueResponse
-{
-    [Id(0)]
-    public int IssueNumber { get; set; }
-    [Id(1)]
-    public int CommentId { get; set; }
 }

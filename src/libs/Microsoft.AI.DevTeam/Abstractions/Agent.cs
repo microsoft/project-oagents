@@ -1,7 +1,7 @@
 using Orleans.Runtime;
 using Orleans.Streams;
 
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.AI.DevTeam.Abstractions;
 
 public abstract class Agent : Grain, IGrainWithStringKey
 {
