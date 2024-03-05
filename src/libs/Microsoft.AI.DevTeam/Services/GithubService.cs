@@ -139,21 +139,6 @@ public class GithubService : IManageGithub
         }
     }
 
-    public async Task MarkTaskComplete(string org, string repo, int commentId)
-    {
-        try
-        {
-            var comment = await _ghClient.Issue.Comment.Get(org, repo, commentId);
-            var updatedComment = comment.Body.Replace("[ ]", "[x]");
-            await _ghClient.Issue.Comment.Update(org, repo, commentId, updatedComment);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error marking task complete");
-             throw;
-        }
-    }
-
     public async Task PostComment(string org, string repo, long issueNumber, string comment)
     {
         try
