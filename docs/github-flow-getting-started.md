@@ -3,6 +3,7 @@
 - Access to gpt3.5-turbo or preferably gpt4 - [Get access here](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview#how-do-i-get-access-to-azure-openai)
 - [Setup a Github app](#how-do-i-setup-the-github-app)
 - [Install the Github app](https://docs.github.com/en/apps/using-github-apps/installing-your-own-github-app)
+- [Provision the azure resources](#how-do-I-deploy-the-azure-bits)
 - [Create labels for the dev team skills](#which-labels-should-i-create)
 
 ### How do I setup the Github app?
@@ -36,10 +37,12 @@ Once you start adding your own skills, just remember to add the corresponding La
 ## How do I run this locally?
 
 Codespaces are preset for this repo.
+Start by creating a codespace
 
-Create a codespace and once the codespace is created, make sure to fill in the `appsettings.json` file, located in the `src\apps\gh-flow` folder.
+![Alt text](./images/new-codespace.png)
 
-There is a `appsettings.local.template.json` you can copy and fill in, containing comments on the different config values.
+and fill in the `appsettings.json` file, located in the `src\apps\gh-flow` folder.
+There is a `appsettings.local.template.json` which you can copy and fill in, containing comments on the different config values.
 
 In the Explorer tab in VS Code, find the Solution explorer, right click on the `gh-flow` project and click Debug -> Start new instance
 
@@ -47,7 +50,7 @@ In the Explorer tab in VS Code, find the Solution explorer, right click on the `
 
 We'll need to expose the running application to the GH App webhooks, for example using [DevTunnels](https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/overview), but any tool like ngrok can also work.
 The following commands will create a persistent tunnel, so we need to only do this once:
-```
+```bash
 TUNNEL_NAME=_name_yout_tunnel_here_
 devtunnel user login
 devtunnel create -a $TUNNEL_NAME
@@ -55,7 +58,7 @@ devtunnel port create -p 5244 $TUNNEL_NAME
 ```
 and once we have the tunnel created we can just start forwarding with the following command:
 
-```
+```bash
 devtunnel host $TUNNEL_NAME
 ```
 
@@ -64,7 +67,6 @@ Copy the local address (it will look something like https://yout_tunnel_name.euw
 Before you go and have the best of times, there is one last thing left to do [load the WAF into the vector DB](#load-the-waf-into-qdrant)
 
 Also, since this project is relying on Orleans for the Agents implementation, there is a [dashboard](https://github.com/OrleansContrib/OrleansDashboard) available at https://yout_tunnel_name.euw.devtunnels.ms/dashboard, with useful metrics and stats related to the running Agents.
-
 
 ## How do I deploy the azure bits?
 
@@ -78,10 +80,15 @@ azd auth login
 After we've logged in, we need to create a new environment provision the azure bits.
 
 ```bash
-azd env new dev
-azd provision -e dev
+ENVIRONMENT=_name_of_your_env
+azd env new $ENVIRONMENT
+azd provision -e $ENVIRONMENT
 ```
+After the provisioning is done, you can inspect the outputs with the following command
 
+```bash
+azd env get-values -e dev
+```
 As the last step, we also need to [load the WAF into the vector DB](#load-the-waf-into-qdrant)
 
 ### Load the WAF into Qdrant. 
