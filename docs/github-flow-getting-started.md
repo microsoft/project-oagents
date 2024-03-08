@@ -8,18 +8,18 @@
 
 ### How do I setup the Github app?
 
-- [Register a Github app](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app).
-- Setup the following permissions
-    - Repository 
-        - Contents - read and write
-        - Issues - read and write
-        - Metadata - read only
-        - Pull requests - read and write
-- Subscribe to the following events:
-    - Issues
-    - Issue comment
-- Allow this app to be installed by any user or organization
-- Add a dummy value for the webhook url, we'll come back to this setting
+- [Register a Github app](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app), with the options listed above
+    - Setup the following permissions
+        - Repository 
+            - Contents - read and write
+            - Issues - read and write
+            - Metadata - read only
+            - Pull requests - read and write
+    - Subscribe to the following events:
+        - Issues
+        - Issue comment
+    - Allow this app to be installed by any user or organization
+    - Add a dummy value for the webhook url, we'll come back to this setting
 - After the app is created, generate a private key, we'll use it later for authentication to Github from the app
 
 ### Which labels should I create?
