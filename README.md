@@ -1,21 +1,25 @@
 
-# AI Dev team
+# Ai Agents
 
-Build a Virtual AI Dev Team using Semantic Kernel Skills
+Build an Dev Team using event driven agents
 
-# Goal
+# Background - initial idea
 
 From a natural language specification, set out to integrate a team of AI copilot skills into your team’s dev process, either for discrete tasks on an existing repo (unit tests, pipeline expansions, PRs for specific intents), developing a new feature, or even building an application from scratch.  Starting from an existing repo and a broad statement of intent, work with multiple AI copilot dev skills, each of which has a different emphasis - from architecture, to task breakdown, to plans for individual tasks, to code output, code review, efficiency, documentation, build, writing tests, setting up pipelines, deployment, integration tests, and then validation.
 The system will present a view that facilitates chain-of-thought coordination across multiple trees of reasoning with the dev team skills.
 
-## Status
+# Emerging framework - Ai Agents
+
+
+# Github dev agents demo
 
 ### TODO
 
-## Trying it out
+# How to run the Github dev agents locally
 
 Check [the getting started guide](./docs/github-flow-getting-started.md)
 
+# Other scenarios using the AiAgents
 
 ## How to run SK plugins with Elsa workflows
 
