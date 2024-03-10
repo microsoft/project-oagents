@@ -20,6 +20,7 @@
         - Issue comment
     - Allow this app to be installed by any user or organization
     - Add a dummy value for the webhook url, we'll come back to this setting
+    - Enter a webhook secret, which you'll need later on when filling in the `WebhookSecret` property in the `appsettings.json` file
 - After the app is created, generate a private key, we'll use it later for authentication to Github from the app
 
 ### Which labels should I create?
