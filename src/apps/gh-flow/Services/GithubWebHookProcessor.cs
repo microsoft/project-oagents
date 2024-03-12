@@ -27,7 +27,7 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
         try
         {
             _logger.LogInformation("Processing issue event");
-            var org = issuesEvent.Organization.Login;
+            var org = issuesEvent.Repository.Owner.Login;
             var repo = issuesEvent.Repository.Name;
             var issueNumber = issuesEvent.Issue.Number;
             var input = issuesEvent.Issue.Body;
@@ -66,7 +66,7 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
         try
         {
             _logger.LogInformation("Processing issue comment event");
-            var org = issueCommentEvent.Organization.Login;
+            var org = issueCommentEvent.Repository.Owner.Login;
             var repo = issueCommentEvent.Repository.Name;
             var issueNumber = issueCommentEvent.Issue.Number;
             var input = issueCommentEvent.Issue.Body;
