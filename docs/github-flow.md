@@ -1,5 +1,7 @@
-# How does the event flow look like?
+# Demo
+https://github.com/microsoft/azure-openai-dev-skills-orchestrator/assets/10728102/cafb1546-69ab-4c27-aaf5-1968313d637f
 
+# How does the event flow look like?
 ```mermaid
 graph TD;
     NEA([NewAsk event]) -->|Hubber| NEA1[Creation of PM issue, DevLead issue, and new branch];
