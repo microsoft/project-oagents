@@ -232,12 +232,3 @@ public interface IManageGithub
     Task<IEnumerable<FileResponse>> GetFiles(string org, string repo, string branch, Func<RepositoryContent, bool> filter);
     Task<string> GetMainLanguage(string org, string repo);
 }
-
-[GenerateSerializer]
-public class NewIssueResponse
-{
-    [Id(0)]
-    public int IssueNumber { get; set; }
-    [Id(1)]
-    public int CommentId { get; set; }
-}

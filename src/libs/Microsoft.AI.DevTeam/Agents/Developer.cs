@@ -1,3 +1,4 @@
+using Microsoft.AI.DevTeam.Abstractions;
 using Microsoft.AI.DevTeam.Skills;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
@@ -10,13 +11,13 @@ using Orleans.Streams;
 namespace Microsoft.AI.DevTeam;
 
 [ImplicitStreamSubscription(Consts.MainNamespace)]
-public class Dev : AiAgent, IDevelopApps
+public class Dev : AzureAiAgent<DeveloperState>, IDevelopApps
 {
     private readonly IKernel _kernel;
     private readonly ISemanticTextMemory _memory;
     private readonly ILogger<Dev> _logger;
 
-    public Dev([PersistentState("state", "messages")] IPersistentState<AgentState> state, IKernel kernel, ISemanticTextMemory memory, ILogger<Dev> logger) : base(state)
+    public Dev([PersistentState("state", "messages")] IPersistentState<AgentState<DeveloperState>> state, IKernel kernel, ISemanticTextMemory memory, ILogger<Dev> logger) : base(state)
     {
         _kernel = kernel;
         _memory = memory;
@@ -29,29 +30,31 @@ public class Dev : AiAgent, IDevelopApps
         {
             case EventType.CodeGenerationRequested:
                 var code = await GenerateCode(item.Message);
-                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event {
-                     Type = EventType.CodeGenerated,
-                        Data = new Dictionary<string, string> {
+                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
+                {
+                    Type = EventType.CodeGenerated,
+                    Data = new Dictionary<string, string> {
                             { "org", item.Data["org"] },
                             { "repo", item.Data["repo"] },
                             { "issueNumber", item.Data["issueNumber"] },
                             { "code", code }
                         },
-                       Message = code
+                    Message = code
                 });
                 break;
             case EventType.CodeChainClosed:
                 var lastCode = _state.State.History.Last().Message;
-                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event {
-                     Type = EventType.CodeCreated,
-                        Data = new Dictionary<string, string> {
+                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
+                {
+                    Type = EventType.CodeCreated,
+                    Data = new Dictionary<string, string> {
                             { "org", item.Data["org"] },
                             { "repo", item.Data["repo"] },
                             { "issueNumber", item.Data["issueNumber"] },
                             { "code", lastCode },
                             { "parentNumber", item.Data["parentNumber"] }
                         },
-                       Message = lastCode
+                    Message = lastCode
                 });
                 break;
             default:
@@ -63,7 +66,9 @@ public class Dev : AiAgent, IDevelopApps
     {
         try
         {
-            return await CallFunction(Developer.Implement, ask, _kernel, _memory);
+            // TODO: ask the architect for the high level architecture as well as the files structure of the project
+            var context = new ContextVariables(AppendChatHistory(ask));
+            return await CallFunction(Developer.Implement, ask, context, _kernel, _memory);
         }
         catch (Exception ex)
         {
@@ -84,13 +89,13 @@ public class Dev : AiAgent, IDevelopApps
             var explainMesage = explainResult.ToString();
 
             var consolidateContext = new ContextVariables();
-            consolidateContext.Set("input", _state.State.Understanding);
+            consolidateContext.Set("input", _state.State.Data.Understanding);
             consolidateContext.Set("newUnderstanding", explainMesage);
 
             var consolidateResult = await _kernel.RunAsync(consolidateContext, consolidateFunction);
             var consolidateMessage = consolidateResult.ToString();
 
-            _state.State.Understanding = consolidateMessage;
+            _state.State.Data.Understanding = consolidateMessage;
             await _state.WriteStateAsync();
 
             return new UnderstandingResult
@@ -105,6 +110,13 @@ public class Dev : AiAgent, IDevelopApps
             return default;
         }
     }
+}
+
+[GenerateSerializer]
+public class DeveloperState
+{
+    [Id(0)]
+    public string Understanding { get; set; }
 }
 
 public interface IDevelopApps
