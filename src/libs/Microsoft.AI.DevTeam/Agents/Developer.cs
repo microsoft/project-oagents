@@ -67,7 +67,7 @@ public class Dev : AzureAiAgent<DeveloperState>, IDevelopApps
         try
         {
             // TODO: ask the architect for the high level architecture as well as the files structure of the project
-            var context = new ContextVariables(ask);
+            var context = new ContextVariables(AppendChatHistory(ask));
             return await CallFunction(Developer.Implement, ask, context, _kernel, _memory);
         }
         catch (Exception ex)

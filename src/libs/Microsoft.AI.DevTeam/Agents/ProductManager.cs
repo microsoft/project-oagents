@@ -63,7 +63,7 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
     {
         try
         {
-            var context = new ContextVariables(ask);
+            var context = new ContextVariables(AppendChatHistory(ask));
             return await CallFunction(PM.Readme, ask, context, _kernel, _memory);
         }
         catch (Exception ex)

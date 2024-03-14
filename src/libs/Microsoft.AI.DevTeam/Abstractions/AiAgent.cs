@@ -27,11 +27,16 @@ public abstract class AiAgent<T> : Agent
         });
     }
 
+     protected string AppendChatHistory(string ask)
+    {
+        AddToHistory(ask, ChatUserType.User);
+        return string.Join("\n",_state.State.History.Select(message=> $"{message.UserType}: {message.Message}"));
+    }
+
     protected virtual async Task<string> CallFunction(string template, string ask, ContextVariables context, IKernel kernel, ISemanticTextMemory memory)
     {
         var function = kernel.CreateSemanticFunction(template, new OpenAIRequestSettings { MaxTokens = 15000, Temperature = 0.8, TopP = 1 });
         var result = (await kernel.RunAsync(context, function)).ToString();
-        AddToHistory(ask, ChatUserType.User);
         AddToHistory(result, ChatUserType.Agent);
         await _state.WriteStateAsync();
         return result;

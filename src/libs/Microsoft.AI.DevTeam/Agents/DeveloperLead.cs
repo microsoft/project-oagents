@@ -66,7 +66,7 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
         {
             // TODO: Ask the architect for the existing high level architecture
             // as well as the file structure
-            var context = new ContextVariables(ask);
+            var context =new ContextVariables(AppendChatHistory(ask));
             return await CallFunction(DevLead.Plan, ask,context, _kernel, _memory);
         }
         catch (Exception ex)
