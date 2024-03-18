@@ -497,3 +497,4 @@ sk-azfunc-server/local.settings.json
 .azure
 temp
 
+.mono

@@ -1,7 +1,6 @@
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.AI.OpenAI;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Memory;
-using Microsoft.SemanticKernel.Orchestration;
 using Orleans.Runtime;
 
 namespace Microsoft.AI.DevTeam;
@@ -14,18 +13,18 @@ public abstract class AiAgent : Agent
         _state = state;
     }
     protected readonly IPersistentState<AgentState> _state;
-    protected async Task<ContextVariables> CreateWafContext(ISemanticTextMemory memory, string ask)
+    protected async Task<KernelArguments> CreateWafContext(/*ISemanticTextMemory memory,*/ string ask)
     {
-        var context = new ContextVariables();
-        var interestingMemories = memory.SearchAsync("waf-pages", ask, 2);
+       // var interestingMemories = memory.SearchAsync("waf-pages", ask, 2);
         var wafContext = "Consider the following architectural guidelines:";
-        await foreach (var m in interestingMemories)
-        {
-            wafContext += $"\n {m.Metadata.Text}";
-        }
-        context.Set("input", ask);
-        context.Set("wafContext", wafContext);
-        return context;
+        // await foreach (var m in interestingMemories)
+        // {
+        //     wafContext += $"\n {m.Metadata.Text}";
+        // }
+        return new KernelArguments{
+            ["input"] = ask,
+            ["wafContext"] = wafContext
+         };
     }
 
     protected void AddToHistory(string message, ChatUserType userType)
@@ -39,11 +38,11 @@ public abstract class AiAgent : Agent
         });
     }
 
-    protected async Task<string> CallFunction(string template, string ask, IKernel kernel, ISemanticTextMemory memory)
+    protected async Task<string> CallFunction(string template, string ask, Kernel kernel/*, ISemanticTextMemory memory*/)
     {
-            var function = kernel.CreateSemanticFunction(template, new OpenAIRequestSettings { MaxTokens = 15000, Temperature = 0.8, TopP = 1 });
-            var context = await CreateWafContext(memory, ask);
-            var result = (await kernel.RunAsync(context, function)).ToString();
+            var function = kernel.CreateFunctionFromPrompt(template, new OpenAIPromptExecutionSettings { MaxTokens = 15000, Temperature = 0.8, TopP = 1 });
+            var context =await CreateWafContext(ask); //await CreateWafContext(memory, ask);
+            var result = (await kernel.InvokeAsync(function, context)).ToString();
             AddToHistory(ask, ChatUserType.User);
             AddToHistory(result, ChatUserType.Agent);
             await _state.WriteStateAsync();

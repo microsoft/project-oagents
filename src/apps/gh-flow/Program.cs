@@ -4,20 +4,16 @@ using Azure.AI.OpenAI;
 using Microsoft.AI.DevTeam;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.AI.OpenAI;
-using Microsoft.SemanticKernel.Connectors.Memory.Qdrant;
-using Microsoft.SemanticKernel.Memory;
-using Microsoft.SemanticKernel.Plugins.Memory;
-using Microsoft.SemanticKernel.Reliability.Basic;
 using Octokit.Webhooks;
 using Octokit.Webhooks.AspNetCore;
 using Azure.Identity;
 using Microsoft.Extensions.Azure;
+using Microsoft.Extensions.Http.Resilience;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<WebhookEventProcessor, GithubWebHookProcessor>();
 builder.Services.AddTransient(CreateKernel);
-builder.Services.AddTransient(CreateMemory);
+// builder.Services.AddTransient(CreateMemory);
 builder.Services.AddHttpClient();
 
 builder.Services.AddSingleton(s =>
@@ -98,48 +94,21 @@ app.Map("/dashboard", x => x.UseOrleansDashboard());
 
 app.Run();
 
-static ISemanticTextMemory CreateMemory(IServiceProvider provider)
+static Kernel CreateKernel(IServiceProvider provider)
 {
     var openAiConfig = provider.GetService<IOptions<OpenAIOptions>>().Value;
-    var qdrantConfig = provider.GetService<IOptions<QdrantOptions>>().Value;
-
-    var loggerFactory = LoggerFactory.Create(builder =>
-    {
-        builder
-            .SetMinimumLevel(LogLevel.Debug)
-            .AddConsole()
-            .AddDebug();
-    });
-
-    var memoryBuilder = new MemoryBuilder();
-    return memoryBuilder.WithLoggerFactory(loggerFactory)
-                 .WithQdrantMemoryStore(qdrantConfig.Endpoint, qdrantConfig.VectorSize)
-                 .WithAzureTextEmbeddingGenerationService(openAiConfig.EmbeddingDeploymentOrModelId, openAiConfig.Endpoint, openAiConfig.ApiKey)
-                 .Build();
-}
-
-static IKernel CreateKernel(IServiceProvider provider)
-{
-    var openAiConfig = provider.GetService<IOptions<OpenAIOptions>>().Value;
-
-    var loggerFactory = LoggerFactory.Create(builder =>
-    {
-        builder
-            .SetMinimumLevel(LogLevel.Debug)
-            .AddConsole()
-            .AddDebug();
-    });
-
     var clientOptions = new OpenAIClientOptions();
     clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
     var openAIClient = new OpenAIClient(new Uri(openAiConfig.Endpoint), new AzureKeyCredential(openAiConfig.ApiKey), clientOptions);
-
-    return new KernelBuilder()
-                        .WithLoggerFactory(loggerFactory)
-                        .WithAzureChatCompletionService(openAiConfig.DeploymentOrModelId, openAIClient)
-                        .WithRetryBasic(new BasicRetryConfig
-                        {
-                            MaxRetryCount = 5,
-                            UseExponentialBackoff = true
-                        }).Build();
+    var builder = Kernel.CreateBuilder();
+    builder.Services.AddLogging( c=> c.AddConsole().AddDebug().SetMinimumLevel(LogLevel.Debug));
+    builder.Services.AddAzureOpenAIChatCompletion(openAiConfig.DeploymentOrModelId, openAIClient);
+    builder.Services.ConfigureHttpClientDefaults(c=>
+    {
+        c.AddStandardResilienceHandler().Configure( o=> {
+            o.Retry.MaxRetryAttempts = 5;
+            o.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
+        });
+    });
+    return builder.Build();
 }
