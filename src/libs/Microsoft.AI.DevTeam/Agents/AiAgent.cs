@@ -38,12 +38,19 @@ public abstract class AiAgent : Agent
         });
     }
 
+    protected string GetChatHistory()
+    {
+        return string.Join("\n",_state.State.History.Select(message=> $"{message.UserType}: {message.Message}"));
+    }
+
     protected async Task<string> CallFunction(string template, string ask, Kernel kernel/*, ISemanticTextMemory memory*/)
     {
             var function = kernel.CreateFunctionFromPrompt(template, new OpenAIPromptExecutionSettings { MaxTokens = 15000, Temperature = 0.8, TopP = 1 });
-            var context =await CreateWafContext(ask); //await CreateWafContext(memory, ask);
-            var result = (await kernel.InvokeAsync(function, context)).ToString();
             AddToHistory(ask, ChatUserType.User);
+            var history = GetChatHistory();
+            var context =await CreateWafContext(ask); //await CreateWafContext(memory, history);
+            var result = (await kernel.InvokeAsync(function, context)).ToString();
+            
             AddToHistory(result, ChatUserType.Agent);
             await _state.WriteStateAsync();
             return result;
