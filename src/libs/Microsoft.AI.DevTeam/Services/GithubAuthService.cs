@@ -18,17 +18,17 @@ public class GithubAuthService
         _logger = logger;
     }
 
-    public string GenerateJwtToken()
+    public string GenerateJwtToken(string appId, string appKey, int minutes)
     {
-        var rsa = RSA.Create();
-        rsa.ImportFromPem(_githubSettings.AppKey);
+        using var rsa = RSA.Create();
+        rsa.ImportFromPem(appKey);
         var securityKey = new RsaSecurityKey(rsa);
 
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.RsaSha256);
 
         var now = DateTime.UtcNow;
         var iat = new DateTimeOffset(now).ToUnixTimeSeconds();
-        var exp = new DateTimeOffset(now.AddMinutes(10)).ToUnixTimeSeconds();
+        var exp = new DateTimeOffset(now.AddMinutes(minutes)).ToUnixTimeSeconds();
 
         var claims = new[] {
             new Claim(JwtRegisteredClaimNames.Iat, iat.ToString(), ClaimValueTypes.Integer64),
@@ -36,7 +36,7 @@ public class GithubAuthService
         };
 
         var token = new JwtSecurityToken(
-            issuer: _githubSettings.AppId.ToString(),
+            issuer: appId,
             claims: claims,
             expires: DateTime.Now.AddMinutes(10),
             signingCredentials: credentials
@@ -49,7 +49,7 @@ public class GithubAuthService
     {
         try
         {
-            var jwtToken = GenerateJwtToken();
+            var jwtToken = GenerateJwtToken(_githubSettings.AppId.ToString(), _githubSettings.AppKey, 10);
             var appClient = new GitHubClient(new ProductHeaderValue("SK-DEV-APP"))
             {
                 Credentials = new Credentials(jwtToken, AuthenticationType.Bearer)

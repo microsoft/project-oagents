@@ -1,5 +1,6 @@
 using Microsoft.AI.DevTeam.Skills;
 using Microsoft.Extensions.Logging;
+using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
@@ -11,13 +12,12 @@ namespace Microsoft.AI.DevTeam;
 public class Dev : AiAgent, IDevelopApps
 {
     private readonly Kernel _kernel;
-    // private readonly ISemanticTextMemory _memory;
     private readonly ILogger<Dev> _logger;
 
-    public Dev([PersistentState("state", "messages")] IPersistentState<AgentState> state, Kernel kernel, /*ISemanticTextMemory memory,*/ ILogger<Dev> logger) : base(state)
+    public Dev([PersistentState("state", "messages")] IPersistentState<AgentState> state, Kernel kernel, IKernelMemory memory, ILogger<Dev> logger) 
+    : base(state, memory)
     {
         _kernel = kernel;
-        //_memory = memory;
         _logger = logger;
     }
 
@@ -61,7 +61,7 @@ public class Dev : AiAgent, IDevelopApps
     {
         try
         {
-            return await CallFunction(Developer.Implement, ask, _kernel/*, _memory*/);
+            return await CallFunction(Developer.Implement, ask, _kernel);
         }
         catch (Exception ex)
         {

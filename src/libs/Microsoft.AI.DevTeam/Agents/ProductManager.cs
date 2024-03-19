@@ -1,7 +1,7 @@
 using Microsoft.AI.DevTeam.Skills;
 using Microsoft.Extensions.Logging;
+using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 using Orleans.Streams;
 
@@ -11,10 +11,10 @@ namespace Microsoft.AI.DevTeam;
 public class ProductManager : AiAgent, IManageProducts
 {
     private readonly Kernel _kernel;
-    // private readonly ISemanticTextMemory _memory;
     private readonly ILogger<ProductManager> _logger;
 
-    public ProductManager([PersistentState("state", "messages")] IPersistentState<AgentState> state, Kernel kernel/*, ISemanticTextMemory memory*/, ILogger<ProductManager> logger) : base(state)
+    public ProductManager([PersistentState("state", "messages")] IPersistentState<AgentState> state, Kernel kernel, IKernelMemory memory, ILogger<ProductManager> logger) 
+    : base(state, memory)
     {
         _kernel = kernel;
         //_memory = memory;
@@ -61,7 +61,7 @@ public class ProductManager : AiAgent, IManageProducts
     {
         try
         {
-            return await CallFunction(PM.Readme, ask, _kernel/*, _memory*/);
+            return await CallFunction(PM.Readme, ask, _kernel);
         }
         catch (Exception ex)
         {

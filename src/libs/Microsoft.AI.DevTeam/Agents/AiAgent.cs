@@ -1,29 +1,28 @@
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
+using Microsoft.KernelMemory;
 
 namespace Microsoft.AI.DevTeam;
 
 public abstract class AiAgent : Agent
 {
      public AiAgent(
-         [PersistentState("state", "messages")] IPersistentState<AgentState> state)
+         [PersistentState("state", "messages")] IPersistentState<AgentState> state, IKernelMemory memory)
     {
         _state = state;
+        _memory = memory;
     }
     protected readonly IPersistentState<AgentState> _state;
-    protected async Task<KernelArguments> CreateWafContext(/*ISemanticTextMemory memory,*/ string ask)
+    private readonly IKernelMemory _memory;
+
+    protected async Task<KernelArguments> CreateWafContext(IKernelMemory memory, string ask)
     {
-       // var interestingMemories = memory.SearchAsync("waf-pages", ask, 2);
-        var wafContext = "Consider the following architectural guidelines:";
-        // await foreach (var m in interestingMemories)
-        // {
-        //     wafContext += $"\n {m.Metadata.Text}";
-        // }
+        var waf = await memory.AskAsync(ask, index:"waf");
+       
         return new KernelArguments{
             ["input"] = ask,
-            ["wafContext"] = wafContext
+            ["wafContext"] = $"Consider the following architectural guidelines: ${waf}"
          };
     }
 
@@ -43,12 +42,12 @@ public abstract class AiAgent : Agent
         return string.Join("\n",_state.State.History.Select(message=> $"{message.UserType}: {message.Message}"));
     }
 
-    protected async Task<string> CallFunction(string template, string ask, Kernel kernel/*, ISemanticTextMemory memory*/)
+    protected async Task<string> CallFunction(string template, string ask, Kernel kernel)
     {
             var function = kernel.CreateFunctionFromPrompt(template, new OpenAIPromptExecutionSettings { MaxTokens = 15000, Temperature = 0.8, TopP = 1 });
             AddToHistory(ask, ChatUserType.User);
             var history = GetChatHistory();
-            var context =await CreateWafContext(ask); //await CreateWafContext(memory, history);
+            var context = await CreateWafContext(_memory, history);
             var result = (await kernel.InvokeAsync(function, context)).ToString();
             
             AddToHistory(result, ChatUserType.Agent);

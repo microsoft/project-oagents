@@ -9,11 +9,12 @@ using Octokit.Webhooks.AspNetCore;
 using Azure.Identity;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Http.Resilience;
+using Microsoft.KernelMemory;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<WebhookEventProcessor, GithubWebHookProcessor>();
 builder.Services.AddTransient(CreateKernel);
-// builder.Services.AddTransient(CreateMemory);
+builder.Services.AddSingleton<IKernelMemory>(CreateMemory);
 builder.Services.AddHttpClient();
 
 builder.Services.AddSingleton(s =>
@@ -94,6 +95,31 @@ app.UseRouting()
 app.Map("/dashboard", x => x.UseOrleansDashboard());
 
 app.Run();
+
+static IKernelMemory CreateMemory(IServiceProvider provider)
+{
+    var qdrantConfig = provider.GetService<IOptions<QdrantOptions>>().Value;
+    var openAiConfig = provider.GetService<IOptions<OpenAIOptions>>().Value;
+    return new KernelMemoryBuilder()
+            .WithQdrantMemoryDb(qdrantConfig.Endpoint)
+            .WithAzureOpenAITextGeneration(new AzureOpenAIConfig
+            {
+                APIType = AzureOpenAIConfig.APITypes.ChatCompletion,
+                Endpoint = openAiConfig.Endpoint,
+                Deployment = openAiConfig.DeploymentOrModelId,
+                Auth = AzureOpenAIConfig.AuthTypes.APIKey,
+                APIKey = openAiConfig.ApiKey
+            })
+            .WithAzureOpenAITextEmbeddingGeneration(new AzureOpenAIConfig
+            {
+                APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
+                Endpoint = openAiConfig.Endpoint,
+                Deployment =openAiConfig.EmbeddingDeploymentOrModelId,
+                Auth = AzureOpenAIConfig.AuthTypes.APIKey,
+               APIKey = openAiConfig.ApiKey
+            })
+            .Build<MemoryServerless>();
+}
 
 static Kernel CreateKernel(IServiceProvider provider)
 {
