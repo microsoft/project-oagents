@@ -1,6 +1,5 @@
-using Microsoft.AI.DevTeam.Abstractions;
-using Microsoft.AI.DevTeam.Skills;
-using Microsoft.Extensions.Logging;
+using Microsoft.AI.Agents.Abstractions;
+using Microsoft.AI.DevTeam.Events;
 using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
 using Orleans.Runtime;
@@ -26,10 +25,10 @@ public class ProductManager : AzureAiAgent<ProductManagerState>, IManageProducts
     {
         switch (item.Type)
         {
-            case EventType.ReadmeRequested:
+            case nameof(GithubFlowEventType.ReadmeRequested):
                 var readme = await CreateReadme(item.Message);
                 await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event {
-                     Type = EventType.ReadmeGenerated,
+                     Type = nameof(GithubFlowEventType.ReadmeGenerated),
                         Data = new Dictionary<string, string> {
                             { "org", item.Data["org"] },
                             { "repo", item.Data["repo"] },
@@ -39,10 +38,10 @@ public class ProductManager : AzureAiAgent<ProductManagerState>, IManageProducts
                        Message = readme
                 });
                 break;
-            case EventType.ReadmeChainClosed:
+            case nameof(GithubFlowEventType.ReadmeChainClosed):
                 var lastReadme = _state.State.History.Last().Message;
                 await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event {
-                     Type = EventType.ReadmeCreated,
+                     Type = nameof(GithubFlowEventType.ReadmeCreated),
                         Data = new Dictionary<string, string> {
                             { "org", item.Data["org"] },
                             { "repo", item.Data["repo"] },
@@ -63,7 +62,7 @@ public class ProductManager : AzureAiAgent<ProductManagerState>, IManageProducts
         try
         {
             var context = new KernelArguments { ["input"] = AppendChatHistory(ask)};
-            return await CallFunction(PM.Readme, context, _kernel);
+            return await CallFunction(PMSkills.Readme, context, _kernel);
         }
         catch (Exception ex)
         {

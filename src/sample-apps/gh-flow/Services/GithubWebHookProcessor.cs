@@ -1,5 +1,6 @@
+using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.DevTeam;
-using Microsoft.AI.DevTeam.Skills;
+using Microsoft.AI.DevTeam.Events;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.IssueComment;
@@ -7,6 +8,7 @@ using Octokit.Webhooks.Events.Issues;
 using Octokit.Webhooks.Models;
 using Orleans.Runtime;
 
+namespace Microsoft.AI.DevTeam;
 public sealed class GithubWebHookProcessor : WebhookEventProcessor
 {
     private readonly ILogger<GithubWebHookProcessor> _logger;
@@ -100,10 +102,10 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
         var stream = streamProvider.GetStream<Event>(streamId);
         var eventType = (skillName, functionName) switch
             {
-                (nameof(PM), nameof(PM.Readme)) => EventType.ReadmeChainClosed,
-                (nameof(DevLead), nameof(DevLead.Plan)) => EventType.DevPlanChainClosed,
-                (nameof(Developer), nameof(Developer.Implement)) => EventType.CodeChainClosed,
-                _ => EventType.NewAsk
+                ("PM","Readme") => nameof(GithubFlowEventType.ReadmeChainClosed),
+                ("DevLead","Plan") => nameof(GithubFlowEventType.DevPlanChainClosed),
+                ("Developer","Implement") => nameof(GithubFlowEventType.CodeChainClosed),
+                _ => nameof(GithubFlowEventType.NewAsk)
             };
         var data = new Dictionary<string, string>
         {
@@ -131,11 +133,11 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
 
             var eventType = (skillName, functionName) switch
             {
-                ("Do", "It") => EventType.NewAsk,
-                (nameof(PM), nameof(PM.Readme)) => EventType.ReadmeRequested,
-                (nameof(DevLead), nameof(DevLead.Plan)) => EventType.DevPlanRequested,
-                (nameof(Developer), nameof(Developer.Implement)) => EventType.CodeGenerationRequested,
-                _ => EventType.NewAsk
+                ("Do", "It") => nameof(GithubFlowEventType.NewAsk),
+                ("PM","Readme") => nameof(GithubFlowEventType.ReadmeRequested),
+                ("DevLead","Plan") => nameof(GithubFlowEventType.DevPlanRequested),
+                 ("Developer","Implement")  => nameof(GithubFlowEventType.CodeGenerationRequested),
+                _ => nameof(GithubFlowEventType.NewAsk)
             };
              var data = new Dictionary<string, string>
             {

@@ -1,4 +1,5 @@
-﻿using Microsoft.AI.DevTeam.Abstractions;
+﻿using Microsoft.AI.Agents.Abstractions;
+using Microsoft.AI.DevTeam.Events;
 using Orleans.Streams;
 
 namespace Microsoft.AI.DevTeam;
@@ -17,14 +18,14 @@ public class AzureGenie : Agent
     {
         switch (item.Type)
         {
-            case EventType.ReadmeCreated:
+            case nameof(GithubFlowEventType.ReadmeCreated):
             {
                 var parentNumber = long.Parse(item.Data["parentNumber"]);
                 var issueNumber = long.Parse(item.Data["issueNumber"]);
                 await Store(item.Data["org"], item.Data["repo"], parentNumber, issueNumber, "readme", "md", "output", item.Message);
                 await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                 {
-                    Type = EventType.ReadmeStored,
+                    Type = nameof(GithubFlowEventType.ReadmeStored),
                     Data = new Dictionary<string, string> {
                             { "org", item.Data["org"] },
                             { "repo", item.Data["repo"] },
@@ -35,7 +36,7 @@ public class AzureGenie : Agent
             }
                 
                 break;
-            case EventType.CodeCreated:
+            case nameof(GithubFlowEventType.CodeCreated):
             {
                 var parentNumber = long.Parse(item.Data["parentNumber"]);
                 var issueNumber = long.Parse(item.Data["issueNumber"]);
@@ -43,7 +44,7 @@ public class AzureGenie : Agent
                 await RunInSandbox(item.Data["org"], item.Data["repo"], parentNumber, issueNumber);
                 await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                 {
-                    Type = EventType.SandboxRunCreated,
+                    Type = nameof(GithubFlowEventType.SandboxRunCreated),
                     Data = new Dictionary<string, string> {
                             { "org", item.Data["org"] },
                             { "repo", item.Data["repo"] },

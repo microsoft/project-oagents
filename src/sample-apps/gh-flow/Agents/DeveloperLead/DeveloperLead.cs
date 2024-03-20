@@ -1,6 +1,5 @@
-using Microsoft.AI.DevTeam.Abstractions;
-using Microsoft.AI.DevTeam.Skills;
-using Microsoft.Extensions.Logging;
+using Microsoft.AI.Agents.Abstractions;
+using Microsoft.AI.DevTeam.Events;
 using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
 using Orleans.Runtime;
@@ -24,11 +23,11 @@ public class DeveloperLead : AzureAiAgent<DeveloperLeadState>, ILeadDevelopers
     {
         switch (item.Type)
         {
-            case EventType.DevPlanRequested:
+            case nameof(GithubFlowEventType.DevPlanRequested):
                 var plan = await CreatePlan(item.Message);
                 await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                 {
-                    Type = EventType.DevPlanGenerated,
+                    Type = nameof(GithubFlowEventType.DevPlanGenerated),
                     Data = new Dictionary<string, string> {
                             { "org", item.Data["org"] },
                             { "repo", item.Data["repo"] },
@@ -38,11 +37,11 @@ public class DeveloperLead : AzureAiAgent<DeveloperLeadState>, ILeadDevelopers
                     Message = plan
                 });
                 break;
-            case EventType.DevPlanChainClosed:
+            case nameof(GithubFlowEventType.DevPlanChainClosed):
                 var latestPlan = _state.State.History.Last().Message;
                 await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                 {
-                    Type = EventType.DevPlanCreated,
+                    Type = nameof(GithubFlowEventType.DevPlanCreated),
                     Data = new Dictionary<string, string> {
                             { "org", item.Data["org"] },
                             { "repo", item.Data["repo"] },
@@ -64,7 +63,7 @@ public class DeveloperLead : AzureAiAgent<DeveloperLeadState>, ILeadDevelopers
             // TODO: Ask the architect for the existing high level architecture
             // as well as the file structure
             var context = new KernelArguments { ["input"] = AppendChatHistory(ask)};
-            return await CallFunction(DevLead.Plan, context, _kernel);
+            return await CallFunction(DevLeadSkills.Plan, context, _kernel);
         }
         catch (Exception ex)
         {

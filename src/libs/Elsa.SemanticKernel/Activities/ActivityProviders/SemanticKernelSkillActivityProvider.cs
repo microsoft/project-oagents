@@ -11,7 +11,6 @@ using Elsa.Workflows;
 using Elsa.Workflows.Contracts;
 using Elsa.Workflows.Models;
 using Elsa.Workflows.UIHints;
-using Microsoft.AI.DevTeam.Skills;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;

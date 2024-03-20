@@ -1,3 +1,4 @@
+namespace Microsoft.AI.DevTeam;
 public class GithubOptions
 {
     public string AppKey { get; set; }

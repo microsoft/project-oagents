@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{24EB6E3A-C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elsa.SemanticKernel", "src\libs\Elsa.SemanticKernel\Elsa.SemanticKernel.csproj", "{1F6EE104-0B3F-49C1-BE3B-B93CAD18BAD0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.AI.DevTeam", "src\libs\Microsoft.AI.DevTeam\Microsoft.AI.DevTeam.csproj", "{9FA8DCFB-1726-42FB-B6CD-8AAC027810A1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.AI.Agents", "src\libs\Microsoft.AI.Agents\Microsoft.AI.Agents.csproj", "{9FA8DCFB-1726-42FB-B6CD-8AAC027810A1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

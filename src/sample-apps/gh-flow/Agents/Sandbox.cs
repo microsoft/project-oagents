@@ -1,4 +1,5 @@
-﻿using Microsoft.AI.DevTeam.Abstractions;
+﻿using Microsoft.AI.Agents.Abstractions;
+using Microsoft.AI.DevTeam.Events;
 using Orleans.Runtime;
 using Orleans.Streams;
 using Orleans.Timers;
@@ -25,7 +26,7 @@ public class Sandbox : Agent, IRemindable
     {
        switch(item.Type)
        {
-           case EventType.SandboxRunCreated:
+           case nameof(GithubFlowEventType.SandboxRunCreated):
                var org = item.Data["org"];
                var repo = item.Data["repo"];
                var parentIssueNumber = long.Parse(item.Data["parentNumber"]);
@@ -56,7 +57,7 @@ public class Sandbox : Agent, IRemindable
                 await _azService.DeleteSandbox(sandboxId);
                 await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                 {
-                    Type = EventType.SandboxRunFinished,
+                    Type = nameof(GithubFlowEventType.SandboxRunFinished),
                     Data = new Dictionary<string, string> {
                         { "org", _state.State.Org },
                         { "repo", _state.State.Repo },

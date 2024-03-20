@@ -1,6 +1,5 @@
-using Microsoft.AI.DevTeam.Abstractions;
-using Microsoft.AI.DevTeam.Skills;
-using Microsoft.Extensions.Logging;
+using Microsoft.AI.Agents.Abstractions;
+using Microsoft.AI.DevTeam.Events;
 using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
 using Orleans.Runtime;
@@ -25,11 +24,11 @@ public class Dev : AzureAiAgent<DeveloperState>, IDevelopApps
     {
         switch (item.Type)
         {
-            case EventType.CodeGenerationRequested:
+            case nameof(GithubFlowEventType.NewAsk):
                 var code = await GenerateCode(item.Message);
                 await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                 {
-                    Type = EventType.CodeGenerated,
+                    Type = nameof(GithubFlowEventType.CodeGenerated),
                     Data = new Dictionary<string, string> {
                             { "org", item.Data["org"] },
                             { "repo", item.Data["repo"] },
@@ -39,11 +38,11 @@ public class Dev : AzureAiAgent<DeveloperState>, IDevelopApps
                     Message = code
                 });
                 break;
-            case EventType.CodeChainClosed:
+            case nameof(GithubFlowEventType.CodeChainClosed):
                 var lastCode = _state.State.History.Last().Message;
                 await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                 {
-                    Type = EventType.CodeCreated,
+                    Type = nameof(GithubFlowEventType.CodeCreated),
                     Data = new Dictionary<string, string> {
                             { "org", item.Data["org"] },
                             { "repo", item.Data["repo"] },
@@ -65,7 +64,7 @@ public class Dev : AzureAiAgent<DeveloperState>, IDevelopApps
         {
             // TODO: ask the architect for the high level architecture as well as the files structure of the project
             var context = new KernelArguments { ["input"] = AppendChatHistory(ask)};
-            return await CallFunction(Developer.Implement, context, _kernel);
+            return await CallFunction(DeveloperSkills.Implement, context, _kernel);
         }
         catch (Exception ex)
         {

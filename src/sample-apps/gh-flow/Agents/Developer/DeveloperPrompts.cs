@@ -1,6 +1,6 @@
 
-namespace Microsoft.AI.DevTeam.Skills;
-public static class Developer {
+namespace Microsoft.AI.DevTeam;
+public static class DeveloperSkills {
     public static string Implement = """
         You are a Developer for an application. 
         Please output the code required to accomplish the task assigned to you below and wrap it in a bash script that creates the files.

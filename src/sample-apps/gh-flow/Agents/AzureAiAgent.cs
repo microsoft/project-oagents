@@ -1,8 +1,9 @@
 using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
 using Orleans.Runtime;
+using Microsoft.AI.Agents.Abstractions;
 
-namespace Microsoft.AI.DevTeam.Abstractions;
+namespace Microsoft.AI.DevTeam;
 
 public abstract class AzureAiAgent<T> : AiAgent<T>
 {
@@ -10,7 +11,6 @@ public abstract class AzureAiAgent<T> : AiAgent<T>
 
     public AzureAiAgent([PersistentState("state", "messages")] IPersistentState<AgentState<T>> state, IKernelMemory memory) : base(state)
     {
-        _state = state;
         _memory = memory;
     }
 

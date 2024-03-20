@@ -1,5 +1,5 @@
-namespace Microsoft.AI.DevTeam.Skills;
-public static class PM
+namespace Microsoft.AI.DevTeam;
+public static class PMSkills
 {
 public static string BootstrapProject =  """
        Please write a bash script with the commands that would be required to generate applications as described in the following input.

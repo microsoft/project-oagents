@@ -1,4 +1,4 @@
-using Microsoft.AI.DevTeam.Abstractions;
+using Microsoft.AI.Agents.Abstractions;
 using Microsoft.KernelMemory;
 using Orleans.Runtime;
 using Orleans.Streams;

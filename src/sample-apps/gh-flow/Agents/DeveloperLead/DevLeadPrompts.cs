@@ -1,5 +1,5 @@
-namespace Microsoft.AI.DevTeam.Skills;
-public static class DevLead {
+namespace Microsoft.AI.DevTeam;
+public static class DevLeadSkills {
     public static string Plan =  """
         You are a Dev Lead for an application team, building the application described below. 
         Please break down the steps and modules required to develop the complete application, describe each step in detail.

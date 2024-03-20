@@ -1,4 +1,4 @@
-
+namespace Microsoft.AI.DevTeam;
 public class OpenAIOptions
 {
     public string ServiceType { get; set; }

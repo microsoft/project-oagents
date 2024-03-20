@@ -1,9 +1,6 @@
 ﻿using System.Text.Json;
-using Microsoft.AI.DevTeam.Abstractions;
-using Microsoft.AI.DevTeam.Skills;
-using Octokit;
-using Orleans.Concurrency;
-using Orleans.Runtime;
+using Microsoft.AI.Agents.Abstractions;
+using Microsoft.AI.DevTeam.Events;
 using Orleans.Streams;
 
 namespace Microsoft.AI.DevTeam;
@@ -22,36 +19,36 @@ public class Hubber : Agent
     {
         switch (item.Type)
         {
-            case EventType.NewAsk:
+            case nameof(GithubFlowEventType.NewAsk):
                 {
                     var parentNumber = long.Parse(item.Data["issueNumber"]);
-                    var pmIssue = await CreateIssue(item.Data["org"], item.Data["repo"], item.Message, $"{nameof(PM)}.{nameof(PM.Readme)}", parentNumber);
-                    var devLeadIssue = await CreateIssue(item.Data["org"], item.Data["repo"], item.Message, $"{nameof(DevLead)}.{nameof(DevLead.Plan)}", parentNumber);
-                    await PostComment(item.Data["org"], item.Data["repo"], parentNumber, $" - #{pmIssue} - tracks {nameof(PM)}.{nameof(PM.Readme)}");
-                    await PostComment(item.Data["org"], item.Data["repo"], parentNumber, $" - #{devLeadIssue} - tracks {nameof(DevLead)}.{nameof(DevLead.Plan)}");   
+                    var pmIssue = await CreateIssue(item.Data["org"], item.Data["repo"], item.Message, "PM.Readme", parentNumber);
+                    var devLeadIssue = await CreateIssue(item.Data["org"], item.Data["repo"], item.Message, "DevLead.Plan", parentNumber);
+                    await PostComment(item.Data["org"], item.Data["repo"], parentNumber, $" - #{pmIssue} - tracks PM.Readme");
+                    await PostComment(item.Data["org"], item.Data["repo"], parentNumber, $" - #{devLeadIssue} - tracks DevLead.Plan");   
                     await CreateBranch(item.Data["org"], item.Data["repo"], $"sk-{parentNumber}");
                 }
                 break;
-            case EventType.ReadmeGenerated:
-            case EventType.DevPlanGenerated:
-            case EventType.CodeGenerated:
+            case nameof(GithubFlowEventType.ReadmeGenerated):
+            case nameof(GithubFlowEventType.DevPlanGenerated):
+            case nameof(GithubFlowEventType.CodeGenerated):
                 await PostComment(item.Data["org"], item.Data["repo"], long.Parse(item.Data["issueNumber"]), item.Message);
                 break;
-            case EventType.DevPlanCreated:
+            case nameof(GithubFlowEventType.DevPlanCreated):
                 {
                     var plan = JsonSerializer.Deserialize<DevLeadPlanResponse>(item.Data["plan"]);
                     var prompts = plan.steps.SelectMany(s => s.subtasks.Select(st => st.prompt));
                     var parentNumber = long.Parse(item.Data["parentNumber"]);
                     foreach (var prompt in prompts)
                     {
-                        var functionName = $"{nameof(Developer)}.{nameof(Developer.Implement)}";
+                        var functionName = "{Developer.Implement}";
                         var issue = await CreateIssue(item.Data["org"], item.Data["repo"], prompt, functionName, parentNumber);
                         var commentBody = $" - #{issue} - tracks {functionName}";
                         await PostComment(item.Data["org"], item.Data["repo"], parentNumber, commentBody);
                     }
                 }
                 break;
-            case EventType.ReadmeStored:
+            case nameof(GithubFlowEventType.ReadmeStored):
                 {
                     var parentNumber = long.Parse(item.Data["parentNumber"]);
                     var issueNumber = long.Parse(item.Data["issueNumber"]);
@@ -60,7 +57,7 @@ public class Hubber : Agent
                     await CreatePullRequest(item.Data["org"], item.Data["repo"], parentNumber, branch);
                 }
                 break;
-            case EventType.SandboxRunFinished:
+            case nameof(GithubFlowEventType.SandboxRunFinished):
                 {
                     var parentNumber = long.Parse(item.Data["parentNumber"]);
                     var issueNumber = long.Parse(item.Data["issueNumber"]);

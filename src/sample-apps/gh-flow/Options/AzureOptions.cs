@@ -1,3 +1,4 @@
+namespace Microsoft.AI.DevTeam;
 public class AzureOptions
 {
     public string SubscriptionId { get; set; }

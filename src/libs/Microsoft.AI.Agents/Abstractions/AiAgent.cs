@@ -2,7 +2,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Orleans.Runtime;
 
-namespace Microsoft.AI.DevTeam.Abstractions;
+namespace Microsoft.AI.Agents.Abstractions;
 
 public abstract class AiAgent<T> : Agent
 {
