@@ -5,13 +5,13 @@ VisualStudioVersion = 17.5.001.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{088E1138-FF7B-4179-AD37-4E3819C56D7E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "apps", "apps", "{4D8667EC-09BE-4CB1-A278-E1CCD83B62B0}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample-apps", "apps", "{4D8667EC-09BE-4CB1-A278-E1CCD83B62B0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gh-flow", "src\apps\gh-flow\gh-flow.csproj", "{37C45587-DD0C-4BFE-817A-21301567A94A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gh-flow", "src\sample-apps\gh-flow\gh-flow.csproj", "{37C45587-DD0C-4BFE-817A-21301567A94A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "seed-memory", "src\apps\seed-memory\seed-memory.csproj", "{110B2C34-0F48-41CE-BC8F-AE3D24E79627}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "seed-memory", "src\sample-apps\seed-memory\seed-memory.csproj", "{110B2C34-0F48-41CE-BC8F-AE3D24E79627}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkflowsApp", "src\apps\WorkflowsApp\WorkflowsApp.csproj", "{F288CF45-81EF-4F57-ABAC-D7ABE894E7A0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkflowsApp", "src\sample-apps\WorkflowsApp\WorkflowsApp.csproj", "{F288CF45-81EF-4F57-ABAC-D7ABE894E7A0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{24EB6E3A-C080-4B27-8EA7-F6C91446B840}"
 EndProject
