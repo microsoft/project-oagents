@@ -1,25 +1,22 @@
 using Microsoft.AI.DevTeam.Abstractions;
 using Microsoft.AI.DevTeam.Skills;
 using Microsoft.Extensions.Logging;
+using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
-using Microsoft.SemanticKernel.Orchestration;
 using Orleans.Runtime;
 using Orleans.Streams;
-using System.Text.Json;
 
 namespace Microsoft.AI.DevTeam;
 [ImplicitStreamSubscription(Consts.MainNamespace)]
-public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
+public class DeveloperLead : AzureAiAgent<DeveloperLeadState>, ILeadDevelopers
 {
-    private readonly IKernel _kernel;
-    private readonly ISemanticTextMemory _memory;
+    private readonly Kernel _kernel;
     private readonly ILogger<DeveloperLead> _logger;
 
-    public DeveloperLead([PersistentState("state", "messages")] IPersistentState<AgentState<DeveloperLeadState>> state, IKernel kernel, ISemanticTextMemory memory, ILogger<DeveloperLead> logger) : base(state)
+    public DeveloperLead([PersistentState("state", "messages")] IPersistentState<AgentState<DeveloperLeadState>> state, Kernel kernel, IKernelMemory memory, ILogger<DeveloperLead> logger)
+     : base(state, memory)
     {
         _kernel = kernel;
-        _memory = memory;
         _logger = logger;
     }
 
@@ -66,8 +63,8 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
         {
             // TODO: Ask the architect for the existing high level architecture
             // as well as the file structure
-            var context =new ContextVariables(AppendChatHistory(ask));
-            return await CallFunction(DevLead.Plan, ask,context, _kernel, _memory);
+            var context = new KernelArguments { ["input"] = AppendChatHistory(ask)};
+            return await CallFunction(DevLead.Plan, context, _kernel);
         }
         catch (Exception ex)
         {

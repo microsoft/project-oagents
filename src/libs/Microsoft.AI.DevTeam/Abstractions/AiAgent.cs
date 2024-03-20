@@ -1,7 +1,5 @@
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.AI.OpenAI;
-using Microsoft.SemanticKernel.Memory;
-using Microsoft.SemanticKernel.Orchestration;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Orleans.Runtime;
 
 namespace Microsoft.AI.DevTeam.Abstractions;
@@ -15,7 +13,6 @@ public abstract class AiAgent<T> : Agent
     }
     protected IPersistentState<AgentState<T>> _state;
 
-
     protected void AddToHistory(string message, ChatUserType userType)
     {
         if (_state.State.History == null) _state.State.History = new List<ChatHistoryItem>();
@@ -27,20 +24,20 @@ public abstract class AiAgent<T> : Agent
         });
     }
 
-     protected string AppendChatHistory(string ask)
+    protected string AppendChatHistory(string ask)
     {
         AddToHistory(ask, ChatUserType.User);
         return string.Join("\n",_state.State.History.Select(message=> $"{message.UserType}: {message.Message}"));
     }
 
-    protected virtual async Task<string> CallFunction(string template, string ask, ContextVariables context, IKernel kernel, ISemanticTextMemory memory)
+    protected virtual async Task<string> CallFunction(string template, KernelArguments arguments, Kernel kernel)
     {
-        var function = kernel.CreateSemanticFunction(template, new OpenAIRequestSettings { MaxTokens = 15000, Temperature = 0.8, TopP = 1 });
-        var result = (await kernel.RunAsync(context, function)).ToString();
-        AddToHistory(result, ChatUserType.Agent);
-        await _state.WriteStateAsync();
-        return result;
-    }
+            var function = kernel.CreateFunctionFromPrompt(template, new OpenAIPromptExecutionSettings { MaxTokens = 15000, Temperature = 0.8, TopP = 1 });
+            var result = (await kernel.InvokeAsync(function, arguments)).ToString();
+            AddToHistory(result, ChatUserType.Agent);
+            await _state.WriteStateAsync();
+            return result;
+    } 
 
     protected async Task<T> ShareContext()
     {

@@ -1,33 +1,29 @@
+using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.AI.OpenAI;
-using Microsoft.SemanticKernel.Memory;
-using Microsoft.SemanticKernel.Orchestration;
 using Orleans.Runtime;
 
 namespace Microsoft.AI.DevTeam.Abstractions;
 
 public abstract class AzureAiAgent<T> : AiAgent<T>
 {
-    public AzureAiAgent([PersistentState("state", "messages")] IPersistentState<AgentState<T>> state) : base(state)
+    private readonly IKernelMemory _memory;
+
+    public AzureAiAgent([PersistentState("state", "messages")] IPersistentState<AgentState<T>> state, IKernelMemory memory) : base(state)
     {
         _state = state;
+        _memory = memory;
     }
 
-    protected async Task<ContextVariables> AddWafContext(ISemanticTextMemory memory, ContextVariables context,  string ask)
+    protected async Task<KernelArguments> AddWafContext(IKernelMemory memory, KernelArguments arguments)
     {
-        var interestingMemories = memory.SearchAsync("waf-pages", ask, 2);
-        var wafContext = "Consider the following architectural guidelines:";
-        await foreach (var m in interestingMemories)
-        {
-            wafContext += $"\n {m.Metadata.Text}";
-        }
-        context.Set("wafContext", wafContext);
-        return context;
+        var waf = await memory.AskAsync(arguments["input"].ToString(), index:"waf");
+        arguments["wafContext"] = $"Consider the following architectural guidelines: ${waf}";
+        return arguments;
     }
 
-    protected override async Task<string> CallFunction(string template, string ask, ContextVariables context, IKernel kernel, ISemanticTextMemory memory)
+    protected override async Task<string> CallFunction(string template, KernelArguments arguments, Kernel kernel)
     {
-       var wafContext = await AddWafContext(memory, context, ask);
-       return await base.CallFunction(template, ask, wafContext, kernel, memory);
+       var wafArguments = await AddWafContext(_memory, arguments);
+       return await base.CallFunction(template, wafArguments, kernel);
     }
 }

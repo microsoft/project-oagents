@@ -1,4 +1,5 @@
 using Microsoft.AI.DevTeam.Abstractions;
+using Microsoft.KernelMemory;
 using Orleans.Runtime;
 using Orleans.Streams;
 
@@ -9,7 +10,8 @@ namespace Microsoft.AI.DevTeam;
 [ImplicitStreamSubscription(Consts.MainNamespace)]
 public class Architect : AzureAiAgent<ArchitectState>
 {
-    public Architect([PersistentState("state", "messages")] IPersistentState<AgentState<ArchitectState>> state) : base(state)
+    public Architect([PersistentState("state", "messages")] IPersistentState<AgentState<ArchitectState>> state, IKernelMemory memory) 
+    : base(state, memory)
     {
     }
 

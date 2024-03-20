@@ -1,25 +1,24 @@
 using Microsoft.AI.DevTeam.Abstractions;
 using Microsoft.AI.DevTeam.Skills;
 using Microsoft.Extensions.Logging;
+using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
-using Microsoft.SemanticKernel.Orchestration;
 using Orleans.Runtime;
 using Orleans.Streams;
 
 namespace Microsoft.AI.DevTeam;
 
 [ImplicitStreamSubscription(Consts.MainNamespace)]
-public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
+public class ProductManager : AzureAiAgent<ProductManagerState>, IManageProducts
 {
-    private readonly IKernel _kernel;
-    private readonly ISemanticTextMemory _memory;
+    private readonly Kernel _kernel;
     private readonly ILogger<ProductManager> _logger;
 
-    public ProductManager([PersistentState("state", "messages")] IPersistentState<AgentState<ProductManagerState>> state, IKernel kernel, ISemanticTextMemory memory, ILogger<ProductManager> logger) : base(state)
+    public ProductManager([PersistentState("state", "messages")] IPersistentState<AgentState<ProductManagerState>> state, Kernel kernel, IKernelMemory memory, ILogger<ProductManager> logger) 
+    : base(state, memory)
     {
         _kernel = kernel;
-        _memory = memory;
+        //_memory = memory;
         _logger = logger;
     }
 
@@ -63,8 +62,8 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
     {
         try
         {
-            var context = new ContextVariables(AppendChatHistory(ask));
-            return await CallFunction(PM.Readme, ask, context, _kernel, _memory);
+            var context = new KernelArguments { ["input"] = AppendChatHistory(ask)};
+            return await CallFunction(PM.Readme, context, _kernel);
         }
         catch (Exception ex)
         {
