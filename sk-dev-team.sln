@@ -19,8 +19,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elsa.SemanticKernel", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.AI.DevTeam", "src\libs\Microsoft.AI.DevTeam\Microsoft.AI.DevTeam.csproj", "{9FA8DCFB-1726-42FB-B6CD-8AAC027810A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.AI.DevTeam.Skills", "src\libs\Microsoft.AI.DevTeam.Skills\Microsoft.AI.DevTeam.Skills.csproj", "{FF3D28B0-9344-44AF-BEEA-260187BE435E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,18 +89,6 @@ Global
 		{9FA8DCFB-1726-42FB-B6CD-8AAC027810A1}.Release|x64.Build.0 = Release|Any CPU
 		{9FA8DCFB-1726-42FB-B6CD-8AAC027810A1}.Release|x86.ActiveCfg = Release|Any CPU
 		{9FA8DCFB-1726-42FB-B6CD-8AAC027810A1}.Release|x86.Build.0 = Release|Any CPU
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E}.Debug|x64.Build.0 = Debug|Any CPU
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E}.Debug|x86.Build.0 = Debug|Any CPU
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E}.Release|x64.ActiveCfg = Release|Any CPU
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E}.Release|x64.Build.0 = Release|Any CPU
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E}.Release|x86.ActiveCfg = Release|Any CPU
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -115,7 +101,6 @@ Global
 		{24EB6E3A-C080-4B27-8EA7-F6C91446B840} = {088E1138-FF7B-4179-AD37-4E3819C56D7E}
 		{1F6EE104-0B3F-49C1-BE3B-B93CAD18BAD0} = {24EB6E3A-C080-4B27-8EA7-F6C91446B840}
 		{9FA8DCFB-1726-42FB-B6CD-8AAC027810A1} = {24EB6E3A-C080-4B27-8EA7-F6C91446B840}
-		{FF3D28B0-9344-44AF-BEEA-260187BE435E} = {24EB6E3A-C080-4B27-8EA7-F6C91446B840}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30612385-E4F4-4FD9-B648-45AF74CB4915}
