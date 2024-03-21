@@ -32,7 +32,7 @@ public abstract class AiAgent<T> : Agent
 
     protected virtual async Task<string> CallFunction(string template, KernelArguments arguments, Kernel kernel, OpenAIPromptExecutionSettings? settings = null)
     {
-        var propmptSettings = (settings == null) ? new OpenAIPromptExecutionSettings { MaxTokens = 4096, Temperature = 0.8, TopP = 1 }
+        var propmptSettings = (settings == null) ? new OpenAIPromptExecutionSettings { MaxTokens = 18000, Temperature = 0.8, TopP = 1 }
                                                 : settings;
         var function = kernel.CreateFunctionFromPrompt(template, propmptSettings);
         var result = (await kernel.InvokeAsync(function, arguments)).ToString();

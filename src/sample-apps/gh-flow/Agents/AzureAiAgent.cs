@@ -17,14 +17,14 @@ public abstract class AzureAiAgent<T> : AiAgent<T>
 
     protected async Task<KernelArguments> AddWafContext(IKernelMemory memory, KernelArguments arguments)
     {
-        var waf = await memory.AskAsync(arguments["input"].ToString(), index:"waf");
-        if(!waf.NoResult) arguments["wafContext"] = $"Consider the following architectural guidelines: ${waf.Result}";
+        var waf = await memory.AskAsync(arguments["input"].ToString(), index: "waf");
+        if (!waf.NoResult) arguments["wafContext"] = $"Consider the following architectural guidelines: ${waf.Result}";
         return arguments;
     }
 
     protected override async Task<string> CallFunction(string template, KernelArguments arguments, Kernel kernel, OpenAIPromptExecutionSettings? settings = null)
     {
-       var wafArguments = await AddWafContext(_memory, arguments);
-       return await base.CallFunction(template, wafArguments, kernel,settings);
+        var wafArguments = await AddWafContext(_memory, arguments);
+        return await base.CallFunction(template, wafArguments, kernel, settings);
     }
 }

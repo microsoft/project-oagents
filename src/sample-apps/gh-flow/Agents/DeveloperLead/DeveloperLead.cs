@@ -58,7 +58,6 @@ public class DeveloperLead : AzureAiAgent<DeveloperLeadState>, ILeadDevelopers
                 break;
         }
     }
-    #pragma warning disable SKEXP0010 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     public async Task<string> CreatePlan(string ask)
     {
         try
@@ -66,8 +65,7 @@ public class DeveloperLead : AzureAiAgent<DeveloperLeadState>, ILeadDevelopers
             // TODO: Ask the architect for the existing high level architecture
             // as well as the file structure
             var context = new KernelArguments { ["input"] = AppendChatHistory(ask)};
-            var peSettings = new OpenAIPromptExecutionSettings { MaxTokens = 4096, Temperature = 0.8, TopP = 1 , ResponseFormat = "json_object" };
-            return await CallFunction(DevLeadSkills.Plan, context, _kernel,peSettings);
+            return await CallFunction(DevLeadSkills.Plan, context, _kernel);
         }
         catch (Exception ex)
         {
@@ -75,7 +73,6 @@ public class DeveloperLead : AzureAiAgent<DeveloperLeadState>, ILeadDevelopers
             return default;
         }
     }
-    #pragma warning restore SKEXP0010 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 }
 
 public interface ILeadDevelopers
