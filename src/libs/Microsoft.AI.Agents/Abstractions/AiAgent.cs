@@ -27,17 +27,18 @@ public abstract class AiAgent<T> : Agent
     protected string AppendChatHistory(string ask)
     {
         AddToHistory(ask, ChatUserType.User);
-        return string.Join("\n",_state.State.History.Select(message=> $"{message.UserType}: {message.Message}"));
+        return string.Join("\n", _state.State.History.Select(message => $"{message.UserType}: {message.Message}"));
     }
 
-    protected virtual async Task<string> CallFunction(string template, KernelArguments arguments, Kernel kernel)
+    protected virtual async Task<string> CallFunction(string template, KernelArguments arguments, Kernel kernel, OpenAIPromptExecutionSettings? settings = null)
     {
-            var function = kernel.CreateFunctionFromPrompt(template, new OpenAIPromptExecutionSettings { MaxTokens = 15000, Temperature = 0.8, TopP = 1 });
-            var result = (await kernel.InvokeAsync(function, arguments)).ToString();
-            AddToHistory(result, ChatUserType.Agent);
-            await _state.WriteStateAsync();
-            return result;
-    } 
+        var propmptSettings = (settings == null) ? new OpenAIPromptExecutionSettings { MaxTokens = 4096, Temperature = 0.8, TopP = 1 }
+                                                : settings;
+        var function = kernel.CreateFunctionFromPrompt(template, propmptSettings);
+        var result = (await kernel.InvokeAsync(function, arguments)).ToString();
+        AddToHistory(result, ChatUserType.Agent);
+        return result;
+    }
 
     protected async Task<T> ShareContext()
     {

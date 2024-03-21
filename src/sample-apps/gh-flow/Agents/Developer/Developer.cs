@@ -10,6 +10,7 @@ namespace Microsoft.AI.DevTeam;
 [ImplicitStreamSubscription(Consts.MainNamespace)]
 public class Dev : AzureAiAgent<DeveloperState>, IDevelopApps
 {
+    protected override string Namespace => Consts.MainNamespace;
     private readonly Kernel _kernel;
     private readonly ILogger<Dev> _logger;
 
@@ -24,7 +25,7 @@ public class Dev : AzureAiAgent<DeveloperState>, IDevelopApps
     {
         switch (item.Type)
         {
-            case nameof(GithubFlowEventType.NewAsk):
+            case nameof(GithubFlowEventType.CodeGenerationRequested):
                 var code = await GenerateCode(item.Message);
                 await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                 {

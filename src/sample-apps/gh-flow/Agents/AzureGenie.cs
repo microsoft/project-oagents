@@ -7,6 +7,7 @@ namespace Microsoft.AI.DevTeam;
 [ImplicitStreamSubscription(Consts.MainNamespace)]
 public class AzureGenie : Agent
 {
+    protected override string Namespace => Consts.MainNamespace;
     private readonly IManageAzure _azureService;
 
     public AzureGenie( IManageAzure azureService)

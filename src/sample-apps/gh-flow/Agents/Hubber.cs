@@ -8,6 +8,7 @@ namespace Microsoft.AI.DevTeam;
 [ImplicitStreamSubscription(Consts.MainNamespace)]
 public class Hubber : Agent
 {
+     protected override string Namespace => Consts.MainNamespace;
     private readonly IManageGithub _ghService;
 
     public Hubber(IManageGithub ghService)
@@ -41,7 +42,7 @@ public class Hubber : Agent
                     var parentNumber = long.Parse(item.Data["parentNumber"]);
                     foreach (var prompt in prompts)
                     {
-                        var functionName = "{Developer.Implement}";
+                        var functionName = "Developer.Implement";
                         var issue = await CreateIssue(item.Data["org"], item.Data["repo"], prompt, functionName, parentNumber);
                         var commentBody = $" - #{issue} - tracks {functionName}";
                         await PostComment(item.Data["org"], item.Data["repo"], parentNumber, commentBody);

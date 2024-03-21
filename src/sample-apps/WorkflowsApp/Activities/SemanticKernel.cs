@@ -1,23 +1,17 @@
 using Elsa.Extensions;
 using JetBrains.Annotations;
-using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
-
-using System;
 using System.Text;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Elsa.Workflows;
 using Elsa.Workflows.Attributes;
 using Elsa.Workflows.UIHints;
 using Elsa.Workflows.Models;
+using Microsoft.SKDevTeam;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SemanticKernel;
 using Azure.AI.OpenAI;
 using Azure;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 
 namespace Elsa.SemanticKernel;
@@ -89,9 +83,9 @@ public class SemanticKernelSkill : CodeActivity<string>
             var kernel = KernelBuilder();
 
             // load the skill
-            var promptTemplate = Skills.ForSkillAndFunction(skillName, functionName);
+            var promptTemplate = SemanticFunctionConfig.ForSkillAndFunction(skillName, functionName);
 
-            var function = kernel.CreateFunctionFromPrompt(promptTemplate, new OpenAIPromptExecutionSettings { MaxTokens = 8000, Temperature = 0.4, TopP = 1 });
+            var function = kernel.CreateFunctionFromPrompt(promptTemplate.PromptTemplate, new OpenAIPromptExecutionSettings { MaxTokens = 8000, Temperature = 0.4, TopP = 1 });
 
             // set the context (our prompt)
             var arguments =  new KernelArguments{
@@ -187,9 +181,9 @@ public class SemanticKernelSkill : CodeActivity<string>
                     string field = function.FieldType.ToString();
                     if (field.Equals("Microsoft.SKDevTeam.SemanticFunctionConfig"))
                     {
-                        var prompt = Skills.ForSkillAndFunction(skillType.Name, function.Name);
+                        var prompt = SemanticFunctionConfig.ForSkillAndFunction(skillType.Name, function.Name);
                         var skfunc = kernel.CreateFunctionFromPrompt(
-                            prompt, new OpenAIPromptExecutionSettings { MaxTokens = 8000, Temperature = 0.4, TopP = 1 });
+                            prompt.PromptTemplate, new OpenAIPromptExecutionSettings { MaxTokens = 8000, Temperature = 0.4, TopP = 1 });
 
                         Console.WriteLine($"SK Added function: {skfunc.Metadata.PluginName}.{skfunc.Metadata.Name}");
                     }

@@ -10,6 +10,7 @@ namespace Microsoft.AI.DevTeam;
 [ImplicitStreamSubscription(Consts.MainNamespace)]
 public class Architect : AzureAiAgent<ArchitectState>
 {
+    protected override string Namespace => Consts.MainNamespace;
     public Architect([PersistentState("state", "messages")] IPersistentState<AgentState<ArchitectState>> state, IKernelMemory memory) 
     : base(state, memory)
     {
@@ -17,7 +18,8 @@ public class Architect : AzureAiAgent<ArchitectState>
 
     public override Task HandleEvent(Event item, StreamSequenceToken? token)
     {
-        throw new NotImplementedException();
+       // throw new NotImplementedException();
+       return Task.CompletedTask;
     }
 }
 

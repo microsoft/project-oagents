@@ -10,6 +10,7 @@ namespace Microsoft.AI.DevTeam;
 [ImplicitStreamSubscription(Consts.MainNamespace)]
 public class ProductManager : AzureAiAgent<ProductManagerState>, IManageProducts
 {
+    protected override string Namespace => Consts.MainNamespace;
     private readonly Kernel _kernel;
     private readonly ILogger<ProductManager> _logger;
 

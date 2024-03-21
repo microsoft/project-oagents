@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Azure;
 using Azure.AI.OpenAI;
 using Elsa.Extensions;
@@ -11,11 +6,10 @@ using Elsa.Workflows;
 using Elsa.Workflows.Contracts;
 using Elsa.Workflows.Models;
 using Elsa.Workflows.UIHints;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
-using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SKDevTeam;
 
 namespace Elsa.SemanticKernel;
 
@@ -159,18 +153,18 @@ public class SemanticKernelActivityProvider : IActivityProvider
         Type[] skillTypes = assembly.GetTypes().ToArray();
         foreach (Type skillType in skillTypes)
         {
-            if (skillType.Namespace.Equals("Microsoft.SKDevTeam"))
+            if (skillType.Namespace.Equals("Microsoft.AI.DevTeam"))
             {
                 skills.Add(skillType.Name);
                 var functions = skillType.GetFields();
                 foreach (var function in functions)
                 {
                     string field = function.FieldType.ToString();
-                    if (field.Equals("Microsoft.SKDevTeam.SemanticFunctionConfig"))
+                    if (field.Equals("Microsoft.AI.DevTeam.SemanticFunctionConfig"))
                     {
-                        var promptTemplate = Skills.ForSkillAndFunction(skillType.Name, function.Name);
+                        var promptTemplate = SemanticFunctionConfig.ForSkillAndFunction(skillType.Name, function.Name);
                         var skfunc = kernel.CreateFunctionFromPrompt(
-                            promptTemplate, new OpenAIPromptExecutionSettings { MaxTokens = 8000, Temperature = 0.4, TopP = 1 });
+                            promptTemplate.PromptTemplate, new OpenAIPromptExecutionSettings { MaxTokens = 8000, Temperature = 0.4, TopP = 1 });
 
                         Console.WriteLine($"SKActivityProvider Added SK function: {skfunc.Metadata.PluginName}.{skfunc.Name}");
                     }

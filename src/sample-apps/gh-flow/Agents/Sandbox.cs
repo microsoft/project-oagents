@@ -8,6 +8,7 @@ namespace Microsoft.AI.DevTeam;
 [ImplicitStreamSubscription(Consts.MainNamespace)]
 public class Sandbox : Agent, IRemindable
 {
+     protected override string Namespace => Consts.MainNamespace;
     private const string ReminderName = "SandboxRunReminder";
     private readonly IManageAzure _azService;
     private readonly IReminderRegistry _reminderRegistry;
