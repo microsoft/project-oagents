@@ -22,7 +22,7 @@ builder.Services.AddSingleton(s =>
     var ghOptions = s.GetService<IOptions<GithubOptions>>();
     var logger = s.GetService<ILogger<GithubAuthService>>();
     var ghService = new GithubAuthService(ghOptions, logger);
-    var client = ghService.GetGitHubClient().Result;
+    var client = ghService.GetGitHubClient();
     return client;
 });
 
