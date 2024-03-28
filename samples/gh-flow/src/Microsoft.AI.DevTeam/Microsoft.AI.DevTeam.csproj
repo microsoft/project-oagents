@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\libs\Microsoft.AI.Agents\Microsoft.AI.Agents.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Microsoft.AI.Agents\Microsoft.AI.Agents.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

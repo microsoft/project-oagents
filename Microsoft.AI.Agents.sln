@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C3504B9A-0CD7-4033-816F-63D4D1D92733}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.AI.Agents", "src\Microsoft.AI.Agents\Microsoft.AI.Agents.csproj", "{4D0C9995-A4F4-46C8-9E8A-8D4E6399618F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{30721DE5-7D9E-4BB8-9E41-920608850F9A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gh-flow", "gh-flow", "{BE6D6721-A0F8-4E73-AE5F-044B066A7FFE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E9801B3E-8C5C-4251-AD85-748B940B3881}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.AI.DevTeam", "samples\gh-flow\src\Microsoft.AI.DevTeam\Microsoft.AI.DevTeam.csproj", "{880A8EB0-455A-4F19-B9FE-7907A1922F73}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkflowsApp", "samples\WorkflowsApp\WorkflowsApp.csproj", "{5E42F8BD-7A6C-4A83-B009-AD2E18BD3C4A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4D0C9995-A4F4-46C8-9E8A-8D4E6399618F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D0C9995-A4F4-46C8-9E8A-8D4E6399618F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D0C9995-A4F4-46C8-9E8A-8D4E6399618F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D0C9995-A4F4-46C8-9E8A-8D4E6399618F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{880A8EB0-455A-4F19-B9FE-7907A1922F73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{880A8EB0-455A-4F19-B9FE-7907A1922F73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{880A8EB0-455A-4F19-B9FE-7907A1922F73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{880A8EB0-455A-4F19-B9FE-7907A1922F73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E42F8BD-7A6C-4A83-B009-AD2E18BD3C4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E42F8BD-7A6C-4A83-B009-AD2E18BD3C4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E42F8BD-7A6C-4A83-B009-AD2E18BD3C4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E42F8BD-7A6C-4A83-B009-AD2E18BD3C4A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4D0C9995-A4F4-46C8-9E8A-8D4E6399618F} = {C3504B9A-0CD7-4033-816F-63D4D1D92733}
+		{BE6D6721-A0F8-4E73-AE5F-044B066A7FFE} = {30721DE5-7D9E-4BB8-9E41-920608850F9A}
+		{E9801B3E-8C5C-4251-AD85-748B940B3881} = {BE6D6721-A0F8-4E73-AE5F-044B066A7FFE}
+		{880A8EB0-455A-4F19-B9FE-7907A1922F73} = {E9801B3E-8C5C-4251-AD85-748B940B3881}
+		{5E42F8BD-7A6C-4A83-B009-AD2E18BD3C4A} = {30721DE5-7D9E-4BB8-9E41-920608850F9A}
+	EndGlobalSection
+EndGlobal
