@@ -3,7 +3,7 @@
 name: ai-dev-team
 services:
   gh-flow:
-    project: "."
+    project: "src/Microsoft.AI.DevTeam/Microsoft.AI.DevTeam.csproj"
     language: csharp
     host: containerapp
     docker:
