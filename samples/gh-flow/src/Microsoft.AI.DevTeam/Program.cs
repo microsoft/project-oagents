@@ -50,7 +50,7 @@ builder.Services.AddOptions<GithubOptions>()
 builder.Services.AddOptions<AzureOptions>()
     .Configure<IConfiguration>((settings, configuration) =>
     {
-        configuration.GetSection("AzureOptions").Bind(settings);
+        configuration.GetSection(nameof(AzureOptions)).Bind(settings);
     })
     .ValidateDataAnnotations()
     .ValidateOnStart();
@@ -58,7 +58,7 @@ builder.Services.AddOptions<AzureOptions>()
 builder.Services.AddOptions<OpenAIOptions>()
     .Configure<IConfiguration>((settings, configuration) =>
     {
-        configuration.GetSection("OpenAIOptions").Bind(settings);
+        configuration.GetSection(nameof(OpenAIOptions)).Bind(settings);
     })
     .ValidateDataAnnotations()
     .ValidateOnStart();
@@ -66,7 +66,7 @@ builder.Services.AddOptions<OpenAIOptions>()
 builder.Services.AddOptions<QdrantOptions>()
     .Configure<IConfiguration>((settings, configuration) =>
     {
-        configuration.GetSection("QdrantOptions").Bind(settings);
+        configuration.GetSection(nameof(QdrantOptions)).Bind(settings);
     })
     .ValidateDataAnnotations()
     .ValidateOnStart();
@@ -74,7 +74,7 @@ builder.Services.AddOptions<QdrantOptions>()
 builder.Services.AddOptions<ServiceOptions>()
     .Configure<IConfiguration>((settings, configuration) =>
     {
-        configuration.GetSection("ServiceOptions").Bind(settings);
+        configuration.GetSection(nameof(ServiceOptions)).Bind(settings);
     })
     .ValidateDataAnnotations()
     .ValidateOnStart();
