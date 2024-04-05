@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Reflection;
 using Azure;
 using Azure.AI.OpenAI;
@@ -32,7 +33,7 @@ public class SemanticKernelActivityProvider : IActivityProvider
         var kernel = KernelBuilder();
 
         // get a list of skills in the assembly
-        var skills = LoadSkillsFromAssemblyAsync("skills", kernel);
+        var skills = LoadSkillsFromAssemblyAsync(typeof(SemanticKernelActivityProvider).Assembly.ToString(), kernel);
         var functionsAvailable = kernel.Plugins.GetFunctionsMetadata();
         
         // create activity descriptors for each skilland function
@@ -150,26 +151,26 @@ public class SemanticKernelActivityProvider : IActivityProvider
     {
         var skills = new List<string>();
         var assembly = Assembly.Load(assemblyName);
-        Type[] skillTypes = assembly.GetTypes().ToArray();
+        Type[] skillTypes = assembly.GetTypes()
+            .Where( type => type.Namespace == "Microsoft.SKDevTeam")
+            .ToArray();
         foreach (Type skillType in skillTypes)
         {
-            if (skillType.Namespace.Equals("Microsoft.AI.DevTeam"))
+           
+            skills.Add(skillType.Name);
+            var functions = skillType.GetFields();
+            foreach (var function in functions)
             {
-                skills.Add(skillType.Name);
-                var functions = skillType.GetFields();
-                foreach (var function in functions)
+                string field = function.FieldType.ToString();
+                if (field.Equals("Microsoft.SKDevTeam.SemanticFunctionConfig"))
                 {
-                    string field = function.FieldType.ToString();
-                    if (field.Equals("Microsoft.AI.DevTeam.SemanticFunctionConfig"))
-                    {
-                        var promptTemplate = SemanticFunctionConfig.ForSkillAndFunction(skillType.Name, function.Name);
-                        var skfunc = kernel.CreateFunctionFromPrompt(
-                            promptTemplate.PromptTemplate, new OpenAIPromptExecutionSettings { MaxTokens = 8000, Temperature = 0.4, TopP = 1 });
+                    var promptTemplate = SemanticFunctionConfig.ForSkillAndFunction(skillType.Name, function.Name);
+                    var skfunc = kernel.CreateFunctionFromPrompt(
+                        promptTemplate.PromptTemplate, new OpenAIPromptExecutionSettings { MaxTokens = 8000, Temperature = 0.4, TopP = 1 });
 
-                        Console.WriteLine($"SKActivityProvider Added SK function: {skfunc.Metadata.PluginName}.{skfunc.Name}");
-                    }
+                    Console.WriteLine($"SKActivityProvider Added SK function: {skfunc.Metadata.PluginName}.{skfunc.Name}");
                 }
-            }
+            }           
         }
         return skills;
     }
