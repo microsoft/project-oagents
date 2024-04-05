@@ -35,7 +35,7 @@ public class SemanticKernelActivityProvider : IActivityProvider
         // get a list of skills in the assembly
         var skills = LoadSkillsFromAssemblyAsync(typeof(SemanticKernelActivityProvider).Assembly.ToString(), kernel);
         var functionsAvailable = kernel.Plugins.GetFunctionsMetadata();
-        
+
         // create activity descriptors for each skilland function
         var activities = new List<ActivityDescriptor>();
         foreach (var function in functionsAvailable)
@@ -77,7 +77,7 @@ public class SemanticKernelActivityProvider : IActivityProvider
             Namespace = $"{thisNamespace}.{function.PluginName}",
             DisplayName = $"{function.PluginName}.{function.Name}",
             Inputs = inputs,
-            Outputs = new[] {new OutputDescriptor()},
+            Outputs = new[] { new OutputDescriptor() },
             Constructor = context =>
             {
                 // The constructor is called when an activity instance of this type is requested.
@@ -152,11 +152,11 @@ public class SemanticKernelActivityProvider : IActivityProvider
         var skills = new List<string>();
         var assembly = Assembly.Load(assemblyName);
         Type[] skillTypes = assembly.GetTypes()
-            .Where( type => type.Namespace == "Microsoft.SKDevTeam")
+            .Where(type => type.Namespace == "Microsoft.SKDevTeam")
             .ToArray();
         foreach (Type skillType in skillTypes)
         {
-           
+
             skills.Add(skillType.Name);
             var functions = skillType.GetFields();
             foreach (var function in functions)
@@ -170,7 +170,7 @@ public class SemanticKernelActivityProvider : IActivityProvider
 
                     Console.WriteLine($"SKActivityProvider Added SK function: {skfunc.Metadata.PluginName}.{skfunc.Name}");
                 }
-            }           
+            }
         }
         return skills;
     }
@@ -187,11 +187,12 @@ public class SemanticKernelActivityProvider : IActivityProvider
         clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
         var openAIClient = new OpenAIClient(new Uri(kernelSettings.Endpoint), new AzureKeyCredential(kernelSettings.ApiKey), clientOptions);
         var builder = Kernel.CreateBuilder();
-        builder.Services.AddLogging( c=> c.AddConsole().AddDebug().SetMinimumLevel(LogLevel.Debug));
+        builder.Services.AddLogging(c => c.AddConsole().AddDebug().SetMinimumLevel(LogLevel.Debug));
         builder.Services.AddAzureOpenAIChatCompletion(kernelSettings.DeploymentOrModelId, openAIClient);
-        builder.Services.ConfigureHttpClientDefaults(c=>
+        builder.Services.ConfigureHttpClientDefaults(c =>
         {
-            c.AddStandardResilienceHandler().Configure( o=> {
+            c.AddStandardResilienceHandler().Configure(o =>
+            {
                 o.Retry.MaxRetryAttempts = 5;
                 o.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
             });

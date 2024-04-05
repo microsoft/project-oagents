@@ -11,7 +11,7 @@ public class SemanticFunctionConfig
     public double TopP { get; set; }
     public double PPenalty { get; set; }
     public double FPenalty { get; set; }
-    public static SemanticFunctionConfig ForSkillAndFunction(string skillName, string functionName) => 
+    public static SemanticFunctionConfig ForSkillAndFunction(string skillName, string functionName) =>
     (skillName, functionName) switch
     {
         (nameof(PM), nameof(PM.Readme)) => PM.Readme,
