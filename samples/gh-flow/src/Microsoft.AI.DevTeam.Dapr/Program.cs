@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Azure;
 using Azure.AI.OpenAI;
-using Microsoft.AI.DevTeam;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Octokit.Webhooks;
@@ -12,12 +11,12 @@ using Microsoft.Extensions.Http.Resilience;
 using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Connectors.Qdrant;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using CloudNative.CloudEvents;
 using Dapr;
-using Microsoft.AI.DevTeam.Events;
 using Dapr.Actors.Client;
 using Dapr.Actors;
 using CloudEvent = CloudNative.CloudEvents.CloudEvent;
+using Microsoft.AI.DevTeam.Dapr;
+using Microsoft.AI.DevTeam.Dapr.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<WebhookEventProcessor, GithubWebHookProcessor>();

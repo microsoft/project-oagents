@@ -1,4 +1,4 @@
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.AI.DevTeam.Dapr;
 public static class PMSkills
 {
 public static string BootstrapProject =  """

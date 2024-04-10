@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.AI.DevTeam.Dapr;
 
 public interface IAnalyzeCode 
 {

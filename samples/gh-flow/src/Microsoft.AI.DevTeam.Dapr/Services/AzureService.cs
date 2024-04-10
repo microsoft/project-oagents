@@ -9,7 +9,7 @@ using Azure.Storage.Files.Shares;
 using Microsoft.Extensions.Options;
 
 
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.AI.DevTeam.Dapr;
 
 public class AzureService : IManageAzure
 {

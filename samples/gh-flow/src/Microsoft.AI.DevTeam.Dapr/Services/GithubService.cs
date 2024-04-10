@@ -5,7 +5,7 @@ using Octokit;
 using Octokit.Helpers;
 
 
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.AI.DevTeam.Dapr;
 
 public class GithubService : IManageGithub
 {

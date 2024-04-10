@@ -1,5 +1,5 @@
 
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.AI.DevTeam.Dapr;
 public static class DeveloperSkills {
     public static string Implement = """
         You are a Developer for an application. 

@@ -1,12 +1,13 @@
 ﻿using CloudNative.CloudEvents;
+using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
 using Microsoft.AI.Agents.Dapr;
-using Microsoft.AI.DevTeam.Events;
+using Microsoft.AI.DevTeam.Dapr.Events;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.AI.DevTeam;
-public class Sandbox : Agent
+namespace Microsoft.AI.DevTeam.Dapr;
+public class Sandbox : Agent, IRunSandbox
 {
     private const string ReminderName = "SandboxRunReminder";
     private readonly IManageAzure _azService;
@@ -98,6 +99,9 @@ public class Sandbox : Agent
     // }
 }
 
+internal interface IRunSandbox : IActor
+{
+}
 
 public class SandboxMetadata
 {

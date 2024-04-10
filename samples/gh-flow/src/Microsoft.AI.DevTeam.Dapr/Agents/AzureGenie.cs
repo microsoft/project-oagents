@@ -1,14 +1,15 @@
 ﻿
 using CloudNative.CloudEvents;
+using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
 using Microsoft.AI.Agents.Dapr;
-using Microsoft.AI.DevTeam.Events;
+using Microsoft.AI.DevTeam.Dapr.Events;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.AI.DevTeam.Dapr;
 
-public class AzureGenie : Agent
+public class AzureGenie : Agent, IDoAzureStuff
 {
     private readonly IManageAzure _azureService;
 
@@ -78,4 +79,11 @@ public class AzureGenie : Agent
     {
         await _azureService.RunInSandbox(org, repo, parentIssueNumber, issueNumber);
     }
+}
+
+
+public interface IDoAzureStuff : IActor
+{
+    Task Store(string org, string repo, long parentIssueNumber, long issueNumber, string filename, string extension, string dir, string output);
+    Task RunInSandbox(string org, string repo, long parentIssueNumber, long issueNumber);
 }

@@ -1,13 +1,14 @@
 using CloudNative.CloudEvents;
+using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
 using Microsoft.AI.Agents.Dapr;
-using Microsoft.AI.DevTeam.Events;
+using Microsoft.AI.DevTeam.Dapr.Events;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.AI.DevTeam.Dapr;
 
 public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
 {
@@ -78,7 +79,7 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
     }
 }
 
-public interface IManageProducts
+public interface IManageProducts: IActor
 {
     public Task<string> CreateReadme(string ask);
 }

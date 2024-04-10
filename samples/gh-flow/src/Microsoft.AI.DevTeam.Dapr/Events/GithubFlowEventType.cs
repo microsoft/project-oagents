@@ -1,4 +1,4 @@
-namespace Microsoft.AI.DevTeam.Events
+namespace Microsoft.AI.DevTeam.Dapr.Events
 {
     public enum GithubFlowEventType
     {

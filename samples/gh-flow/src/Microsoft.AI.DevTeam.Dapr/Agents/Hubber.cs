@@ -1,14 +1,15 @@
 ﻿using System.Text.Json;
 using CloudNative.CloudEvents;
+using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
 using Microsoft.AI.Agents.Dapr;
-using Microsoft.AI.DevTeam.Events;
+using Microsoft.AI.DevTeam.Dapr.Events;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.AI.DevTeam.Dapr;
 
-public class Hubber : Agent
+public class Hubber : Agent, IDoStuffWithGithub
 {
     private readonly IManageGithub _ghService;
 
@@ -115,4 +116,13 @@ public class Hubber : Agent
     {
         await _ghService.CommitToBranch(org, repo, parentNumber, issueNumber, rootDir, branch);
     }
+}
+
+public interface IDoStuffWithGithub : IActor
+{
+    Task<int> CreateIssue(string org, string repo, string input, string function, long parentNumber);
+    Task PostComment(string org, string repo, long issueNumber, string comment);
+    Task CreateBranch(string org, string repo, string branch);
+    Task CreatePullRequest(string org, string repo, long issueNumber, string branch);
+    Task CommitToBranch(string org, string repo, long parentNumber, long issueNumber, string rootDir, string branch);
 }

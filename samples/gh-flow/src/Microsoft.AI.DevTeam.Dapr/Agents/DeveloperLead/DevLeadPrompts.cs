@@ -1,4 +1,4 @@
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.AI.DevTeam.Dapr;
 public static class DevLeadSkills {
     public static string Plan =  """
         You are a Dev Lead for an application team, building the application described below. 

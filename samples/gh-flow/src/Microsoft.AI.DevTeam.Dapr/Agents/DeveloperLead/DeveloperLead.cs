@@ -1,13 +1,14 @@
 using CloudNative.CloudEvents;
+using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
 using Microsoft.AI.Agents.Dapr;
-using Microsoft.AI.DevTeam.Events;
+using Microsoft.AI.DevTeam.Dapr.Events;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.AI.DevTeam.Dapr;
 public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
 {
     private readonly ILogger<DeveloperLead> _logger;
@@ -78,7 +79,7 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
     }
 }
 
-public interface ILeadDevelopers
+public interface ILeadDevelopers : IActor
 {
     public Task<string> CreatePlan(string ask);
 }
