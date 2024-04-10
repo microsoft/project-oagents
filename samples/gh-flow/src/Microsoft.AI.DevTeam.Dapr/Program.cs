@@ -40,6 +40,8 @@ builder.Services.AddAzureClients(clientBuilder =>
     clientBuilder.AddArmClient(default);
 });
 
+builder.Services.AddDaprClient();
+
 builder.Services.AddActors(
     options =>
     {

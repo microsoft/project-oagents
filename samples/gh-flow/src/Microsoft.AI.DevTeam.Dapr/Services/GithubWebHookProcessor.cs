@@ -1,3 +1,6 @@
+using CloudNative.CloudEvents;
+using Dapr.Client;
+using Microsoft.AI.DevTeam.Dapr.Events;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.IssueComment;
@@ -7,12 +10,14 @@ using Octokit.Webhooks.Models;
 namespace Microsoft.AI.DevTeam.Dapr;
 public sealed class GithubWebHookProcessor : WebhookEventProcessor
 {
+    private readonly DaprClient _daprClient;
     private readonly ILogger<GithubWebHookProcessor> _logger;
     private readonly IManageGithub _ghService;
     private readonly IManageAzure _azService;
 
-    public GithubWebHookProcessor(ILogger<GithubWebHookProcessor> logger, IManageGithub ghService, IManageAzure azService)
+    public GithubWebHookProcessor(DaprClient daprClient, ILogger<GithubWebHookProcessor> logger, IManageGithub ghService, IManageAzure azService)
     {
+        _daprClient = daprClient;
         _logger = logger;
         _ghService = ghService;
         _azService = azService;
@@ -117,40 +122,38 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
 
     private async Task HandleNewAsk(long issueNumber, long? parentNumber, string skillName, string functionName, string suffix, string input, string org, string repo)
     {
-        // try
-        // {
-        //     _logger.LogInformation("Handling new ask");
-        //     var streamProvider = _client.GetStreamProvider("StreamProvider");
-        //     var streamId = StreamId.Create(Consts.MainNamespace, suffix+issueNumber.ToString());
-        //     var stream = streamProvider.GetStream<Event>(streamId);
-
-        //     var eventType = (skillName, functionName) switch
-        //     {
-        //         ("Do", "It") => nameof(GithubFlowEventType.NewAsk),
-        //         ("PM","Readme") => nameof(GithubFlowEventType.ReadmeRequested),
-        //         ("DevLead","Plan") => nameof(GithubFlowEventType.DevPlanRequested),
-        //          ("Developer","Implement")  => nameof(GithubFlowEventType.CodeGenerationRequested),
-        //         _ => nameof(GithubFlowEventType.NewAsk)
-        //     };
-        //      var data = new Dictionary<string, string>
-        //     {
-        //         { "org", org },
-        //         { "repo", repo },
-        //         { "issueNumber", issueNumber.ToString() },
-        //         { "parentNumber", parentNumber?.ToString()}
-        //     };
-        //     await stream.OnNextAsync(new Event
-        //     {
-        //         Type = eventType,
-        //         Message = input,
-        //         Data = data
-        //     });
-        // }
-        // catch (Exception ex)
-        // {
-        //      _logger.LogError(ex, "Handling new ask");
-        //      throw;
-        // }
+        try
+        {
+            _logger.LogInformation("Handling new ask");
+            
+            var eventType = (skillName, functionName) switch
+            {
+                ("Do", "It") => nameof(GithubFlowEventType.NewAsk),
+                ("PM","Readme") => nameof(GithubFlowEventType.ReadmeRequested),
+                ("DevLead","Plan") => nameof(GithubFlowEventType.DevPlanRequested),
+                 ("Developer","Implement")  => nameof(GithubFlowEventType.CodeGenerationRequested),
+                _ => nameof(GithubFlowEventType.NewAsk)
+            };
+             var data = new Dictionary<string, string>
+            {
+                { "org", org },
+                { "repo", repo },
+                { "issueNumber", issueNumber.ToString() },
+                { "parentNumber", parentNumber?.ToString()}
+            };
+            var evt = new CloudEvent
+            {
+                Type = eventType,
+                Subject = suffix+issueNumber.ToString(),
+                Data = data
+            };
+            await _daprClient.PublishEventAsync(Consts.PubSub, Consts.MainTopic,evt);
+        }
+        catch (Exception ex)
+        {
+             _logger.LogError(ex, "Handling new ask");
+             throw;
+        }
     }
 }
 
