@@ -1,8 +1,10 @@
+using CloudNative.CloudEvents;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
+using Newtonsoft.Json.Linq;
 using Orleans.Runtime;
 
 namespace Microsoft.AI.DevTeam;
@@ -19,36 +21,42 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
         _logger = logger;
     }
 
-    public async override Task HandleEvent(Event item)
+    public async override Task HandleEvent(CloudEvent item)
     {
         switch (item.Type)
         {
             case nameof(GithubFlowEventType.ReadmeRequested):
-                var readme = await CreateReadme(item.Message);
-                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event {
+            {
+                var data = (JObject)item.Data;
+                var readme = await CreateReadme(data["input"].ToString());
+                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new CloudEvent {
                      Type = nameof(GithubFlowEventType.ReadmeGenerated),
                         Data = new Dictionary<string, string> {
-                            { "org", item.Data["org"] },
-                            { "repo", item.Data["repo"] },
-                            { "issueNumber", item.Data["issueNumber"] },
-                            { "readme", readme }
-                        },
-                       Message = readme
+                            { "org", data["org"].ToString() },
+                            { "repo", data["repo"].ToString() },
+                            { "issueNumber", data["issueNumber"].ToString() },
+                            { "result", readme }
+                        }
                 });
+            }
+                
                 break;
             case nameof(GithubFlowEventType.ReadmeChainClosed):
+            {
+                var data = (JObject)item.Data;
                 var lastReadme = _state.State.History.Last().Message;
-                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event {
+                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new CloudEvent {
                      Type = nameof(GithubFlowEventType.ReadmeCreated),
                         Data = new Dictionary<string, string> {
-                            { "org", item.Data["org"] },
-                            { "repo", item.Data["repo"] },
-                            { "issueNumber", item.Data["issueNumber"] },
+                            { "org", data["org"].ToString() },
+                            { "repo", data["repo"].ToString() },
+                            { "issueNumber", data["issueNumber"].ToString() },
                             { "readme", lastReadme },
-                            { "parentNumber", item.Data["parentNumber"] }
+                            { "parentNumber", data["parentNumber"].ToString() }
                         },
-                       Message = lastReadme
                 });
+            }
+                
                 break;
             default:
                 break;

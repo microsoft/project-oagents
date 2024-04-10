@@ -1,8 +1,10 @@
+using CloudNative.CloudEvents;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
+using Newtonsoft.Json.Linq;
 using Orleans.Runtime;
 
 namespace Microsoft.AI.DevTeam;
@@ -18,38 +20,44 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
         _logger = logger;
     }
 
-    public async override Task HandleEvent(Event item)
+    public async override Task HandleEvent(CloudEvent item)
     {
         switch (item.Type)
         {
             case nameof(GithubFlowEventType.DevPlanRequested):
-                var plan = await CreatePlan(item.Message);
-                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                 {
-                    Type = nameof(GithubFlowEventType.DevPlanGenerated),
-                    Data = new Dictionary<string, string> {
-                            { "org", item.Data["org"] },
-                            { "repo", item.Data["repo"] },
-                            { "issueNumber", item.Data["issueNumber"] },
-                            { "plan", plan }
-                        },
-                    Message = plan
-                });
+                    var data = (JObject)item.Data;
+                    var plan = await CreatePlan(data["input"].ToString());
+                    await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new CloudEvent
+                    {
+                        Type = nameof(GithubFlowEventType.DevPlanGenerated),
+                        Data = new Dictionary<string, string> {
+                            { "org", data["org"].ToString() },
+                            { "repo", data["repo"].ToString() },
+                            { "issueNumber", data["issueNumber"].ToString() },
+                            { "result", plan }
+                        }
+                    });
+                }
+
                 break;
             case nameof(GithubFlowEventType.DevPlanChainClosed):
-                var latestPlan = _state.State.History.Last().Message;
-                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                 {
-                    Type = nameof(GithubFlowEventType.DevPlanCreated),
-                    Data = new Dictionary<string, string> {
-                            { "org", item.Data["org"] },
-                            { "repo", item.Data["repo"] },
-                            { "issueNumber", item.Data["issueNumber"] },
-                            {"parentNumber", item.Data["parentNumber"]},
+                    var data = (JObject)item.Data;
+                    var latestPlan = _state.State.History.Last().Message;
+                    await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new CloudEvent
+                    {
+                        Type = nameof(GithubFlowEventType.DevPlanCreated),
+                        Data = new Dictionary<string, string> {
+                            { "org", data["org"].ToString() },
+                            { "repo", data["repo"].ToString() },
+                            { "issueNumber", data["issueNumber"].ToString() },
+                            {"parentNumber", data["parentNumber"].ToString()},
                             { "plan", latestPlan }
-                        },
-                    Message = latestPlan
-                });
+                        }
+                    });
+                }
+
                 break;
             default:
                 break;

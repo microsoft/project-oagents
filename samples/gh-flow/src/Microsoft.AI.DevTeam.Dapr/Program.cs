@@ -12,8 +12,6 @@ using Microsoft.Extensions.Http.Resilience;
 using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Connectors.Qdrant;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using System.Configuration;
-using Orleans.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<WebhookEventProcessor, GithubWebHookProcessor>();
@@ -84,20 +82,6 @@ builder.Services.AddSingleton<IManageAzure, AzureService>();
 builder.Services.AddSingleton<IManageGithub, GithubService>();
 builder.Services.AddSingleton<IAnalyzeCode, CodeAnalyzer>();
 
-builder.Host.UseOrleans(siloBuilder =>
-{
-
-    siloBuilder.UseLocalhostClustering()
-               .AddMemoryStreams("StreamProvider")
-               .AddMemoryGrainStorage("PubSubStore")
-               .AddMemoryGrainStorage("messages");
-    siloBuilder.Services.AddSerializer( sb => {
-        sb.AddNewtonsoftJsonSerializer(isSupported: t => true);
-    });
-    siloBuilder.UseInMemoryReminderService();
-    siloBuilder.UseDashboard(x => x.HostSelf = true);
-
-});
 
 builder.Services.Configure<JsonSerializerOptions>(options =>
 {
@@ -111,8 +95,6 @@ app.UseRouting()
     var ghOptions = app.Services.GetService<IOptions<GithubOptions>>().Value;
     endpoints.MapGitHubWebhooks(secret: ghOptions.WebhookSecret);
 });
-
-app.Map("/dashboard", x => x.UseOrleansDashboard());
 
 app.Run();
 

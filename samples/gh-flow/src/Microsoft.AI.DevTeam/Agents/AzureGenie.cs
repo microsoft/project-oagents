@@ -1,6 +1,8 @@
-﻿using Microsoft.AI.Agents.Abstractions;
+﻿using CloudNative.CloudEvents;
+using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.AI.DevTeam;
 
@@ -15,23 +17,26 @@ public class AzureGenie : Agent
         _azureService = azureService;
     }
 
-    public override async Task HandleEvent(Event item)
+    public override async Task HandleEvent(CloudEvent item)
     {
         switch (item.Type)
         {
             case nameof(GithubFlowEventType.ReadmeCreated):
             {
-                var parentNumber = long.Parse(item.Data["parentNumber"]);
-                var issueNumber = long.Parse(item.Data["issueNumber"]);
-                await Store(item.Data["org"], item.Data["repo"], parentNumber, issueNumber, "readme", "md", "output", item.Message);
-                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
+                var data = (JObject)item.Data;
+                var parentNumber = long.Parse(data["parentNumber"].ToString());
+                var issueNumber = long.Parse(data["issueNumber"].ToString());
+                var org = data["org"].ToString();
+                var repo = data["repo"].ToString();
+                await Store(org,repo, parentNumber, issueNumber, "readme", "md", "output", data["readme"].ToString());
+                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new CloudEvent
                 {
                     Type = nameof(GithubFlowEventType.ReadmeStored),
                     Data = new Dictionary<string, string> {
-                            { "org", item.Data["org"] },
-                            { "repo", item.Data["repo"] },
-                            { "issueNumber", item.Data["issueNumber"] },
-                            { "parentNumber", item.Data["parentNumber"]  }
+                            { "org", org },
+                            { "repo", repo },
+                            { "issueNumber", $"{issueNumber}" },
+                            { "parentNumber", $"{parentNumber}" }
                         }
                 });
             }
@@ -39,18 +44,21 @@ public class AzureGenie : Agent
                 break;
             case nameof(GithubFlowEventType.CodeCreated):
             {
-                var parentNumber = long.Parse(item.Data["parentNumber"]);
-                var issueNumber = long.Parse(item.Data["issueNumber"]);
-                await Store(item.Data["org"], item.Data["repo"], parentNumber, issueNumber, "run", "sh", "output", item.Message);
-                await RunInSandbox(item.Data["org"], item.Data["repo"], parentNumber, issueNumber);
-                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
+                var data = (JObject)item.Data;
+                var parentNumber = long.Parse(data["parentNumber"].ToString());
+                var issueNumber = long.Parse(data["issueNumber"].ToString());
+                var org = data["org"].ToString();
+                var repo = data["repo"].ToString();
+                await Store(org,repo, parentNumber, issueNumber, "run", "sh", "output", data["code"].ToString());
+                await RunInSandbox(org, repo, parentNumber, issueNumber);
+                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new CloudEvent
                 {
                     Type = nameof(GithubFlowEventType.SandboxRunCreated),
                     Data = new Dictionary<string, string> {
-                            { "org", item.Data["org"] },
-                            { "repo", item.Data["repo"] },
-                            { "issueNumber", item.Data["issueNumber"] },
-                            { "parentNumber", item.Data["parentNumber"]  }
+                            { "org", org },
+                            { "repo", repo },
+                            { "issueNumber", $"{issueNumber}" },
+                            { "parentNumber", $"{parentNumber}" }
                         }
                 });
             }

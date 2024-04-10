@@ -1,25 +1,20 @@
-using CloudNative.CloudEvents;
 using Microsoft.AI.DevTeam.Events;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.IssueComment;
 using Octokit.Webhooks.Events.Issues;
 using Octokit.Webhooks.Models;
-using Orleans.Runtime;
 
 namespace Microsoft.AI.DevTeam;
 public sealed class GithubWebHookProcessor : WebhookEventProcessor
 {
     private readonly ILogger<GithubWebHookProcessor> _logger;
-    private readonly IClusterClient _client;
     private readonly IManageGithub _ghService;
     private readonly IManageAzure _azService;
 
-    public GithubWebHookProcessor(ILogger<GithubWebHookProcessor> logger,
-    IClusterClient client, IManageGithub ghService, IManageAzure azService)
+    public GithubWebHookProcessor(ILogger<GithubWebHookProcessor> logger, IManageGithub ghService, IManageAzure azService)
     {
         _logger = logger;
-        _client = client;
         _ghService = ghService;
         _azService = azService;
     }
@@ -96,74 +91,67 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
 
     private async Task HandleClosingIssue(long issueNumber, long? parentNumber, string skillName, string functionName, string suffix, string org, string repo)
     {
-        var streamProvider = _client.GetStreamProvider("StreamProvider");
-        var streamId = StreamId.Create(Consts.MainNamespace, suffix+issueNumber.ToString());
-        var stream = streamProvider.GetStream<CloudEvent>(streamId);
-        var eventType = (skillName, functionName) switch
-            {
-                ("PM","Readme") => nameof(GithubFlowEventType.ReadmeChainClosed),
-                ("DevLead","Plan") => nameof(GithubFlowEventType.DevPlanChainClosed),
-                ("Developer","Implement") => nameof(GithubFlowEventType.CodeChainClosed),
-                _ => nameof(GithubFlowEventType.NewAsk)
-            };
-        var data = new Dictionary<string, string>
-        {
-            { "org", org },
-            { "repo", repo },
-            { "issueNumber", issueNumber.ToString() },
-            { "parentNumber", parentNumber?.ToString()}
-        };
+        // var streamProvider = _client.GetStreamProvider("StreamProvider");
+        // var streamId = StreamId.Create(Consts.MainNamespace, suffix+issueNumber.ToString());
+        // var stream = streamProvider.GetStream<Event>(streamId);
+        // var eventType = (skillName, functionName) switch
+        //     {
+        //         ("PM","Readme") => nameof(GithubFlowEventType.ReadmeChainClosed),
+        //         ("DevLead","Plan") => nameof(GithubFlowEventType.DevPlanChainClosed),
+        //         ("Developer","Implement") => nameof(GithubFlowEventType.CodeChainClosed),
+        //         _ => nameof(GithubFlowEventType.NewAsk)
+        //     };
+        // var data = new Dictionary<string, string>
+        // {
+        //     { "org", org },
+        //     { "repo", repo },
+        //     { "issueNumber", issueNumber.ToString() },
+        //     { "parentNumber", parentNumber?.ToString()}
+        // };
 
-        await stream.OnNextAsync(new CloudEvent
-        {
-            Id = $"Guid.NewGuid()",
-            Type = eventType,
-            Time = DateTimeOffset.UtcNow,
-            DataContentType = "application/json",
-            Data = data
-        });
+        // await stream.OnNextAsync(new Event
+        // {
+        //     Type = eventType,
+        //     Data = data
+        // });
     }
 
     private async Task HandleNewAsk(long issueNumber, long? parentNumber, string skillName, string functionName, string suffix, string input, string org, string repo)
     {
-        try
-        {
-            _logger.LogInformation("Handling new ask");
-            var streamProvider = _client.GetStreamProvider("StreamProvider");
-            var streamId = StreamId.Create(Consts.MainNamespace, suffix+issueNumber.ToString());
-            var stream = streamProvider.GetStream<CloudEvent>(streamId);
+        // try
+        // {
+        //     _logger.LogInformation("Handling new ask");
+        //     var streamProvider = _client.GetStreamProvider("StreamProvider");
+        //     var streamId = StreamId.Create(Consts.MainNamespace, suffix+issueNumber.ToString());
+        //     var stream = streamProvider.GetStream<Event>(streamId);
 
-            var eventType = (skillName, functionName) switch
-            {
-                ("Do", "It") => nameof(GithubFlowEventType.NewAsk),
-                ("PM","Readme") => nameof(GithubFlowEventType.ReadmeRequested),
-                ("DevLead","Plan") => nameof(GithubFlowEventType.DevPlanRequested),
-                 ("Developer","Implement")  => nameof(GithubFlowEventType.CodeGenerationRequested),
-                _ => nameof(GithubFlowEventType.NewAsk)
-            };
-             var data = new Dictionary<string, string>
-            {
-                { "org", org },
-                { "repo", repo },
-                { "issueNumber", issueNumber.ToString() },
-                { "parentNumber", parentNumber?.ToString()},
-                { "input", input}
-
-            };
-            await stream.OnNextAsync(new CloudEvent
-            {
-                Id = $"Guid.NewGuid()",
-                Type = eventType,
-                Time = DateTimeOffset.UtcNow,
-                DataContentType = "application/json",
-                Data = data
-            });
-        }
-        catch (Exception ex)
-        {
-             _logger.LogError(ex, "Handling new ask");
-             throw;
-        }
+        //     var eventType = (skillName, functionName) switch
+        //     {
+        //         ("Do", "It") => nameof(GithubFlowEventType.NewAsk),
+        //         ("PM","Readme") => nameof(GithubFlowEventType.ReadmeRequested),
+        //         ("DevLead","Plan") => nameof(GithubFlowEventType.DevPlanRequested),
+        //          ("Developer","Implement")  => nameof(GithubFlowEventType.CodeGenerationRequested),
+        //         _ => nameof(GithubFlowEventType.NewAsk)
+        //     };
+        //      var data = new Dictionary<string, string>
+        //     {
+        //         { "org", org },
+        //         { "repo", repo },
+        //         { "issueNumber", issueNumber.ToString() },
+        //         { "parentNumber", parentNumber?.ToString()}
+        //     };
+        //     await stream.OnNextAsync(new Event
+        //     {
+        //         Type = eventType,
+        //         Message = input,
+        //         Data = data
+        //     });
+        // }
+        // catch (Exception ex)
+        // {
+        //      _logger.LogError(ex, "Handling new ask");
+        //      throw;
+        // }
     }
 }
 
