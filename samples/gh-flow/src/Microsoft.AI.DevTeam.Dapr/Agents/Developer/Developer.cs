@@ -1,57 +1,61 @@
 using CloudNative.CloudEvents;
 using Dapr.Actors.Runtime;
+using Dapr.Client;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Dapr;
 using Microsoft.AI.DevTeam.Events;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.AI.DevTeam;
 
 public class Dev : AiAgent<DeveloperState>, IDevelopApps
 {
-    protected override string Namespace => Consts.MainNamespace;
     
     private readonly ILogger<Dev> _logger;
 
-    public Dev(ActorHost host, Kernel kernel, ISemanticTextMemory memory, ILogger<Dev> logger) 
-    : base(host, memory, kernel)
+    public Dev(ActorHost host, DaprClient client, Kernel kernel, ISemanticTextMemory memory, ILogger<Dev> logger) 
+    : base(host, client, memory, kernel)
     {
         _logger = logger;
     }
-
     public async override Task HandleEvent(CloudEvent item)
     {
         switch (item.Type)
         {
             case nameof(GithubFlowEventType.CodeGenerationRequested):
-                // var code = await GenerateCode(item.Message);
-                // await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
-                // {
-                //     Type = nameof(GithubFlowEventType.CodeGenerated),
-                //     Data = new Dictionary<string, string> {
-                //             { "org", item.Data["org"] },
-                //             { "repo", item.Data["repo"] },
-                //             { "issueNumber", item.Data["issueNumber"] },
-                //             { "code", code }
-                //         },
-                //     Message = code
-                // });
+               {
+                    var data = (JObject)item.Data;
+                    var code = await GenerateCode(data["input"].ToString());
+                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
+                    {
+                        Type = nameof(GithubFlowEventType.CodeGenerated),
+                        Data = new Dictionary<string, string> {
+                            { "org", data["org"].ToString() },
+                            { "repo", data["repo"].ToString() },
+                            { "issueNumber", data["issueNumber"].ToString()},
+                            { "result", code }
+                        }
+                    });
+                }
                 break;
             case nameof(GithubFlowEventType.CodeChainClosed):
-                // var lastCode = _state.State.History.Last().Message;
-                // await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
-                // {
-                //     Type = nameof(GithubFlowEventType.CodeCreated),
-                //     Data = new Dictionary<string, string> {
-                //             { "org", item.Data["org"] },
-                //             { "repo", item.Data["repo"] },
-                //             { "issueNumber", item.Data["issueNumber"] },
-                //             { "code", lastCode },
-                //             { "parentNumber", item.Data["parentNumber"] }
-                //         },
-                //     Message = lastCode
-                // });
+                {
+                    var data = (JObject)item.Data;
+                    var lastCode = state.History.Last().Message;
+                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
+                    {
+                        Type = nameof(GithubFlowEventType.CodeCreated),
+                        Data = new Dictionary<string, string> {
+                            { "org", data["org"].ToString() },
+                            { "repo", data["repo"].ToString() },
+                            { "issueNumber", data["issueNumber"].ToString() },
+                            { "code", lastCode },
+                            { "parentNumber", data["parentNumber"].ToString() }
+                        }
+                    });
+                }
                 break;
             default:
                 break;

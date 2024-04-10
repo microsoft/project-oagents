@@ -119,7 +119,7 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
             Id = $"Guid.NewGuid()",
             Type = eventType,
             Time = DateTimeOffset.UtcNow,
-            DataContentType = "application/json",
+            DataContentType = "application/cloudevents+json",
             Data = data
         });
     }
@@ -155,7 +155,7 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
                 Id = $"Guid.NewGuid()",
                 Type = eventType,
                 Time = DateTimeOffset.UtcNow,
-                DataContentType = "application/json",
+                DataContentType = "application/cloudevents+json",
                 Data = data
             });
         }

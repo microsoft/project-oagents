@@ -1,18 +1,19 @@
 using CloudNative.CloudEvents;
 using Dapr.Actors.Runtime;
+using Dapr.Client;
 using Microsoft.AI.Agents.Dapr;
 using Microsoft.AI.DevTeam.Events;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.AI.DevTeam;
 public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
 {
-    protected override string Namespace => Consts.MainNamespace;
     private readonly ILogger<DeveloperLead> _logger;
 
-    public DeveloperLead(ActorHost host, Kernel kernel, ISemanticTextMemory memory, ILogger<DeveloperLead> logger)
-     : base(host, memory, kernel)
+    public DeveloperLead(ActorHost host, DaprClient client, Kernel kernel, ISemanticTextMemory memory, ILogger<DeveloperLead> logger)
+     : base(host, client, memory, kernel)
     {
         _logger = logger;
     }
@@ -22,33 +23,37 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
         switch (item.Type)
         {
             case nameof(GithubFlowEventType.DevPlanRequested):
-                // var plan = await CreatePlan(item.Message);
-                // await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
-                // {
-                //     Type = nameof(GithubFlowEventType.DevPlanGenerated),
-                //     Data = new Dictionary<string, string> {
-                //             { "org", item.Data["org"] },
-                //             { "repo", item.Data["repo"] },
-                //             { "issueNumber", item.Data["issueNumber"] },
-                //             { "plan", plan }
-                //         },
-                //     Message = plan
-                // });
+                {
+                    var data = (JObject)item.Data;
+                    var plan = await CreatePlan(data["input"].ToString());
+                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
+                    {
+                        Type = nameof(GithubFlowEventType.DevPlanGenerated),
+                        Data = new Dictionary<string, string> {
+                            { "org", data["org"].ToString() },
+                            { "repo", data["repo"].ToString() },
+                            { "issueNumber", data["issueNumber"].ToString() },
+                            { "result", plan }
+                        }
+                    });
+                }
                 break;
             case nameof(GithubFlowEventType.DevPlanChainClosed):
-                // var latestPlan = _state.State.History.Last().Message;
-                // await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
-                // {
-                //     Type = nameof(GithubFlowEventType.DevPlanCreated),
-                //     Data = new Dictionary<string, string> {
-                //             { "org", item.Data["org"] },
-                //             { "repo", item.Data["repo"] },
-                //             { "issueNumber", item.Data["issueNumber"] },
-                //             {"parentNumber", item.Data["parentNumber"]},
-                //             { "plan", latestPlan }
-                //         },
-                //     Message = latestPlan
-                // });
+                 {
+                    var data = (JObject)item.Data;
+                    var latestPlan = state.History.Last().Message;
+                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
+                    {
+                        Type = nameof(GithubFlowEventType.DevPlanCreated),
+                        Data = new Dictionary<string, string> {
+                            { "org", data["org"].ToString() },
+                            { "repo", data["repo"].ToString() },
+                            { "issueNumber", data["issueNumber"].ToString() },
+                            {"parentNumber", data["parentNumber"].ToString()},
+                            { "plan", latestPlan }
+                        }
+                    });
+                }
                 break;
             default:
                 break;

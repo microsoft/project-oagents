@@ -1,12 +1,13 @@
 ﻿using CloudNative.CloudEvents;
 using Dapr.Actors.Runtime;
+using Dapr.Client;
 using Microsoft.AI.Agents.Dapr;
 using Microsoft.AI.DevTeam.Events;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.AI.DevTeam;
 public class Sandbox : Agent
 {
-     protected override string Namespace => Consts.MainNamespace;
     private const string ReminderName = "SandboxRunReminder";
     private readonly IManageAzure _azService;
    // private readonly IReminderRegistry _reminderRegistry;
@@ -14,7 +15,7 @@ public class Sandbox : Agent
 
     //protected readonly IPersistentState<SandboxMetadata> _state;
 
-    public Sandbox(ActorHost host,IManageAzure azService) : base(host)
+    public Sandbox(ActorHost host, DaprClient client, IManageAzure azService) : base(host, client)
     {
         _azService = azService;
     }
@@ -25,14 +26,14 @@ public class Sandbox : Agent
        {
            case nameof(GithubFlowEventType.SandboxRunCreated):
             {
-
+                    var data = (JObject)item.Data;
+                    var org = data["org"].ToString();
+                    var repo = data["repo"].ToString();
+                    var parentIssueNumber = long.Parse(data["parentNumber"].ToString());
+                    var issueNumber = long.Parse(data["issueNumber"].ToString());
+                    await ScheduleCommitSandboxRun(org, repo, parentIssueNumber, issueNumber);
             }
-                break;
-            //    var org = item.Data["org"];
-            //    var repo = item.Data["repo"];
-            //    var parentIssueNumber = long.Parse(item.Data["parentNumber"]);
-            //    var issueNumber = long.Parse(item.Data["issueNumber"]);
-            //    await ScheduleCommitSandboxRun(org, repo, parentIssueNumber, issueNumber);
+             break;
            
            default:
                break;

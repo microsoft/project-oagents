@@ -1,5 +1,6 @@
 using System.Text;
 using Dapr.Actors.Runtime;
+using Dapr.Client;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
@@ -9,8 +10,9 @@ namespace Microsoft.AI.Agents.Dapr;
 
 public abstract class AiAgent<T> : Agent, IAiAgent
 {
-    public AiAgent(ActorHost host,ISemanticTextMemory memory, Kernel kernel)
-    : base(host)
+    public string StateStore = "state";
+    public AiAgent(ActorHost host, DaprClient client,ISemanticTextMemory memory, Kernel kernel)
+    : base(host, client)
     {
         _memory = memory;
         _kernel = kernel;
@@ -18,22 +20,29 @@ public abstract class AiAgent<T> : Agent, IAiAgent
     private readonly ISemanticTextMemory _memory;
     private readonly Kernel _kernel;
 
+    protected AgentState<T> state;
+
+   
+    protected override async Task OnActivateAsync()
+    {
+        state = await StateManager.GetStateAsync<AgentState<T>>(StateStore);
+    } 
+
     public void AddToHistory(string message, ChatUserType userType)
     {
-        // if (_state.State.History == null) _state.State.History = new List<ChatHistoryItem>();
-        // _state.State.History.Add(new ChatHistoryItem
-        // {
-        //     Message = message,
-        //     Order = _state.State.History.Count + 1,
-        //     UserType = userType
-        // });
+        if (state.History == null) state.History = new List<ChatHistoryItem>();
+        state.History.Add(new ChatHistoryItem
+        {
+            Message = message,
+            Order = state.History.Count + 1,
+            UserType = userType
+        });
     }
 
     public string AppendChatHistory(string ask)
     {
-        // AddToHistory(ask, ChatUserType.User);
-        // return string.Join("\n", _state.State.History.Select(message => $"{message.UserType}: {message.Message}"));
-        return default;
+        AddToHistory(ask, ChatUserType.User);
+        return string.Join("\n", state.History.Select(message => $"{message.UserType}: {message.Message}"));
     }
 
     public virtual async Task<string> CallFunction(string template, KernelArguments arguments, OpenAIPromptExecutionSettings? settings = null)
@@ -43,6 +52,9 @@ public abstract class AiAgent<T> : Agent, IAiAgent
         var function = _kernel.CreateFunctionFromPrompt(template, propmptSettings);
         var result = (await _kernel.InvokeAsync(function, arguments)).ToString();
         AddToHistory(result, ChatUserType.Agent);
+        await StateManager.SetStateAsync(
+                StateStore,
+                state);
         return result;
     }
 

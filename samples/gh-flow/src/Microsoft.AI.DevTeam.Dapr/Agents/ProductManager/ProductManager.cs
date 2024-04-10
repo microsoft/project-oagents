@@ -1,19 +1,20 @@
 using CloudNative.CloudEvents;
 using Dapr.Actors.Runtime;
+using Dapr.Client;
 using Microsoft.AI.Agents.Dapr;
 using Microsoft.AI.DevTeam.Events;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.AI.DevTeam;
 
 public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
 {
-    protected override string Namespace => Consts.MainNamespace;
     private readonly ILogger<ProductManager> _logger;
 
-    public ProductManager(ActorHost host, Kernel kernel, ISemanticTextMemory memory, ILogger<ProductManager> logger) 
-    : base(host, memory, kernel)
+    public ProductManager(ActorHost host, DaprClient client, Kernel kernel, ISemanticTextMemory memory, ILogger<ProductManager> logger)
+    : base(host, client, memory, kernel)
     {
         _logger = logger;
     }
@@ -23,31 +24,37 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
         switch (item.Type)
         {
             case nameof(GithubFlowEventType.ReadmeRequested):
-                // var readme = await CreateReadme(item.Message);
-                // await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event {
-                //      Type = nameof(GithubFlowEventType.ReadmeGenerated),
-                //         Data = new Dictionary<string, string> {
-                //             { "org", item.Data["org"] },
-                //             { "repo", item.Data["repo"] },
-                //             { "issueNumber", item.Data["issueNumber"] },
-                //             { "readme", readme }
-                //         },
-                //        Message = readme
-                // });
+                {
+                    var data = (JObject)item.Data;
+                    var readme = await CreateReadme(data["input"].ToString());
+                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
+                    {
+                        Type = nameof(GithubFlowEventType.ReadmeGenerated),
+                        Data = new Dictionary<string, string> {
+                            { "org", data["org"].ToString() },
+                            { "repo", data["repo"].ToString() },
+                            { "issueNumber", data["issueNumber"].ToString() },
+                            { "result", readme }
+                        }
+                    });
+                }
                 break;
             case nameof(GithubFlowEventType.ReadmeChainClosed):
-                // var lastReadme = _state.State.History.Last().Message;
-                // await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event {
-                //      Type = nameof(GithubFlowEventType.ReadmeCreated),
-                //         Data = new Dictionary<string, string> {
-                //             { "org", item.Data["org"] },
-                //             { "repo", item.Data["repo"] },
-                //             { "issueNumber", item.Data["issueNumber"] },
-                //             { "readme", lastReadme },
-                //             { "parentNumber", item.Data["parentNumber"] }
-                //         },
-                //        Message = lastReadme
-                // });
+                {
+                    var data = (JObject)item.Data;
+                    var lastReadme = state.History.Last().Message;
+                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent {
+                        Type = nameof(GithubFlowEventType.ReadmeCreated),
+                            Data = new Dictionary<string, string> {
+                                { "org", data["org"].ToString() },
+                                { "repo", data["repo"].ToString() },
+                                { "issueNumber", data["issueNumber"].ToString() },
+                                { "readme", lastReadme },
+                                { "parentNumber", data["parentNumber"].ToString() }
+                            },
+                    });
+                }
+                
                 break;
             default:
                 break;
@@ -58,9 +65,9 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
     {
         try
         {
-            var context = new KernelArguments { ["input"] = AppendChatHistory(ask)};
+            var context = new KernelArguments { ["input"] = AppendChatHistory(ask) };
             var instruction = "Consider the following architectural guidelines:!waf!";
-            var enhancedContext = await AddKnowledge(instruction, "waf",context);
+            var enhancedContext = await AddKnowledge(instruction, "waf", context);
             return await CallFunction(PMSkills.Readme, enhancedContext);
         }
         catch (Exception ex)
