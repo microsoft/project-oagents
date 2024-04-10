@@ -114,51 +114,39 @@ app.UseRouting()
     var ghOptions = app.Services.GetService<IOptions<GithubOptions>>().Value;
     endpoints.MapGitHubWebhooks(secret: ghOptions.WebhookSecret);
     endpoints.MapActorsHandlers();
+    endpoints.MapSubscribeHandler();
 });
 
 app.MapPost("/developers", [Topic(Consts.PubSub, Consts.MainTopic, 
     $"(event.type ==\"{nameof(GithubFlowEventType.CodeGenerationRequested)}\") || (event.type ==\"{nameof(GithubFlowEventType.CodeGenerationRequested)}\")", 1)] 
-    async (IActorProxyFactory proxyFactory, CloudEvent evt) => {
-    var dev = proxyFactory.Create(new ActorId(""), nameof(Dev));
-    await dev.InvokeMethodAsync(nameof(Dev.HandleEvent), evt);
-});
+    async (IActorProxyFactory proxyFactory, CloudEvent evt) =>  await HandleEvent(proxyFactory, evt.Subject, nameof(Dev), nameof(Dev.HandleEvent), evt));
 
 app.MapPost("/devleads", [Topic(Consts.PubSub, Consts.MainTopic,
 $"(event.type ==\"{nameof(GithubFlowEventType.DevPlanRequested)}\") || (event.type ==\"{nameof(GithubFlowEventType.DevPlanChainClosed)}\")", 2)] 
-async (IActorProxyFactory proxyFactory, CloudEvent evt) => {
-     var devLead = proxyFactory.Create(new ActorId(""), nameof(DeveloperLead));
-     await devLead.InvokeMethodAsync(nameof(DeveloperLead.HandleEvent), evt);
-});
+async (IActorProxyFactory proxyFactory, CloudEvent evt) => await HandleEvent(proxyFactory, evt.Subject, nameof(DeveloperLead), nameof(DeveloperLead.HandleEvent), evt));
 
 app.MapPost("/productmanagers", [Topic(Consts.PubSub, Consts.MainTopic, 
 $"(event.type ==\"{nameof(GithubFlowEventType.ReadmeRequested)}\") || (event.type ==\"{nameof(GithubFlowEventType.ReadmeChainClosed)}\")", 3)]
-async (IActorProxyFactory proxyFactory, CloudEvent evt) => {
-    var pm = proxyFactory.Create(new ActorId(""), nameof(ProductManager));
-    await pm.InvokeMethodAsync(nameof(ProductManager.HandleEvent), evt);
-});
+async (IActorProxyFactory proxyFactory, CloudEvent evt) =>  await HandleEvent(proxyFactory, evt.Subject, nameof(ProductManager), nameof(ProductManager.HandleEvent), evt));
 
 app.MapPost("/hubbers", [Topic(Consts.PubSub, Consts.MainTopic,
  $"(event.type ==\"{nameof(GithubFlowEventType.NewAsk)}\") || (event.type ==\"{nameof(GithubFlowEventType.ReadmeGenerated)}\") || (event.type ==\"{nameof(GithubFlowEventType.DevPlanGenerated)}\") || (event.type ==\"{nameof(GithubFlowEventType.CodeGenerated)}\") || (event.type ==\"{nameof(GithubFlowEventType.DevPlanCreated)}\") || (event.type ==\"{nameof(GithubFlowEventType.ReadmeStored)}\") || (event.type ==\"{nameof(GithubFlowEventType.SandboxRunFinished)}\")", 4)]
- async (IActorProxyFactory proxyFactory, CloudEvent evt) => {
-    var hubber = proxyFactory.Create(new ActorId(""), nameof(Hubber));
-    await hubber.InvokeMethodAsync(nameof(Hubber.HandleEvent), evt);
-});
+ async (IActorProxyFactory proxyFactory, CloudEvent evt) =>  await HandleEvent(proxyFactory, evt.Subject, nameof(Hubber), nameof(Hubber.HandleEvent), evt));
 
 app.MapPost("/azuregenies", [Topic(Consts.PubSub, Consts.MainTopic,  
 $"(event.type ==\"{nameof(GithubFlowEventType.ReadmeCreated)}\") || (event.type ==\"{nameof(GithubFlowEventType.CodeCreated)}\")", 5)]
-async (IActorProxyFactory proxyFactory, CloudEvent evt) => {
-    var azGenie = proxyFactory.Create(new ActorId(""), nameof(AzureGenie));
-    await azGenie.InvokeMethodAsync(nameof(AzureGenie.HandleEvent), evt);
-});
+async (IActorProxyFactory proxyFactory, CloudEvent evt) => await HandleEvent(proxyFactory, evt.Subject, nameof(AzureGenie), nameof(AzureGenie.HandleEvent), evt));
 
 app.MapPost("/sandboxes", [Topic(Consts.PubSub, Consts.MainTopic,$"(event.type ==\"{nameof(GithubFlowEventType.SandboxRunCreated)}\")", 6)] 
-async (IActorProxyFactory proxyFactory, CloudEvent evt) => {
-    var sandbox = proxyFactory.Create(new ActorId(""), nameof(Sandbox));
-    await sandbox.InvokeMethodAsync(nameof(Sandbox.HandleEvent), evt);
-});
-
+async (IActorProxyFactory proxyFactory, CloudEvent evt) => await HandleEvent(proxyFactory, evt.Subject, nameof(Sandbox), nameof(Sandbox.HandleEvent), evt));
 
 app.Run();
+
+static async Task HandleEvent(IActorProxyFactory proxyFactory, string actorId, string type, string method, CloudEvent evt)
+{
+    var proxy = proxyFactory.Create(new ActorId(actorId), type);
+    await proxy.InvokeMethodAsync(method, evt);
+}
 
 static ISemanticTextMemory CreateMemory(IServiceProvider provider)
 {

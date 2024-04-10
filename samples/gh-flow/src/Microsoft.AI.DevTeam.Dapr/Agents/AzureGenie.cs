@@ -33,6 +33,7 @@ public class AzureGenie : Agent, IDoAzureStuff
                 await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
                 {
                     Type = nameof(GithubFlowEventType.ReadmeStored),
+                    Subject = item.Subject,
                     Data = new Dictionary<string, string> {
                             { "org", org },
                             { "repo", repo },
@@ -55,6 +56,7 @@ public class AzureGenie : Agent, IDoAzureStuff
                 await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
                 {
                     Type = nameof(GithubFlowEventType.SandboxRunCreated),
+                    Subject = item.Subject,
                     Data = new Dictionary<string, string> {
                             { "org", org },
                             { "repo", repo },

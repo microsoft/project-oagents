@@ -11,7 +11,7 @@ namespace Microsoft.AI.Agents.Dapr;
 
 public abstract class AiAgent<T> : Agent, IAiAgent
 {
-    public string StateStore = "state";
+    public string StateStore = "agents-statestore";
     public AiAgent(ActorHost host, DaprClient client,ISemanticTextMemory memory, Kernel kernel)
     : base(host, client)
     {

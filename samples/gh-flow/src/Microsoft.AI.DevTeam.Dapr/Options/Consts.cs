@@ -3,5 +3,5 @@
 public static class Consts
 {
     public const string MainTopic = "DevPersonas";
-    public const string PubSub = "DevPersonasPubSub";
+    public const string PubSub = "agents-pubsub";
 }

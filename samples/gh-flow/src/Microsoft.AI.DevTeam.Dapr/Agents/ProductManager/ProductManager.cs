@@ -28,9 +28,10 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
                 {
                     var data = (JObject)item.Data;
                     var readme = await CreateReadme(data["input"].ToString());
-                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
+                    await PublishEvent(Consts.PubSub, Consts.MainTopic, new CloudEvent
                     {
                         Type = nameof(GithubFlowEventType.ReadmeGenerated),
+                        Subject = item.Subject,
                         Data = new Dictionary<string, string> {
                             { "org", data["org"].ToString() },
                             { "repo", data["repo"].ToString() },
@@ -44,9 +45,11 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
                 {
                     var data = (JObject)item.Data;
                     var lastReadme = state.History.Last().Message;
-                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent {
+                    await PublishEvent(Consts.PubSub, Consts.MainTopic, new CloudEvent
+                    {
                         Type = nameof(GithubFlowEventType.ReadmeCreated),
-                            Data = new Dictionary<string, string> {
+                        Subject = item.Subject,
+                        Data = new Dictionary<string, string> {
                                 { "org", data["org"].ToString() },
                                 { "repo", data["repo"].ToString() },
                                 { "issueNumber", data["issueNumber"].ToString() },
@@ -55,7 +58,7 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
                             },
                     });
                 }
-                
+
                 break;
             default:
                 break;
@@ -79,7 +82,7 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
     }
 }
 
-public interface IManageProducts: IActor
+public interface IManageProducts : IActor
 {
     public Task<string> CreateReadme(string ask);
 }

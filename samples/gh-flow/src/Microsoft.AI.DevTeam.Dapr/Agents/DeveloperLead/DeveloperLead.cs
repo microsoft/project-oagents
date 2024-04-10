@@ -30,6 +30,7 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
                     await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
                     {
                         Type = nameof(GithubFlowEventType.DevPlanGenerated),
+                        Subject = item.Subject,
                         Data = new Dictionary<string, string> {
                             { "org", data["org"].ToString() },
                             { "repo", data["repo"].ToString() },
@@ -46,6 +47,7 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
                     await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
                     {
                         Type = nameof(GithubFlowEventType.DevPlanCreated),
+                        Subject = item.Subject,
                         Data = new Dictionary<string, string> {
                             { "org", data["org"].ToString() },
                             { "repo", data["repo"].ToString() },

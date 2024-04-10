@@ -29,6 +29,7 @@ public class Dev : AiAgent<DeveloperState>, IDevelopApps
                     await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
                     {
                         Type = nameof(GithubFlowEventType.CodeGenerated),
+                        Subject = item.Subject,
                         Data = new Dictionary<string, string> {
                             { "org", data["org"].ToString() },
                             { "repo", data["repo"].ToString() },
@@ -45,6 +46,7 @@ public class Dev : AiAgent<DeveloperState>, IDevelopApps
                     await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
                     {
                         Type = nameof(GithubFlowEventType.CodeCreated),
+                        Subject = item.Subject,
                         Data = new Dictionary<string, string> {
                             { "org", data["org"].ToString() },
                             { "repo", data["repo"].ToString() },
