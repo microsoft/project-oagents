@@ -1,13 +1,9 @@
-using System.Linq;
 using System.Reflection;
-using Azure;
-using Azure.AI.OpenAI;
 using Elsa.Extensions;
 using Elsa.Workflows;
 using Elsa.Workflows.Contracts;
 using Elsa.Workflows.Models;
 using Elsa.Workflows.UIHints;
-using Microsoft.Extensions.Http.Resilience;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SKDevTeam;
@@ -30,18 +26,17 @@ public class SemanticKernelActivityProvider : IActivityProvider
     public async ValueTask<IEnumerable<ActivityDescriptor>> GetDescriptorsAsync(CancellationToken cancellationToken = default)
     {
         // get the kernel
-        var kernel = KernelBuilder();
+        var kernel = KernelBuilder.BuildKernel();
 
         // get a list of skills in the assembly
         var skills = LoadSkillsFromAssemblyAsync(typeof(SemanticKernelActivityProvider).Assembly.ToString(), kernel);
-        var functionsAvailable = kernel.Plugins.GetFunctionsMetadata();
-
+        
         // create activity descriptors for each skilland function
         var activities = new List<ActivityDescriptor>();
-        foreach (var function in functionsAvailable)
+        foreach (var skill in skills)
         {
-            Console.WriteLine($"Creating Activities for Plugin: {function.PluginName}");
-            activities.Add(CreateActivityDescriptorFromSkillAndFunction(function, cancellationToken));
+            Console.WriteLine($"Creating Activities for Plugin: {skill.SemanticFunctionConfig.SkillName}");
+            activities.Add(CreateActivityDescriptorFromSkillAndFunction(skill, cancellationToken));
         }
 
         return activities;
@@ -53,17 +48,19 @@ public class SemanticKernelActivityProvider : IActivityProvider
     /// <param name="function">The semantic kernel function</param>
     /// <param name="cancellationToken">An optional cancellation token.</param>
     /// <returns>An activity descriptor.</returns>
-    private ActivityDescriptor CreateActivityDescriptorFromSkillAndFunction(KernelFunctionMetadata function, CancellationToken cancellationToken = default)
+    private ActivityDescriptor CreateActivityDescriptorFromSkillAndFunction(SkillDefintion skill, CancellationToken cancellationToken = default)
     {
         // Create a fully qualified type name for the activity 
         var thisNamespace = GetType().Namespace;
-        var fullTypeName = $"{thisNamespace}.{function.PluginName}.{function.Name}";
+        var function = skill.SemanticFunctionConfig;
+
+        var fullTypeName = $"{thisNamespace}.{function.SkillName}.{function.Name}";
         Console.WriteLine($"Creating Activity: {fullTypeName}");
 
         // create inputs from the function parameters - the SemanticKernelSkill activity will be the base for each activity
         var inputs = new List<InputDescriptor>();
-        foreach (var p in function.Parameters) { inputs.Add(CreateInputDescriptorFromSKParameter(p)); }
-        inputs.Add(CreateInputDescriptor(typeof(string), "SkillName", function.PluginName, "The name of the skill to use (generated, do not change)"));
+        foreach (var p in skill.KernelFunction.Metadata.Parameters) { inputs.Add(CreateInputDescriptorFromSKParameter(p)); }
+        inputs.Add(CreateInputDescriptor(typeof(string), "SkillName", function.SkillName, "The name of the skill to use (generated, do not change)"));
         inputs.Add(CreateInputDescriptor(typeof(string), "FunctionName", function.Name, "The name of the function to use (generated, do not change)"));
         inputs.Add(CreateInputDescriptor(typeof(int), "MaxRetries", KernelSettings.DefaultMaxRetries, "Max Retries to contact AI Service"));
 
@@ -74,8 +71,8 @@ public class SemanticKernelActivityProvider : IActivityProvider
             Description = function.Description,
             Name = function.Name,
             TypeName = fullTypeName,
-            Namespace = $"{thisNamespace}.{function.PluginName}",
-            DisplayName = $"{function.PluginName}.{function.Name}",
+            Namespace = $"{thisNamespace}.{function.SkillName}",
+            DisplayName = $"{function.SkillName}.{function.Name}",
             Inputs = inputs,
             Outputs = new[] { new OutputDescriptor() },
             Constructor = context =>
@@ -89,7 +86,7 @@ public class SemanticKernelActivityProvider : IActivityProvider
                 activityInstance.Type = fullTypeName;
 
                 // Configure the activity's URL and method properties.
-                activityInstance.SkillName = new Input<string?>(function.PluginName);
+                activityInstance.SkillName = new Input<string?>(function.SkillName);
                 activityInstance.FunctionName = new Input<string?>(function.Name);
 
                 return activityInstance;
@@ -147,9 +144,9 @@ public class SemanticKernelActivityProvider : IActivityProvider
     ///<summary>
     /// Gets a list of the skills in the assembly
     ///</summary>
-    private IEnumerable<string> LoadSkillsFromAssemblyAsync(string assemblyName, Kernel kernel)
+    private IEnumerable<SkillDefintion> LoadSkillsFromAssemblyAsync(string assemblyName, Kernel kernel)
     {
-        var skills = new List<string>();
+        var skills = new List<SkillDefintion>();
         var assembly = Assembly.Load(assemblyName);
         Type[] skillTypes = assembly.GetTypes()
             .Where(type => type.Namespace == "Microsoft.SKDevTeam")
@@ -157,7 +154,6 @@ public class SemanticKernelActivityProvider : IActivityProvider
         foreach (Type skillType in skillTypes)
         {
 
-            skills.Add(skillType.Name);
             var functions = skillType.GetFields();
             foreach (var function in functions)
             {
@@ -166,38 +162,30 @@ public class SemanticKernelActivityProvider : IActivityProvider
                 {
                     var promptTemplate = SemanticFunctionConfig.ForSkillAndFunction(skillType.Name, function.Name);
                     var skfunc = kernel.CreateFunctionFromPrompt(
-                        promptTemplate.PromptTemplate, new OpenAIPromptExecutionSettings { MaxTokens = 8000, Temperature = 0.4, TopP = 1 });
+                        promptTemplate.PromptTemplate, new OpenAIPromptExecutionSettings
+                        {
+                            MaxTokens = promptTemplate.MaxTokens,
+                            Temperature = promptTemplate.Temperature,
+                            TopP = promptTemplate.TopP
+                        });
 
-                    Console.WriteLine($"SKActivityProvider Added SK function: {skfunc.Metadata.PluginName}.{skfunc.Name}");
+                    skills.Add(new SkillDefintion
+                    {
+                        SemanticFunctionConfig = promptTemplate,
+                        KernelFunction = skfunc
+                    });
+
+                    Console.WriteLine($"SKActivityProvider Added SK function: {skillType.Name}.{function.Name}");
                 }
             }
         }
         return skills;
     }
+}
 
-    /// <summary>
-    /// Gets a semantic kernel instance
-    /// </summary>
-    /// <returns>Microsoft.SemanticKernel.IKernel</returns>
-    private Kernel KernelBuilder()
-    {
-        var kernelSettings = KernelSettings.LoadSettings();
-
-        var clientOptions = new OpenAIClientOptions();
-        clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
-        var openAIClient = new OpenAIClient(new Uri(kernelSettings.Endpoint), new AzureKeyCredential(kernelSettings.ApiKey), clientOptions);
-        var builder = Kernel.CreateBuilder();
-        builder.Services.AddLogging(c => c.AddConsole().AddDebug().SetMinimumLevel(LogLevel.Debug));
-        builder.Services.AddAzureOpenAIChatCompletion(kernelSettings.DeploymentOrModelId, openAIClient);
-        builder.Services.ConfigureHttpClientDefaults(c =>
-        {
-            c.AddStandardResilienceHandler().Configure(o =>
-            {
-                o.Retry.MaxRetryAttempts = 5;
-                o.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
-            });
-        });
-        return builder.Build();
-    }
+internal class SkillDefintion
+{
+    public SemanticFunctionConfig SemanticFunctionConfig { get; set; }
+    public KernelFunction KernelFunction { get; set; }
 }
 

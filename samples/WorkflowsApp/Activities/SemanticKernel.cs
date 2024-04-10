@@ -1,7 +1,5 @@
 using Elsa.Extensions;
 using JetBrains.Annotations;
-using System.Text;
-using System.Reflection;
 using Elsa.Workflows;
 using Elsa.Workflows.Attributes;
 using Elsa.Workflows.UIHints;
@@ -9,9 +7,6 @@ using Elsa.Workflows.Models;
 using Microsoft.SKDevTeam;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel;
-using Azure.AI.OpenAI;
-using Azure;
-using Microsoft.Extensions.Http.Resilience;
 
 
 namespace Elsa.SemanticKernel;
@@ -80,12 +75,12 @@ public class SemanticKernelSkill : CodeActivity<string>
         else
         {
             // get the kernel
-            var kernel = KernelBuilder();
+            var kernel = KernelBuilder.BuildKernel();
 
             // load the skill
             var promptTemplate = SemanticFunctionConfig.ForSkillAndFunction(skillName, functionName);
 
-            var function = kernel.CreateFunctionFromPrompt(promptTemplate.PromptTemplate, new OpenAIPromptExecutionSettings { MaxTokens = 8000, Temperature = 0.4, TopP = 1 });
+            var function = kernel.CreateFunctionFromPrompt(promptTemplate.PromptTemplate, new OpenAIPromptExecutionSettings { MaxTokens = 4096, Temperature = 0.4, TopP = 1 });
 
             // set the context (our prompt)
             var arguments =  new KernelArguments{
@@ -95,101 +90,5 @@ public class SemanticKernelSkill : CodeActivity<string>
             var answer = await kernel.InvokeAsync(function, arguments);
             workflowContext.SetResult(answer);
         }
-    }
-
-    /// <summary>
-    /// Load the skills into the kernel
-    /// </summary>
-    private string ListSkillsInKernel(Kernel kernel)
-    {
-
-        var theSkills = LoadSkillsFromAssemblyAsync("skills", kernel);
-        var functionsAvailable = kernel.Plugins.GetFunctionsMetadata();
-
-        var list = new StringBuilder();
-        foreach (var function in functionsAvailable)
-        {
-            Console.WriteLine($"Skill: {function.PluginName}");
-            
-                // Function description
-                if (function.Description != null)
-                {
-                    list.AppendLine($"// {function.Description}");
-                }
-                else
-                {
-                    Console.WriteLine("{0}.{1} is missing a description", function.PluginName, function.Name);
-                    list.AppendLine($"// Function {function.PluginName}.{function.Name}.");
-                }
-
-                // Function name
-                list.AppendLine($"{function.PluginName}.{function.Name}");
-
-                // Function parameters
-                foreach (var p in function.Parameters)
-                {
-                    var description = string.IsNullOrEmpty(p.Description) ? p.Name : p.Description;
-                    var defaultValueString =  p.DefaultValue == null ? string.Empty : $" (default value: {p.DefaultValue})";
-                    list.AppendLine($"Parameter \"{p.Name}\": {description} {defaultValueString}");
-                }
-        }
-
-        Console.WriteLine($"List of all skills ----- {list.ToString()}");
-        return list.ToString();
-    }
-
-    /// <summary>
-    /// Gets a semantic kernel instance
-    /// </summary>
-    /// <returns>Microsoft.SemanticKernel.IKernel</returns>
-    private Kernel KernelBuilder()
-    {
-        var kernelSettings = KernelSettings.LoadSettings();
-
-        var clientOptions = new OpenAIClientOptions();
-        clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
-        var openAIClient = new OpenAIClient(new Uri(kernelSettings.Endpoint), new AzureKeyCredential(kernelSettings.ApiKey), clientOptions);
-        var builder = Kernel.CreateBuilder();
-        builder.Services.AddLogging( c=> c.AddConsole().AddDebug().SetMinimumLevel(LogLevel.Debug));
-        builder.Services.AddAzureOpenAIChatCompletion(kernelSettings.DeploymentOrModelId, openAIClient);
-        builder.Services.ConfigureHttpClientDefaults(c=>
-        {
-            c.AddStandardResilienceHandler().Configure( o=> {
-                o.Retry.MaxRetryAttempts = 5;
-                o.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
-            });
-        });
-        return builder.Build();
-    }
-
-    ///<summary>
-    /// Gets a list of the skills in the assembly
-    ///</summary>
-    private IEnumerable<string> LoadSkillsFromAssemblyAsync(string assemblyName, Kernel kernel)
-    {
-        var skills = new List<string>();
-        var assembly = Assembly.Load(assemblyName);
-        Type[] skillTypes = assembly.GetTypes().ToArray();
-        foreach (Type skillType in skillTypes)
-        {
-            if (skillType.Namespace.Equals("Microsoft.SKDevTeam"))
-            {
-                skills.Add(skillType.Name);
-                var functions = skillType.GetFields();
-                foreach (var function in functions)
-                {
-                    string field = function.FieldType.ToString();
-                    if (field.Equals("Microsoft.SKDevTeam.SemanticFunctionConfig"))
-                    {
-                        var prompt = SemanticFunctionConfig.ForSkillAndFunction(skillType.Name, function.Name);
-                        var skfunc = kernel.CreateFunctionFromPrompt(
-                            prompt.PromptTemplate, new OpenAIPromptExecutionSettings { MaxTokens = 8000, Temperature = 0.4, TopP = 1 });
-
-                        Console.WriteLine($"SK Added function: {skfunc.Metadata.PluginName}.{skfunc.Metadata.Name}");
-                    }
-                }
-            }
-        }
-        return skills;
     }
 }
