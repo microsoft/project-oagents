@@ -2,6 +2,7 @@ using System.Reflection;
 using Elsa.Extensions;
 using Elsa.Workflows;
 using Elsa.Workflows.Contracts;
+using Elsa.Workflows.Management;
 using Elsa.Workflows.Models;
 using Elsa.Workflows.UIHints;
 using Microsoft.SemanticKernel;
@@ -30,13 +31,13 @@ public class SemanticKernelActivityProvider : IActivityProvider
 
         // get a list of skills in the assembly
         var skills = LoadSkillsFromAssemblyAsync(typeof(SemanticKernelActivityProvider).Assembly.ToString(), kernel);
-        
+
         // create activity descriptors for each skilland function
         var activities = new List<ActivityDescriptor>();
         foreach (var skill in skills)
         {
             Console.WriteLine($"Creating Activities for Plugin: {skill.SemanticFunctionConfig.SkillName}");
-            activities.Add(CreateActivityDescriptorFromSkillAndFunction(skill, cancellationToken));
+            activities.Add(await CreateActivityDescriptorFromSkillAndFunction(skill, cancellationToken));
         }
 
         return activities;
@@ -48,7 +49,7 @@ public class SemanticKernelActivityProvider : IActivityProvider
     /// <param name="function">The semantic kernel function</param>
     /// <param name="cancellationToken">An optional cancellation token.</param>
     /// <returns>An activity descriptor.</returns>
-    private ActivityDescriptor CreateActivityDescriptorFromSkillAndFunction(SkillDefintion skill, CancellationToken cancellationToken = default)
+    private async Task<ActivityDescriptor> CreateActivityDescriptorFromSkillAndFunction(SkillDefintion skill, CancellationToken cancellationToken = default)
     {
         // Create a fully qualified type name for the activity 
         var thisNamespace = GetType().Namespace;
@@ -59,10 +60,15 @@ public class SemanticKernelActivityProvider : IActivityProvider
 
         // create inputs from the function parameters - the SemanticKernelSkill activity will be the base for each activity
         var inputs = new List<InputDescriptor>();
-        foreach (var p in skill.KernelFunction.Metadata.Parameters) { inputs.Add(CreateInputDescriptorFromSKParameter(p)); }
-        inputs.Add(CreateInputDescriptor(typeof(string), "SkillName", function.SkillName, "The name of the skill to use (generated, do not change)"));
-        inputs.Add(CreateInputDescriptor(typeof(string), "FunctionName", function.Name, "The name of the function to use (generated, do not change)"));
-        inputs.Add(CreateInputDescriptor(typeof(int), "MaxRetries", KernelSettings.DefaultMaxRetries, "Max Retries to contact AI Service"));
+        
+        foreach (var p in skill.KernelFunction.Metadata.Parameters)
+        {
+            inputs.Add(CreateInputDescriptorFromSKParameter(p));
+        }
+
+        inputs.Add(await _activityDescriber.DescribeInputPropertyAsync<SemanticKernelSkill, Input<int>>(x => x.MaxRetries, cancellationToken));
+
+        var outputDescriptor = await _activityDescriber.DescribeOutputProperty<SemanticKernelSkill, Output<string>?>(x => x.Result, cancellationToken);
 
         return new ActivityDescriptor
         {
@@ -74,7 +80,7 @@ public class SemanticKernelActivityProvider : IActivityProvider
             Namespace = $"{thisNamespace}.{function.SkillName}",
             DisplayName = $"{function.SkillName}.{function.Name}",
             Inputs = inputs,
-            Outputs = new[] { new OutputDescriptor() },
+            Outputs = new[] { outputDescriptor },
             Constructor = context =>
             {
                 // The constructor is called when an activity instance of this type is requested.
@@ -88,6 +94,8 @@ public class SemanticKernelActivityProvider : IActivityProvider
                 // Configure the activity's URL and method properties.
                 activityInstance.SkillName = new Input<string?>(function.SkillName);
                 activityInstance.FunctionName = new Input<string?>(function.Name);
+                activityInstance.SysPrompt = new Input<string?>(function.PromptTemplate);
+                activityInstance.Prompt = new Input<string?>(String.Empty);
 
                 return activityInstance;
             }

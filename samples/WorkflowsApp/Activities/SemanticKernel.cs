@@ -82,12 +82,22 @@ public class SemanticKernelSkill : CodeActivity<string>
 
             var function = kernel.CreateFunctionFromPrompt(promptTemplate.PromptTemplate, new OpenAIPromptExecutionSettings { MaxTokens = 4096, Temperature = 0.4, TopP = 1 });
 
-            // set the context (our prompt)
-            var arguments =  new KernelArguments{
-                ["input"] = prompt
-            };
+            var arguments = new KernelArguments();
 
-            var answer = await kernel.InvokeAsync(function, arguments);
+            if (SyntheticProperties.Count > 0)
+            {
+                foreach(var property in SyntheticProperties) {
+                    arguments[property.Key] = property.Value;
+                }
+            }
+            else
+            {
+                // set the context (our prompt)
+                arguments["input"] = prompt;
+            }          
+
+            var answer = await kernel.InvokeAsync<string>(function, arguments);
+
             workflowContext.SetResult(answer);
         }
     }
