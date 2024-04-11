@@ -1,6 +1,4 @@
-﻿using CloudNative.CloudEvents;
-using Dapr.Actors;
-using Dapr.Actors.Runtime;
+﻿using Dapr.Actors.Runtime;
 using Dapr.Client;
 using Microsoft.AI.Agents.Abstractions;
 
@@ -14,10 +12,16 @@ public abstract class Agent : Actor, IAgent
     {
         this.daprClient = daprClient;
     }
-    public abstract Task HandleEvent(CloudEvent item);
+    public abstract Task HandleEvent(Event item);
 
-    public async Task PublishEvent(string ns, string id, CloudEvent item)
+    public async Task PublishEvent(string ns, string id, Event item)
     {
-       await daprClient.PublishEventAsync(ns, id, item);
+        var metadata = new Dictionary<string, string>() {
+                 { "cloudevent.Type", item.Type },
+                 { "cloudevent.Subject",  item.Subject },
+                 { "cloudevent.id", Guid.NewGuid().ToString()}
+            };
+      
+       await daprClient.PublishEventAsync(ns, id, item, metadata);
     }
 }

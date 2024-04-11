@@ -1,10 +1,8 @@
-using CloudNative.CloudEvents;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
-using Newtonsoft.Json.Linq;
 using Orleans.Runtime;
 
 namespace Microsoft.AI.DevTeam;
@@ -22,41 +20,36 @@ public class Dev : AiAgent<DeveloperState>, IDevelopApps
         _logger = logger;
     }
 
-    public async override Task HandleEvent(CloudEvent item)
+    public async override Task HandleEvent(Event item)
     {
         switch (item.Type)
         {
             case nameof(GithubFlowEventType.CodeGenerationRequested):
                 {
-                    var data = (JObject)item.Data;
-                    var code = await GenerateCode(data["input"].ToString());
-                    await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new CloudEvent
+                    var context = item.ToGithubContext();
+                    var code = await GenerateCode(item.Data["input"]);
+                    var data = context.ToData();
+                    data["result"] = code;
+                    await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                     {
                         Type = nameof(GithubFlowEventType.CodeGenerated),
-                        Data = new Dictionary<string, string> {
-                            { "org", data["org"].ToString() },
-                            { "repo", data["repo"].ToString() },
-                            { "issueNumber", data["issueNumber"].ToString()},
-                            { "result", code }
-                        }
+                        Subject = context.Subject,
+                        Data = data
                     });
                 }
 
                 break;
             case nameof(GithubFlowEventType.CodeChainClosed):
                 {
-                    var data = (JObject)item.Data;
+                    var context = item.ToGithubContext();
                     var lastCode = _state.State.History.Last().Message;
-                    await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new CloudEvent
+                    var data = context.ToData();
+                    data["code"] = lastCode;
+                    await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                     {
                         Type = nameof(GithubFlowEventType.CodeCreated),
-                        Data = new Dictionary<string, string> {
-                            { "org", data["org"].ToString() },
-                            { "repo", data["repo"].ToString() },
-                            { "issueNumber", data["issueNumber"].ToString() },
-                            { "code", lastCode },
-                            { "parentNumber", data["parentNumber"].ToString() }
-                        }
+                        Subject = context.Subject,
+                        Data = data
                     });
                 }
 

@@ -1,7 +1,6 @@
-﻿using CloudNative.CloudEvents;
+﻿using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
-using Newtonsoft.Json.Linq;
 using Orleans.Runtime;
 using Orleans.Timers;
 
@@ -24,18 +23,14 @@ public class Sandbox : Agent, IRemindable
         _azService = azService;
         _state = state;
     }
-    public override async Task HandleEvent(CloudEvent item)
+    public override async Task HandleEvent(Event item)
     {
         switch (item.Type)
         {
             case nameof(GithubFlowEventType.SandboxRunCreated):
                 {
-                    var data = (JObject)item.Data;
-                    var org = data["org"].ToString();
-                    var repo = data["repo"].ToString();
-                    var parentIssueNumber = long.Parse(data["parentNumber"].ToString());
-                    var issueNumber = long.Parse(data["issueNumber"].ToString());
-                    await ScheduleCommitSandboxRun(org, repo, parentIssueNumber, issueNumber);
+                    var context = item.ToGithubContext();
+                    await ScheduleCommitSandboxRun(context.Org, context.Repo, context.ParentNumber.Value, context.IssueNumber);
                     break;
                 }
 
@@ -61,7 +56,7 @@ public class Sandbox : Agent, IRemindable
             if (await _azService.IsSandboxCompleted(sandboxId))
             {
                 await _azService.DeleteSandbox(sandboxId);
-                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new CloudEvent
+                await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                 {
                     Type = nameof(GithubFlowEventType.SandboxRunFinished),
                     Data = new Dictionary<string, string> {

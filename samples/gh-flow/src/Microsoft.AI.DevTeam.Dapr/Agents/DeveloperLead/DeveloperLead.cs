@@ -29,6 +29,7 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
                     var plan = await CreatePlan(data["input"].ToString());
                     await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
                     {
+                        Id = Guid.NewGuid().ToString(),
                         Type = nameof(GithubFlowEventType.DevPlanGenerated),
                         Subject = item.Subject,
                         Data = new Dictionary<string, string> {
@@ -46,6 +47,7 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
                     var latestPlan = state.History.Last().Message;
                     await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
                     {
+                        Id = Guid.NewGuid().ToString(),
                         Type = nameof(GithubFlowEventType.DevPlanCreated),
                         Subject = item.Subject,
                         Data = new Dictionary<string, string> {

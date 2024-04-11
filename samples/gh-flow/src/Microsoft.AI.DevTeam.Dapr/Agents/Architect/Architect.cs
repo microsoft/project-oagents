@@ -1,6 +1,6 @@
-using CloudNative.CloudEvents;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
+using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Dapr;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
@@ -16,7 +16,7 @@ public class Architect : AiAgent<ArchitectState>
     {
     }
 
-    public override Task HandleEvent(CloudEvent item)
+    public override Task HandleEvent(Event item)
     {
         return Task.CompletedTask;
     }

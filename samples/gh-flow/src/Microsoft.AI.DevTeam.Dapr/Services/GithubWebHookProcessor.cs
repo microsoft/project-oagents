@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using CloudNative.CloudEvents;
-using CloudNative.CloudEvents.NewtonsoftJson;
+using CloudNative.CloudEvents.SystemTextJson;
 using Dapr.Client;
 using Json.More;
 using Microsoft.AI.DevTeam.Dapr.Events;
@@ -117,9 +117,9 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
             Source = new Uri("https://github.com/microsoft/azure-openai-dev-skills-orchestrator"),
             Subject = suffix + issueNumber.ToString(),
             DataContentType = "application/cloudevents+json",
-            Data = data
+            Data = JsonSerializer.Serialize(data)
         };
-        await _daprClient.PublishEventAsync(Consts.PubSub, Consts.MainTopic, evt);
+        await PublishEvent(evt);
     }
 
     private async Task HandleNewAsk(long issueNumber, long? parentNumber, string skillName, string functionName, string suffix, string input, string org, string repo)
@@ -152,17 +152,7 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
                 DataContentType = "application/cloudevents+json",
                 Data = JsonSerializer.Serialize(data)
             };
-
-            // var metadata = new Dictionary<string,string>() {
-            //      { "cloudevent.Type", eventType },
-            //      { "cloudevent.id", "d99b228f-6c73-4e78-8c4d-3f80a043d317" }
-            // };
-
-            //var jsonPayload = evt.ToJsonDocument();
-            var formatter = new JsonEventFormatter();
-            var bytes = formatter.EncodeStructuredModeMessage(evt, out var contentType);
-            var json = Encoding.UTF8.GetString(bytes.Span);
-            await _daprClient.PublishEventAsync(Consts.PubSub, Consts.MainTopic, json);
+            await PublishEvent(evt);
         }
         catch (Exception ex)
         {
@@ -170,5 +160,22 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
             throw;
         }
     }
+
+    private async Task PublishEvent(CloudEvent evt)
+    {
+        var formatter = new JsonEventFormatter();
+        var bytes = formatter.EncodeStructuredModeMessage(evt, out var contentType);
+        var json = Encoding.UTF8.GetString(bytes.Span);
+
+         var metadata = new Dictionary<string, string>() {
+                 { "cloudevent.Type", evt.Type },
+                 { "cloudevent.Subject",  evt.Subject },
+                 { "cloudevent.id", evt.Id}
+            };
+
+        await _daprClient.PublishEventAsync(Consts.PubSub, Consts.MainTopic, json, metadata);
+    }
 }
+
+
 

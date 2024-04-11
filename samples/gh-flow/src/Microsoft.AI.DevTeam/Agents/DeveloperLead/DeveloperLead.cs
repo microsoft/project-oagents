@@ -1,4 +1,3 @@
-using CloudNative.CloudEvents;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
@@ -20,41 +19,36 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
         _logger = logger;
     }
 
-    public async override Task HandleEvent(CloudEvent item)
+    public async override Task HandleEvent(Event item)
     {
         switch (item.Type)
         {
             case nameof(GithubFlowEventType.DevPlanRequested):
                 {
-                    var data = (JObject)item.Data;
-                    var plan = await CreatePlan(data["input"].ToString());
-                    await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new CloudEvent
+                    var context = item.ToGithubContext();
+                    var plan = await CreatePlan(item.Data["input"]);
+                    var data = context.ToData();
+                    data["result"] = plan;
+                    await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                     {
                         Type = nameof(GithubFlowEventType.DevPlanGenerated),
-                        Data = new Dictionary<string, string> {
-                            { "org", data["org"].ToString() },
-                            { "repo", data["repo"].ToString() },
-                            { "issueNumber", data["issueNumber"].ToString() },
-                            { "result", plan }
-                        }
+                        Subject = context.Subject,
+                        Data = data
                     });
                 }
 
                 break;
             case nameof(GithubFlowEventType.DevPlanChainClosed):
                 {
-                    var data = (JObject)item.Data;
+                    var context = item.ToGithubContext();
                     var latestPlan = _state.State.History.Last().Message;
-                    await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new CloudEvent
+                    var data = context.ToData();
+                    data["plan"] = latestPlan;
+                    await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                     {
                         Type = nameof(GithubFlowEventType.DevPlanCreated),
-                        Data = new Dictionary<string, string> {
-                            { "org", data["org"].ToString() },
-                            { "repo", data["repo"].ToString() },
-                            { "issueNumber", data["issueNumber"].ToString() },
-                            {"parentNumber", data["parentNumber"].ToString()},
-                            { "plan", latestPlan }
-                        }
+                        Subject = context.Subject,
+                        Data = data
                     });
                 }
 

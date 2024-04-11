@@ -32,6 +32,7 @@ public class AzureGenie : Agent, IDoAzureStuff
                 await Store(org,repo, parentNumber, issueNumber, "readme", "md", "output", data["readme"].ToString());
                 await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
                 {
+                    Id = Guid.NewGuid().ToString(),
                     Type = nameof(GithubFlowEventType.ReadmeStored),
                     Subject = item.Subject,
                     Data = new Dictionary<string, string> {
@@ -55,6 +56,7 @@ public class AzureGenie : Agent, IDoAzureStuff
                 await RunInSandbox(org, repo, parentNumber, issueNumber);
                 await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
                 {
+                    Id = Guid.NewGuid().ToString(),
                     Type = nameof(GithubFlowEventType.SandboxRunCreated),
                     Subject = item.Subject,
                     Data = new Dictionary<string, string> {

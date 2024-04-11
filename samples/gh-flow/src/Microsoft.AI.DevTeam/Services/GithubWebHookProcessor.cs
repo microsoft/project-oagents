@@ -1,4 +1,4 @@
-using CloudNative.CloudEvents;
+using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.DevTeam.Events;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
@@ -96,9 +96,10 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
 
     private async Task HandleClosingIssue(long issueNumber, long? parentNumber, string skillName, string functionName, string suffix, string org, string repo)
     {
+        var subject =  suffix+issueNumber.ToString();
         var streamProvider = _client.GetStreamProvider("StreamProvider");
-        var streamId = StreamId.Create(Consts.MainNamespace, suffix+issueNumber.ToString());
-        var stream = streamProvider.GetStream<CloudEvent>(streamId);
+        var streamId = StreamId.Create(Consts.MainNamespace, subject);
+        var stream = streamProvider.GetStream<Event>(streamId);
         var eventType = (skillName, functionName) switch
             {
                 ("PM","Readme") => nameof(GithubFlowEventType.ReadmeChainClosed),
@@ -114,12 +115,10 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
             { "parentNumber", parentNumber?.ToString()}
         };
 
-        await stream.OnNextAsync(new CloudEvent
+        await stream.OnNextAsync(new Event
         {
-            Id = $"Guid.NewGuid()",
             Type = eventType,
-            Time = DateTimeOffset.UtcNow,
-            DataContentType = "application/cloudevents+json",
+            Subject = subject,
             Data = data
         });
     }
@@ -129,9 +128,10 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
         try
         {
             _logger.LogInformation("Handling new ask");
+            var subject =  suffix+issueNumber.ToString();
             var streamProvider = _client.GetStreamProvider("StreamProvider");
-            var streamId = StreamId.Create(Consts.MainNamespace, suffix+issueNumber.ToString());
-            var stream = streamProvider.GetStream<CloudEvent>(streamId);
+            var streamId = StreamId.Create(Consts.MainNamespace, subject);
+            var stream = streamProvider.GetStream<Event>(streamId);
 
             var eventType = (skillName, functionName) switch
             {
@@ -150,12 +150,10 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
                 { "input", input}
 
             };
-            await stream.OnNextAsync(new CloudEvent
+            await stream.OnNextAsync(new Event
             {
-                Id = $"Guid.NewGuid()",
                 Type = eventType,
-                Time = DateTimeOffset.UtcNow,
-                DataContentType = "application/cloudevents+json",
+                Subject = subject,
                 Data = data
             });
         }

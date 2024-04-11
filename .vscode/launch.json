@@ -1,12 +1,6 @@
 {
     "configurations": [
         {
-            "name": "C#: Microsoft.AI.DevTeam.Dapr [Default Configuration]",
-            "type": "dotnet",
-            "request": "launch",
-            "projectPath": "${workspaceFolder}/samples/gh-flow/src/Microsoft.AI.DevTeam.Dapr/Microsoft.AI.DevTeam.Dapr.csproj"
-        },
-        {
             "name": "C#: Microsoft.AI.DevTeam.Dapr [Default Configuration] with Dapr",
             "type": "dotnet",
             "request": "launch",

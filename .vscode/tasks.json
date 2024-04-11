@@ -3,6 +3,8 @@
 	"tasks": [
 		{
 			"appId": "dev-agents",
+			"grpcPort": 50001,
+			"httpPort": 3500,
 			"appPort": 5244,
 			"componentsPath": "samples/gh-flow/components",
 			"label": "dapr-debug",

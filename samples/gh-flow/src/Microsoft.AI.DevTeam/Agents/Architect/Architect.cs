@@ -1,4 +1,3 @@
-using CloudNative.CloudEvents;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
@@ -18,7 +17,7 @@ public class Architect : AiAgent<ArchitectState>
     {
     }
 
-    public override Task HandleEvent(CloudEvent item)
+    public override Task HandleEvent(Event item)
     {
        return Task.CompletedTask;
     }

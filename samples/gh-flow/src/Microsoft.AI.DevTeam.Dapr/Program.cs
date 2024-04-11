@@ -17,6 +17,9 @@ using Dapr.Actors;
 using CloudEvent = CloudNative.CloudEvents.CloudEvent;
 using Microsoft.AI.DevTeam.Dapr;
 using Microsoft.AI.DevTeam.Dapr.Events;
+using System.Text;
+using CloudNative.CloudEvents.SystemTextJson;
+using System.Net.Mime;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<WebhookEventProcessor, GithubWebHookProcessor>();
@@ -46,6 +49,7 @@ builder.Services.AddActors(
     options =>
     {
         options.UseJsonSerialization = true;
+        
         options.Actors.RegisterActor<Dev>();
         options.Actors.RegisterActor<DeveloperLead>();
         options.Actors.RegisterActor<ProductManager>();
@@ -119,33 +123,46 @@ app.UseRouting()
 
 app.MapPost("/developers", [Topic(Consts.PubSub, Consts.MainTopic, 
     $"(event.type ==\"{nameof(GithubFlowEventType.CodeGenerationRequested)}\") || (event.type ==\"{nameof(GithubFlowEventType.CodeGenerationRequested)}\")", 1)] 
-    async (IActorProxyFactory proxyFactory, CloudEvent evt) =>  await HandleEvent(proxyFactory, evt.Subject, nameof(Dev), nameof(Dev.HandleEvent), evt));
+    async (IActorProxyFactory proxyFactory, CloudEvent evt) =>  await HandleEvent(proxyFactory,nameof(Dev), nameof(Dev.HandleEvent), evt));
 
 app.MapPost("/devleads", [Topic(Consts.PubSub, Consts.MainTopic,
 $"(event.type ==\"{nameof(GithubFlowEventType.DevPlanRequested)}\") || (event.type ==\"{nameof(GithubFlowEventType.DevPlanChainClosed)}\")", 2)] 
-async (IActorProxyFactory proxyFactory, CloudEvent evt) => await HandleEvent(proxyFactory, evt.Subject, nameof(DeveloperLead), nameof(DeveloperLead.HandleEvent), evt));
+async (IActorProxyFactory proxyFactory, CloudEvent evt) => await HandleEvent(proxyFactory, nameof(DeveloperLead), nameof(DeveloperLead.HandleEvent), evt));
 
 app.MapPost("/productmanagers", [Topic(Consts.PubSub, Consts.MainTopic, 
 $"(event.type ==\"{nameof(GithubFlowEventType.ReadmeRequested)}\") || (event.type ==\"{nameof(GithubFlowEventType.ReadmeChainClosed)}\")", 3)]
-async (IActorProxyFactory proxyFactory, CloudEvent evt) =>  await HandleEvent(proxyFactory, evt.Subject, nameof(ProductManager), nameof(ProductManager.HandleEvent), evt));
+async (IActorProxyFactory proxyFactory, CloudEvent evt) =>  await HandleEvent(proxyFactory, nameof(ProductManager), nameof(ProductManager.HandleEvent), evt));
 
 app.MapPost("/hubbers", [Topic(Consts.PubSub, Consts.MainTopic,
  $"(event.type ==\"{nameof(GithubFlowEventType.NewAsk)}\") || (event.type ==\"{nameof(GithubFlowEventType.ReadmeGenerated)}\") || (event.type ==\"{nameof(GithubFlowEventType.DevPlanGenerated)}\") || (event.type ==\"{nameof(GithubFlowEventType.CodeGenerated)}\") || (event.type ==\"{nameof(GithubFlowEventType.DevPlanCreated)}\") || (event.type ==\"{nameof(GithubFlowEventType.ReadmeStored)}\") || (event.type ==\"{nameof(GithubFlowEventType.SandboxRunFinished)}\")", 4)]
- async (IActorProxyFactory proxyFactory, CloudEvent evt) =>  await HandleEvent(proxyFactory, evt.Subject, nameof(Hubber), nameof(Hubber.HandleEvent), evt));
+ async (IActorProxyFactory proxyFactory, CloudEvent evt) =>  await HandleEvent(proxyFactory, nameof(Hubber), nameof(Hubber.HandleEvent), evt));
 
 app.MapPost("/azuregenies", [Topic(Consts.PubSub, Consts.MainTopic,  
 $"(event.type ==\"{nameof(GithubFlowEventType.ReadmeCreated)}\") || (event.type ==\"{nameof(GithubFlowEventType.CodeCreated)}\")", 5)]
-async (IActorProxyFactory proxyFactory, CloudEvent evt) => await HandleEvent(proxyFactory, evt.Subject, nameof(AzureGenie), nameof(AzureGenie.HandleEvent), evt));
+async (IActorProxyFactory proxyFactory, CloudEvent evt) => await HandleEvent(proxyFactory, nameof(AzureGenie), nameof(AzureGenie.HandleEvent), evt));
 
 app.MapPost("/sandboxes", [Topic(Consts.PubSub, Consts.MainTopic,$"(event.type ==\"{nameof(GithubFlowEventType.SandboxRunCreated)}\")", 6)] 
-async (IActorProxyFactory proxyFactory, CloudEvent evt) => await HandleEvent(proxyFactory, evt.Subject, nameof(Sandbox), nameof(Sandbox.HandleEvent), evt));
+async (IActorProxyFactory proxyFactory, CloudEvent evt) => await HandleEvent(proxyFactory, nameof(Sandbox), nameof(Sandbox.HandleEvent), evt));
 
 app.Run();
 
-static async Task HandleEvent(IActorProxyFactory proxyFactory, string actorId, string type, string method, CloudEvent evt)
+static async Task HandleEvent(IActorProxyFactory proxyFactory, string type, string method, CloudEvent evt)
 {
-    var proxy = proxyFactory.Create(new ActorId(actorId), type);
-    await proxy.InvokeMethodAsync(method, evt);
+    try
+    {
+        var payload = ((JsonElement)evt.Data).GetString();
+        byte[] bytes = Encoding.UTF8.GetBytes(payload);
+        var formatter = new JsonEventFormatter();
+
+        var cloudEvent = formatter.DecodeStructuredModeMessage(new MemoryStream(bytes), new ContentType("application/cloudevents+json"), null);
+        var proxy = proxyFactory.Create(new ActorId(cloudEvent.Subject), type);
+        await proxy.InvokeMethodAsync(method, cloudEvent);
+    }
+    catch (Exception ex)
+    {
+        throw;
+    }
+   
 }
 
 static ISemanticTextMemory CreateMemory(IServiceProvider provider)
