@@ -1,3 +1,4 @@
+using BoilerPlate.Events;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
@@ -18,6 +19,10 @@ public class Editor : AiAgent<EditorState>
     : base(state, memory, kernel)
     {
         _logger = logger;
+        if (state.State.Data == null)
+        {
+            state.State.Data = new EditorState();
+        }
     }
 
     public async override Task HandleEvent(Event item)
@@ -25,6 +30,7 @@ public class Editor : AiAgent<EditorState>
         switch (item.Type)
         {
             case nameof(EventTypes.NewRequest):
+                item.Data.TryGetValue("context", out var context);
                 this._state.State.Data.Article = "I have written an article";
                 break;
             default:

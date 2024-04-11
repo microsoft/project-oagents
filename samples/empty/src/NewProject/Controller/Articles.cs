@@ -1,4 +1,5 @@
-﻿using Microsoft.AI.Agents.Abstractions;
+﻿using BoilerPlate.Events;
+using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.DevTeam;
 using Microsoft.AI.DevTeam.Events;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,13 @@ using System.Runtime.CompilerServices;
 
 namespace BoilerPlate.Controller
 {
+
+    [GenerateSerializer]
+    public class Asd
+    {
+        [Id(0)]
+        public string Name { get; set; }
+    }
 
     [Route("api/[controller]")]
     [ApiController]
@@ -48,7 +56,7 @@ namespace BoilerPlate.Controller
             await stream.OnNextAsync(new Event
             {
                 Type = nameof(EventTypes.NewRequest),
-                Message = "Write a new article",
+                Message = id.ToString(),
                 Data = data
             });
 

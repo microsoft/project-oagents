@@ -1,3 +1,4 @@
+using BoilerPlate.Events;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
@@ -18,30 +19,29 @@ public class Writer : AiAgent<WriterState>, IDevelopApps
     : base(state, memory, kernel)
     {
         _logger = logger;
+        if(state.State.Data == null)
+        {
+            state.State.Data = new WriterState();
+        }
     }
 
     public async override Task HandleEvent(Event item)
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.ArticleWritten):
-                var code = await GenerateCode(item.Message);
-                _logger.LogInformation($"Executed agent {nameof(EventTypes.ArticleWritten)}: {this._state.State.Data.WrittenArticle}");
-                //await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
-                //{
-                //    Type = nameof(EventTypes.ArticleWritten),
-                //    Data = new Dictionary<string, string> {
-                //            { "org", item.Data["org"] },
-                //            { "repo", item.Data["repo"] },
-                //            { "issueNumber", item.Data["issueNumber"] },
-                //            { "code", code }
-                //        },
-                //    Message = code
-                //});
-                break;
             case nameof(EventTypes.NewRequest):
-                var lastCode = _state.State.History.Last().Message;
-                _logger.LogInformation($"Executed agent {nameof(EventTypes.NewRequest)}: {this._state.State.Data.WrittenArticle}");
+                AppendChatHistory(item.Message);
+                
+                if (Int32.TryParse(item.Message, out int counter))
+                {
+                    this._state.State.Data.counter += counter;
+                    _logger.LogInformation($"[{nameof(Writer)}] Event {nameof(EventTypes.NewRequest)}. Counter: {this._state.State.Data.counter}");
+                }
+                else
+                {
+                    _logger.LogError($"[{nameof(Writer)}] Failed to parse message {item.Message} to int");
+                }
+                
                 //await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
                 //{
                 //    Type = nameof(EventTypes.ArticleWritten),
@@ -83,6 +83,9 @@ public class WriterState
 {
     [Id(0)]
     public string WrittenArticle { get; set; }
+
+    [Id(1)]
+    public int counter { get; set;  }
 }
 
 public interface IDevelopApps
