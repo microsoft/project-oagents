@@ -70,6 +70,8 @@ builder.Services.AddElsa(elsa =>
 
     elsa.UseRealTimeWorkflows();
 
+    elsa.UseJavaScript();
+
     // Add Semantic Kernel skill.
     elsa.AddActivity<SemanticKernelSkill>();
 
