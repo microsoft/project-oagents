@@ -1,7 +1,8 @@
-using CloudNative.CloudEvents;
+
 using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
+using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Dapr;
 using Microsoft.AI.DevTeam.Dapr.Events;
 using Microsoft.SemanticKernel;
@@ -10,7 +11,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.AI.DevTeam.Dapr;
 
-public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
+public class ProductManager : AiAgent<ProductManagerState>, IDaprAgent
 {
     private readonly ILogger<ProductManager> _logger;
 
@@ -20,45 +21,34 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
         _logger = logger;
     }
 
-    public async override Task HandleEvent(CloudEvent item)
+    public async override Task HandleEvent(Event item)
     {
         switch (item.Type)
         {
             case nameof(GithubFlowEventType.ReadmeRequested):
                 {
-                    var data = (JObject)item.Data;
-                    var readme = await CreateReadme(data["input"].ToString());
-                    await PublishEvent(Consts.PubSub, Consts.MainTopic, new CloudEvent
-                    {
-                        Id = Guid.NewGuid().ToString(),
+                     var context = item.ToGithubContext();
+                    var readme = await CreateReadme(item.Data["input"]);
+                    var data = context.ToData();
+                    data["result"]=readme;
+                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new Event {
                         Type = nameof(GithubFlowEventType.ReadmeGenerated),
-                        Subject = item.Subject,
-                        Data = new Dictionary<string, string> {
-                            { "org", data["org"].ToString() },
-                            { "repo", data["repo"].ToString() },
-                            { "issueNumber", data["issueNumber"].ToString() },
-                            { "result", readme }
-                        }
+                        Subject = context.Subject,
+                        Data = data
                     });
                 }
                 break;
             case nameof(GithubFlowEventType.ReadmeChainClosed):
                 {
-                    var data = (JObject)item.Data;
-                    var lastReadme = state.History.Last().Message;
-                    await PublishEvent(Consts.PubSub, Consts.MainTopic, new CloudEvent
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        Type = nameof(GithubFlowEventType.ReadmeCreated),
-                        Subject = item.Subject,
-                        Data = new Dictionary<string, string> {
-                                { "org", data["org"].ToString() },
-                                { "repo", data["repo"].ToString() },
-                                { "issueNumber", data["issueNumber"].ToString() },
-                                { "readme", lastReadme },
-                                { "parentNumber", data["parentNumber"].ToString() }
-                            },
-                    });
+                    var context = item.ToGithubContext();
+                var lastReadme = state.History.Last().Message;
+                var data = context.ToData();
+                data["readme"] = lastReadme;
+                await PublishEvent(Consts.PubSub,Consts.MainTopic, new Event {
+                     Type = nameof(GithubFlowEventType.ReadmeCreated),
+                     Subject = context.Subject,
+                    Data = data
+                });
                 }
 
                 break;
@@ -82,11 +72,6 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
             return default;
         }
     }
-}
-
-public interface IManageProducts : IActor
-{
-    public Task<string> CreateReadme(string ask);
 }
 
 public class ProductManagerState

@@ -1,15 +1,14 @@
 ﻿using System.Text.Json;
-using CloudNative.CloudEvents;
 using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
+using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Dapr;
 using Microsoft.AI.DevTeam.Dapr.Events;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.AI.DevTeam.Dapr;
 
-public class Hubber : Agent, IDoStuffWithGithub
+public class Hubber : Agent, IDaprAgent
 {
     private readonly IManageGithub _ghService;
 
@@ -18,77 +17,59 @@ public class Hubber : Agent, IDoStuffWithGithub
         _ghService = ghService;
     }
 
-    public override async Task HandleEvent(CloudEvent item)
+    public override async Task HandleEvent(Event item)
     {
         switch (item.Type)
         {
             case nameof(GithubFlowEventType.NewAsk):
                 {
-                    var data = (JObject)item.Data;
-                    var parentNumber = long.Parse(data["issueNumber"].ToString());
-                    var org = data["org"].ToString();
-                    var repo = data["repo"].ToString();
-                    var input = data["input"].ToString();
-                    var pmIssue = await CreateIssue(org, repo , input, "PM.Readme", parentNumber);
-                    var devLeadIssue = await CreateIssue(org, repo , input, "DevLead.Plan", parentNumber);
-                    await PostComment(org, repo, parentNumber, $" - #{pmIssue} - tracks PM.Readme");
-                    await PostComment(org, repo, parentNumber, $" - #{devLeadIssue} - tracks DevLead.Plan");   
-                    await CreateBranch(org, repo, $"sk-{parentNumber}");
+                    var context = item.ToGithubContext();
+                    var pmIssue = await CreateIssue(context.Org, context.Repo , item.Data["input"], "PM.Readme", context.IssueNumber);
+                    var devLeadIssue = await CreateIssue(context.Org, context.Repo , item.Data["input"], "DevLead.Plan", context.IssueNumber);
+                    await PostComment(context.Org, context.Repo, context.IssueNumber, $" - #{pmIssue} - tracks PM.Readme");
+                    await PostComment(context.Org, context.Repo, context.IssueNumber, $" - #{devLeadIssue} - tracks DevLead.Plan");   
+                    await CreateBranch(context.Org, context.Repo, $"sk-{context.IssueNumber}");
                 }
                 break;
             case nameof(GithubFlowEventType.ReadmeGenerated):
             case nameof(GithubFlowEventType.DevPlanGenerated):
             case nameof(GithubFlowEventType.CodeGenerated):
                 {
-                    var data = (JObject)item.Data;
-                    var result = data["result"].ToString();
-                    var org = data["org"].ToString();
-                    var repo = data["repo"].ToString();
-                    var issueNumber = long.Parse(data["issueNumber"].ToString());
+                    var context = item.ToGithubContext();
+                    var result = item.Data["result"];
                     var contents = string.IsNullOrEmpty(result)? "Sorry, I got tired, can you try again please? ": result;
-                    await PostComment(org,repo, issueNumber, contents);
+                    await PostComment(context.Org,context.Repo, context.IssueNumber, contents);
                 }
                
                 break;
             case nameof(GithubFlowEventType.DevPlanCreated):
                 {
-                    var data = (JObject)item.Data;
-                    var parentNumber = long.Parse(data["parentNumber"].ToString());
-                    var org = data["org"].ToString();
-                    var repo = data["repo"].ToString();
-                    var plan = JsonSerializer.Deserialize<DevLeadPlanResponse>(data["plan"].ToString());
+                     var context = item.ToGithubContext();
+                    var plan = JsonSerializer.Deserialize<DevLeadPlanResponse>(item.Data["plan"]);
                     var prompts = plan.steps.SelectMany(s => s.subtasks.Select(st => st.prompt));
                     
                     foreach (var prompt in prompts)
                     {
                         var functionName = "Developer.Implement";
-                        var issue = await CreateIssue(org, repo, prompt, functionName, parentNumber);
+                        var issue = await CreateIssue(context.Org, context.Repo, prompt, functionName, context.ParentNumber.Value);
                         var commentBody = $" - #{issue} - tracks {functionName}";
-                        await PostComment(org, repo, parentNumber, commentBody);
+                        await PostComment(context.Org, context.Repo, context.ParentNumber.Value, commentBody);
                     }
                 }
                 break;
             case nameof(GithubFlowEventType.ReadmeStored):
                 {
-                    var data = (JObject)item.Data;
-                    var parentNumber = long.Parse(data["parentNumber"].ToString());
-                    var issueNumber = long.Parse(data["issueNumber"].ToString());
-                    var org = data["org"].ToString();
-                    var repo = data["repo"].ToString();
-                    var branch = $"sk-{parentNumber}";
-                    await CommitToBranch(org, repo, parentNumber, issueNumber, "output", branch);
-                    await CreatePullRequest(org, repo, parentNumber, branch);
+                    var context = item.ToGithubContext();
+                    var branch = $"sk-{context.ParentNumber}";
+                    await CommitToBranch(context.Org, context.Repo, context.ParentNumber.Value, context.IssueNumber, "output", branch);
+                    await CreatePullRequest(context.Org, context.Repo, context.ParentNumber.Value, branch);
                 }
                 break;
             case nameof(GithubFlowEventType.SandboxRunFinished):
                 {
-                    var data = (JObject)item.Data;
-                    var org = data["org"].ToString();
-                    var repo = data["repo"].ToString();
-                    var parentNumber = long.Parse(data["parentNumber"].ToString());
-                    var issueNumber = long.Parse(data["issueNumber"].ToString());
-                    var branch = $"sk-{parentNumber}";
-                    await CommitToBranch(org, repo, parentNumber, issueNumber, "output", branch);
+                    var context = item.ToGithubContext();
+                    var branch = $"sk-{context.ParentNumber}";
+                    await CommitToBranch(context.Org, context.Repo, context.ParentNumber.Value, context.IssueNumber, "output", branch);
                 }
                 break;
             default:
@@ -116,13 +97,4 @@ public class Hubber : Agent, IDoStuffWithGithub
     {
         await _ghService.CommitToBranch(org, repo, parentNumber, issueNumber, rootDir, branch);
     }
-}
-
-public interface IDoStuffWithGithub : IActor
-{
-    Task<int> CreateIssue(string org, string repo, string input, string function, long parentNumber);
-    Task PostComment(string org, string repo, long issueNumber, string comment);
-    Task CreateBranch(string org, string repo, string branch);
-    Task CreatePullRequest(string org, string repo, long issueNumber, string branch);
-    Task CommitToBranch(string org, string repo, long parentNumber, long issueNumber, string rootDir, string branch);
 }

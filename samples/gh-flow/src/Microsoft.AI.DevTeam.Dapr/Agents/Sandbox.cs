@@ -1,13 +1,12 @@
-﻿using CloudNative.CloudEvents;
-using Dapr.Actors;
+﻿using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
+using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Dapr;
 using Microsoft.AI.DevTeam.Dapr.Events;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.AI.DevTeam.Dapr;
-public class Sandbox : Agent, IRunSandbox
+public class Sandbox : Agent, IDaprAgent
 {
     private const string ReminderName = "SandboxRunReminder";
     private readonly IManageAzure _azService;
@@ -21,18 +20,14 @@ public class Sandbox : Agent, IRunSandbox
         _azService = azService;
     }
 
-    public override async Task HandleEvent(CloudEvent item)
+    public override async Task HandleEvent(Event item)
     {
         switch(item.Type)
        {
            case nameof(GithubFlowEventType.SandboxRunCreated):
             {
-                    var data = (JObject)item.Data;
-                    var org = data["org"].ToString();
-                    var repo = data["repo"].ToString();
-                    var parentIssueNumber = long.Parse(data["parentNumber"].ToString());
-                    var issueNumber = long.Parse(data["issueNumber"].ToString());
-                    await ScheduleCommitSandboxRun(org, repo, parentIssueNumber, issueNumber);
+                var context = item.ToGithubContext();
+                await ScheduleCommitSandboxRun(context.Org, context.Repo, context.ParentNumber.Value, context.IssueNumber);
             }
              break;
            
@@ -97,10 +92,6 @@ public class Sandbox : Agent, IRunSandbox
     //         this.GetGrainId(), _reminder);
     //     await _state.WriteStateAsync();
     // }
-}
-
-internal interface IRunSandbox : IActor
-{
 }
 
 public class SandboxMetadata

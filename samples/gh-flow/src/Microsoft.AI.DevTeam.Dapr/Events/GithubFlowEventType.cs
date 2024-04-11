@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.AI.Agents.Abstractions;
 
 namespace Microsoft.AI.DevTeam.Dapr.Events
@@ -56,5 +57,11 @@ namespace Microsoft.AI.DevTeam.Dapr.Events
         public long? ParentNumber { get; set; }
 
         public string Subject => $"{Org}/{Repo}/{IssueNumber}";
+    }
+
+    public class EventEnvelope
+    {
+        [JsonPropertyName("data")]
+        public Event Data { get; set; }
     }
 }

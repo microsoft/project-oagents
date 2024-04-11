@@ -1,9 +1,5 @@
-using System.Text;
-using System.Text.Json;
-using CloudNative.CloudEvents;
-using CloudNative.CloudEvents.SystemTextJson;
 using Dapr.Client;
-using Json.More;
+using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.DevTeam.Dapr.Events;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
@@ -44,12 +40,12 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
             if (issuesEvent.Action == IssuesAction.Opened)
             {
                 _logger.LogInformation("Processing HandleNewAsk");
-                await HandleNewAsk(issueNumber, parentNumber, skillName, labels[skillName], suffix, input, org, repo);
+                await HandleNewAsk(issueNumber, parentNumber, skillName, labels[skillName], input, org, repo);
             }
             else if (issuesEvent.Action == IssuesAction.Closed && issuesEvent.Issue.User.Type.Value == UserType.Bot)
             {
                 _logger.LogInformation("Processing HandleClosingIssue");
-                await HandleClosingIssue(issueNumber, parentNumber, skillName, labels[skillName], suffix, org, repo);
+                await HandleClosingIssue(issueNumber, parentNumber, skillName, labels[skillName], org, repo);
             }
         }
         catch (Exception ex)
@@ -82,7 +78,7 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
             // we only respond to non-bot comments
             if (issueCommentEvent.Sender.Type.Value != UserType.Bot)
             {
-                await HandleNewAsk(issueNumber, parentNumber, skillName, labels[skillName], suffix, input, org, repo);
+                await HandleNewAsk(issueNumber, parentNumber, skillName, labels[skillName], input, org, repo);
             }
         }
         catch (Exception ex)
@@ -93,8 +89,9 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
 
     }
 
-    private async Task HandleClosingIssue(long issueNumber, long? parentNumber, string skillName, string functionName, string suffix, string org, string repo)
+    private async Task HandleClosingIssue(long issueNumber, long? parentNumber, string skillName, string functionName, string org, string repo)
     {
+        var subject = $"{org}/{repo}/{issueNumber}";
         var eventType = (skillName, functionName) switch
         {
             ("PM", "Readme") => nameof(GithubFlowEventType.ReadmeChainClosed),
@@ -110,24 +107,21 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
             { "parentNumber", parentNumber?.ToString()}
         };
 
-        var evt = new CloudEvent
+        var evt = new Event
         {
             Type = eventType,
-            Id = $"{Guid.NewGuid()}",
-            Source = new Uri("https://github.com/microsoft/azure-openai-dev-skills-orchestrator"),
-            Subject = suffix + issueNumber.ToString(),
-            DataContentType = "application/cloudevents+json",
-            Data = JsonSerializer.Serialize(data)
+            Subject = subject,
+            Data = data
         };
         await PublishEvent(evt);
     }
 
-    private async Task HandleNewAsk(long issueNumber, long? parentNumber, string skillName, string functionName, string suffix, string input, string org, string repo)
+    private async Task HandleNewAsk(long issueNumber, long? parentNumber, string skillName, string functionName, string input, string org, string repo)
     {
         try
         {
             _logger.LogInformation("Handling new ask");
-
+            var subject = $"{org}/{repo}/{issueNumber}";
             var eventType = (skillName, functionName) switch
             {
                 ("Do", "It") => nameof(GithubFlowEventType.NewAsk),
@@ -141,16 +135,14 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
                 { "org", org },
                 { "repo", repo },
                 { "issueNumber", issueNumber.ToString() },
-                { "parentNumber", parentNumber?.ToString()}
+                { "parentNumber", parentNumber?.ToString()},
+                { "input" , input}
             };
-            var evt = new CloudEvent
+            var evt = new Event
             {
                 Type = eventType,
-                Id = $"{Guid.NewGuid()}",
-                Source = new Uri("https://github.com/microsoft/azure-openai-dev-skills-orchestrator"),
-                Subject = suffix + issueNumber.ToString(),
-                DataContentType = "application/cloudevents+json",
-                Data = JsonSerializer.Serialize(data)
+                Subject = subject,
+                Data = data
             };
             await PublishEvent(evt);
         }
@@ -161,19 +153,15 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
         }
     }
 
-    private async Task PublishEvent(CloudEvent evt)
+    private async Task PublishEvent(Event evt)
     {
-        var formatter = new JsonEventFormatter();
-        var bytes = formatter.EncodeStructuredModeMessage(evt, out var contentType);
-        var json = Encoding.UTF8.GetString(bytes.Span);
-
-         var metadata = new Dictionary<string, string>() {
+        var metadata = new Dictionary<string, string>() {
                  { "cloudevent.Type", evt.Type },
                  { "cloudevent.Subject",  evt.Subject },
-                 { "cloudevent.id", evt.Id}
+                 { "cloudevent.id", Guid.NewGuid().ToString()}
             };
 
-        await _daprClient.PublishEventAsync(Consts.PubSub, Consts.MainTopic, json, metadata);
+        await _daprClient.PublishEventAsync(Consts.PubSub, Consts.MainTopic, evt, metadata);
     }
 }
 

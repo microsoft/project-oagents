@@ -1,7 +1,8 @@
-using CloudNative.CloudEvents;
+
 using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
+using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Dapr;
 using Microsoft.AI.DevTeam.Dapr.Events;
 using Microsoft.SemanticKernel;
@@ -9,7 +10,7 @@ using Microsoft.SemanticKernel.Memory;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.AI.DevTeam.Dapr;
-public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
+public class DeveloperLead : AiAgent<DeveloperLeadState>, IDaprAgent
 {
     private readonly ILogger<DeveloperLead> _logger;
 
@@ -19,44 +20,35 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
         _logger = logger;
     }
 
-    public async override Task HandleEvent(CloudEvent item)
+    public async override Task HandleEvent(Event item)
     {
         switch (item.Type)
         {
             case nameof(GithubFlowEventType.DevPlanRequested):
                 {
-                    var data = (JObject)item.Data;
-                    var plan = await CreatePlan(data["input"].ToString());
-                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
+                     var context = item.ToGithubContext();
+                    var plan = await CreatePlan(item.Data["input"]);
+                    var data = context.ToData();
+                    data["result"] = plan;
+                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new Event
                     {
-                        Id = Guid.NewGuid().ToString(),
                         Type = nameof(GithubFlowEventType.DevPlanGenerated),
-                        Subject = item.Subject,
-                        Data = new Dictionary<string, string> {
-                            { "org", data["org"].ToString() },
-                            { "repo", data["repo"].ToString() },
-                            { "issueNumber", data["issueNumber"].ToString() },
-                            { "result", plan }
-                        }
+                        Subject = context.Subject,
+                        Data = data
                     });
                 }
                 break;
             case nameof(GithubFlowEventType.DevPlanChainClosed):
                  {
-                    var data = (JObject)item.Data;
+                    var context = item.ToGithubContext();
                     var latestPlan = state.History.Last().Message;
-                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new CloudEvent
+                    var data = context.ToData();
+                    data["plan"] = latestPlan;
+                    await PublishEvent(Consts.PubSub,Consts.MainTopic, new Event
                     {
-                        Id = Guid.NewGuid().ToString(),
                         Type = nameof(GithubFlowEventType.DevPlanCreated),
-                        Subject = item.Subject,
-                        Data = new Dictionary<string, string> {
-                            { "org", data["org"].ToString() },
-                            { "repo", data["repo"].ToString() },
-                            { "issueNumber", data["issueNumber"].ToString() },
-                            {"parentNumber", data["parentNumber"].ToString()},
-                            { "plan", latestPlan }
-                        }
+                        Subject = context.Subject,
+                        Data = data
                     });
                 }
                 break;
@@ -81,11 +73,6 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, ILeadDevelopers
             return default;
         }
     }
-}
-
-public interface ILeadDevelopers : IActor
-{
-    public Task<string> CreatePlan(string ask);
 }
 
 public class DevLeadPlanResponse
