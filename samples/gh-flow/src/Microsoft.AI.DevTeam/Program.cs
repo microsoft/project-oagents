@@ -21,7 +21,7 @@ builder.Services.AddTransient(CreateKernel);
 builder.Services.AddTransient(CreateMemory);
 builder.Services.AddHttpClient();
 
-builder.Services.AddScoped(s =>
+builder.Services.AddTransient(s =>
 {
     var ghOptions = s.GetService<IOptions<GithubOptions>>();
     var logger = s.GetService<ILogger<GithubAuthService>>();
