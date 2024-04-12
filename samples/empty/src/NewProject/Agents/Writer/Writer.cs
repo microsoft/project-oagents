@@ -9,7 +9,7 @@ using Orleans.Runtime;
 namespace Microsoft.AI.DevTeam;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-public class Writer : AiAgent<WriterState>, IDevelopApps
+public class Writer : AiAgent<WriterState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
     
@@ -29,13 +29,17 @@ public class Writer : AiAgent<WriterState>, IDevelopApps
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.NewRequest):
-                AppendChatHistory(item.Message);
-                
+            case nameof(EventTypes.NewRequest):                
                 if (Int32.TryParse(item.Message, out int counter))
                 {
+                    //var lastCode = _state.State.History.Last().Message;
+
                     this._state.State.Data.counter += counter;
                     _logger.LogInformation($"[{nameof(Writer)}] Event {nameof(EventTypes.NewRequest)}. Counter: {this._state.State.Data.counter}");
+                    
+                    var context = new KernelArguments { ["input"] = AppendChatHistory(item.Message) };
+                    await CallFunction(WriterPrompts.Write, context);
+                    //await AddKnowledge(instruction, "waf", context);
                 }
                 else
                 {
@@ -59,23 +63,6 @@ public class Writer : AiAgent<WriterState>, IDevelopApps
                 break;
         }
     }
-
-    public async Task<string> GenerateCode(string ask)
-    {
-        try
-        {
-            // TODO: ask the architect for the high level architecture as well as the files structure of the project
-            var context = new KernelArguments { ["input"] = AppendChatHistory(ask)};
-            var instruction = "Consider the following architectural guidelines:!waf!";
-            var enhancedContext = await AddKnowledge(instruction, "waf",context);
-            return await CallFunction(WriterPrompts.Implement, enhancedContext);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating code");
-            return default;
-        }
-    }
 }
 
 [GenerateSerializer]
@@ -87,12 +74,6 @@ public class WriterState
     [Id(1)]
     public int counter { get; set;  }
 }
-
-public interface IDevelopApps
-{
-    public Task<string> GenerateCode(string ask);
-}
-
 [GenerateSerializer]
 public class UnderstandingResult
 {

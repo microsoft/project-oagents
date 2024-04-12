@@ -1,12 +1,9 @@
 
 namespace Microsoft.AI.DevTeam;
 public static class WriterPrompts{
-    public static string Implement = """
-        You are a Developer for an application. 
-        Please output the code required to accomplish the task assigned to you below and wrap it in a bash script that creates the files.
-        Do not use any IDE commands and do not build and run the code.
-        Make specific choices about implementation. Do not offer a range of options.
-        Use comments in the code to describe the intent. Do not include other text other than code and code comments.
+    public static string Write = """
+        You are a Marketing writer. 
+        Write up to three paragraphs for a campain to promote what it is described bellow.
         Input: {{$input}}
         {{$wafContext}}
         """;
