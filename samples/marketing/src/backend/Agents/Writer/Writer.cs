@@ -1,4 +1,3 @@
-using BoilerPlate.Events;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
@@ -9,7 +8,7 @@ using Orleans.Runtime;
 namespace Microsoft.AI.DevTeam;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-public class Writer : AiAgent<WriterState>
+public class Writer : AiAgent<WriterState>, IWriter
 {
     protected override string Namespace => Consts.OrleansNamespace;
     
@@ -29,23 +28,17 @@ public class Writer : AiAgent<WriterState>
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.NewRequest):                
-                if (Int32.TryParse(item.Message, out int counter))
-                {
-                    //var lastCode = _state.State.History.Last().Message;
+            case nameof(EventTypes.UserChatInput):                
+                //var lastCode = _state.State.History.Last().Message;
 
-                    this._state.State.Data.counter += counter;
-                    _logger.LogInformation($"[{nameof(Writer)}] Event {nameof(EventTypes.NewRequest)}. Counter: {this._state.State.Data.counter}");
+                _logger.LogInformation($"[{nameof(Writer)}] Event {nameof(EventTypes.UserChatInput)}. UserMessage: {item.Message}");
                     
-                    var context = new KernelArguments { ["input"] = AppendChatHistory(item.Message) };
-                    await CallFunction(WriterPrompts.Write, context);
-                    //await AddKnowledge(instruction, "waf", context);
-                }
-                else
-                {
-                    _logger.LogError($"[{nameof(Writer)}] Failed to parse message {item.Message} to int");
-                }
-                
+                var context = new KernelArguments { ["input"] = AppendChatHistory(item.Message) };
+                string newArticle = await CallFunction(WriterPrompts.Write, context);
+                _state.State.Data.WrittenArticle = newArticle;
+
+                //await AddKnowledge(instruction, "waf", context);
+
                 //await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
                 //{
                 //    Type = nameof(EventTypes.ArticleWritten),
@@ -63,6 +56,16 @@ public class Writer : AiAgent<WriterState>
                 break;
         }
     }
+
+    public Task<String> GetArticle()
+    {
+        return Task.FromResult(_state.State.Data.WrittenArticle);
+    }
+}
+
+public interface IWriter : IGrainWithStringKey
+{
+    Task<String> GetArticle();
 }
 
 [GenerateSerializer]
@@ -70,9 +73,6 @@ public class WriterState
 {
     [Id(0)]
     public string WrittenArticle { get; set; }
-
-    [Id(1)]
-    public int counter { get; set;  }
 }
 [GenerateSerializer]
 public class UnderstandingResult

@@ -1,12 +1,9 @@
-﻿using BoilerPlate.Events;
-using Microsoft.AI.Agents.Abstractions;
+﻿using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.DevTeam;
 using Microsoft.AI.DevTeam.Events;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Amqp.Framing;
+using Orleans;
 using Orleans.Runtime;
-using System.IO;
-using System.Runtime.CompilerServices;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -30,17 +27,18 @@ namespace BoilerPlate.Controller
         {
             _client = client;
         }
-
-        // GET: api/<Post>
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
-
         // GET api/<Post>/5
         [HttpGet("{id}")]
-        public async Task<string> Get(int id, string context)
+        public async Task<string> Get(string id)
+        {
+            var grain = _client.GetGrain<IWriter>(id);
+            string article = await grain.GetArticle();
+            return article;
+        }
+
+        // PUT api/<Post>/5
+        [HttpPut("{id}")]
+        public async Task<string> Put(string id, [FromBody] string userMessage)
         {
             var streamProvider = _client.GetStreamProvider("StreamProvider");
             var streamId = StreamId.Create(Consts.OrleansNamespace, id);
@@ -50,35 +48,18 @@ namespace BoilerPlate.Controller
             var data = new Dictionary<string, string>
             {
                 { nameof(id), id.ToString() },
-                { nameof(context), context },
+                { nameof(userMessage), userMessage },
             };
 
             await stream.OnNextAsync(new Event
             {
-                Type = nameof(EventTypes.NewRequest),
-                Message = id.ToString(),
+                Type = nameof(EventTypes.UserChatInput),
+                Message = userMessage,
                 Data = data
             });
 
             return $"Task {id} accepted";
         }
 
-        // POST api/<Post>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
-
-        // PUT api/<Post>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<Post>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
     }
 }
