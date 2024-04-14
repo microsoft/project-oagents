@@ -1,3 +1,4 @@
+using Marketing.Hubs;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
@@ -36,6 +37,9 @@ public class Writer : AiAgent<WriterState>, IWriter
                 var context = new KernelArguments { ["input"] = AppendChatHistory(item.Message) };
                 string newArticle = await CallFunction(WriterPrompts.Write, context);
                 _state.State.Data.WrittenArticle = newArticle;
+
+                ArticleHub._allHubs.TryGetValue(item.Data["UserId"], out var articleHub);
+                articleHub.SendMessageToSpecificClient(item.Data["UserId"], newArticle);
 
                 //await AddKnowledge(instruction, "waf", context);
 

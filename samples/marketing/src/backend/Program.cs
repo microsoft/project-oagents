@@ -15,6 +15,8 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System.Configuration;
 using Microsoft.OpenApi.Models;
 using Microsoft.AI.Agents.Abstractions;
+using Marketing.Hubs;
+using Microsoft.SemanticKernel.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient(CreateKernel);
@@ -23,6 +25,23 @@ builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSignalR();
+
+
+// TODO: Only for DEV
+const string AllowDebugOrigin = "AllowDebugOrigin";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(AllowDebugOrigin,
+        builder =>
+        {
+            builder
+            .WithOrigins("http://localhost:3000") // client url
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+        });
+});
 
 builder.Services.AddOptions<OpenAIOptions>()
     .Configure<IConfiguration>((settings, configuration) =>
@@ -56,6 +75,10 @@ builder.Host.UseOrleans(siloBuilder =>
                .AddMemoryGrainStorage("messages");
     siloBuilder.UseInMemoryReminderService();
     siloBuilder.UseDashboard(x => x.HostSelf = true);
+    //siloBuilder.ConfigureServices(services =>
+    //{
+    //    // services.AddSingleton<IArticleHub, ArticleHub>();
+    //}
 });
 
 builder.Services.Configure<JsonSerializerOptions>(options =>
@@ -65,8 +88,9 @@ builder.Services.Configure<JsonSerializerOptions>(options =>
 
 var app = builder.Build();
 
-app.UseRouting()
-   .UseEndpoints(endpoints =>
+app.UseRouting();
+app.UseCors(AllowDebugOrigin);
+app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
 });
@@ -79,6 +103,7 @@ app.UseSwaggerUI(c =>
 });
 
 app.Map("/dashboard", x => x.UseOrleansDashboard());
+app.MapHub<ArticleHub>("/articlehub");
 app.Run();
 
 static ISemanticTextMemory CreateMemory(IServiceProvider provider)

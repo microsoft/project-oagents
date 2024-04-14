@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BoilerPlate", "BoilerPlate.csproj", "{491A6E2F-A0D0-4723-80A2-B0F60091E39D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Marketing", "Marketing.csproj", "{491A6E2F-A0D0-4723-80A2-B0F60091E39D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.AI.Agents.Orleans", "..\..\..\..\src\Microsoft.AI.Agents.Orleans\Microsoft.AI.Agents.Orleans.csproj", "{4C246005-605C-4F7F-8D67-839A5640587A}"
 EndProject

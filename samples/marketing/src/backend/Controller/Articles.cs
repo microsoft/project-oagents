@@ -7,7 +7,7 @@ using Orleans.Runtime;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace BoilerPlate.Controller
+namespace Marketing.Controller
 {
 
     [GenerateSerializer]
@@ -37,17 +37,16 @@ namespace BoilerPlate.Controller
         }
 
         // PUT api/<Post>/5
-        [HttpPut("{id}")]
-        public async Task<string> Put(string id, [FromBody] string userMessage)
+        [HttpPut("{UserId}")]
+        public async Task<string> Put(string UserId, [FromBody] string userMessage)
         {
             var streamProvider = _client.GetStreamProvider("StreamProvider");
-            var streamId = StreamId.Create(Consts.OrleansNamespace, id);
+            var streamId = StreamId.Create(Consts.OrleansNamespace, UserId);
             var stream = streamProvider.GetStream<Event>(streamId);
-
 
             var data = new Dictionary<string, string>
             {
-                { nameof(id), id.ToString() },
+                { nameof(UserId), UserId.ToString() },
                 { nameof(userMessage), userMessage },
             };
 
@@ -58,7 +57,7 @@ namespace BoilerPlate.Controller
                 Data = data
             });
 
-            return $"Task {id} accepted";
+            return $"Task {UserId} accepted";
         }
 
     }
