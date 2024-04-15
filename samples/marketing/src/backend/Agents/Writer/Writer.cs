@@ -1,3 +1,4 @@
+#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
 using Marketing.Hubs;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
@@ -13,9 +14,9 @@ public class Writer : AiAgent<WriterState>, IWriter
 {
     protected override string Namespace => Consts.OrleansNamespace;
     
-    private readonly ILogger<Writer> _logger;
+    private readonly ILogger<GraphicDesigner> _logger;
 
-    public Writer([PersistentState("state", "messages")] IPersistentState<AgentState<WriterState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<Writer> logger) 
+    public Writer([PersistentState("state", "messages")] IPersistentState<AgentState<WriterState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger) 
     : base(state, memory, kernel)
     {
         _logger = logger;
@@ -32,29 +33,27 @@ public class Writer : AiAgent<WriterState>, IWriter
             case nameof(EventTypes.UserChatInput):                
                 //var lastCode = _state.State.History.Last().Message;
 
-                _logger.LogInformation($"[{nameof(Writer)}] Event {nameof(EventTypes.UserChatInput)}. UserMessage: {item.Message}");
+                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.UserChatInput)}. UserMessage: {item.Message}");
                     
                 var context = new KernelArguments { ["input"] = AppendChatHistory(item.Message) };
                 string newArticle = await CallFunction(WriterPrompts.Write, context);
                 _state.State.Data.WrittenArticle = newArticle;
 
+
+                await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
+                {
+                    Type = nameof(EventTypes.ArticleWritten),
+                    Data = new Dictionary<string, string> {
+                            { "UserId", item.Data["UserId"] },
+                            { "UserMessage", item.Data["userMessage"] },
+                            { "WrittenArticle", newArticle }
+                        },
+                    Message = newArticle
+                });
+
                 ArticleHub._allHubs.TryGetValue(item.Data["UserId"], out var articleHub);
-                articleHub.SendMessageToSpecificClient(item.Data["UserId"], newArticle);
+                await articleHub.SendMessageToSpecificClient(item.Data["UserId"], newArticle, AgentTypes.Chat);
 
-                //await AddKnowledge(instruction, "waf", context);
-
-                //await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
-                //{
-                //    Type = nameof(EventTypes.ArticleWritten),
-                //    Data = new Dictionary<string, string> {
-                //            { "org", item.Data["org"] },
-                //            { "repo", item.Data["repo"] },
-                //            { "issueNumber", item.Data["issueNumber"] },
-                //            { "code", lastCode },
-                //            { "parentNumber", item.Data["parentNumber"] }
-                //        },
-                //    Message = lastCode
-                //});
                 break;
             default:
                 break;
@@ -78,11 +77,5 @@ public class WriterState
     [Id(0)]
     public string WrittenArticle { get; set; }
 }
-[GenerateSerializer]
-public class UnderstandingResult
-{
-    [Id(0)]
-    public string NewUnderstanding { get; set; }
-    [Id(1)]
-    public string Explanation { get; set; }
-}
+
+#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task

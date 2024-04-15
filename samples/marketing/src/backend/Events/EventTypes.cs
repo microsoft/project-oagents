@@ -5,8 +5,6 @@ namespace Microsoft.AI.DevTeam.Events
     public enum EventTypes
     {
         UserChatInput,
-        NewRequest,
-        WriteArticle,
         ArticleWritten,
     }
 }

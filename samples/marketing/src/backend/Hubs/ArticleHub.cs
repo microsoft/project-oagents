@@ -70,14 +70,14 @@ namespace Marketing.Hubs
             });
         }
 
-        public async Task SendMessageToSpecificClient(string userId, string message)
+        public async Task SendMessageToSpecificClient(string userId, string message, AgentTypes agentType)
         {
             var connectionId = _connectionIdByUser[userId];
             var frontEndMessage = new FrontEndMessage()
             {
                 UserId = userId,
                 Message = message,
-                Agent = AgentTypes.Chat.ToString()
+                Agent = agentType.ToString()
             };
             await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveMessage", frontEndMessage);
         }

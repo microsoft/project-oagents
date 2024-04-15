@@ -15,6 +15,7 @@ import StakeholderList from './stakeholders/page';
 import CostList from './costs/page';
 import RelevantDocumentList from './docs/page';
 import Chat from './chat/page';
+import CommunityManager from './community-manager/page';
 import { Container, Grid } from '@mui/material';
 import { HubConnectionBuilder, HubConnection, LogLevel } from '@microsoft/signalr';
 
@@ -33,11 +34,24 @@ export default function LegalAssistant() {
     color: theme.palette.text.secondary,
   }));
 
+  // Add this style
+  const Background = styled('div')({
+    backgroundImage: `url(/static/background1.webp)`,
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'cover',
+    height: '100vh',
+  });
+
   const [connection, setConnection] = React.useState<HubConnection>();
 
   const userId = 'Carlos';
   //Chat component state
   const [messages, setMessages] = React.useState<{ sender: string; text: any; }[]>([]);
+
+  //Community manager state
+  const [ article, setArticle ] = useState<string>('');
+  const [ imgUrl, setImgUrl ] = useState<string>('');
+  const [ communityManagerOpen, setCommunityManagerOpen ] = useState<boolean>(false);
 
   const createSignalRConnection = async (userId: string) => {
     try {
@@ -53,6 +67,25 @@ export default function LegalAssistant() {
         if (message.agent === 'Chat') {
           const newMessage = { sender: 'agent', text: message.message };
           setMessages(prevMessages => [...prevMessages, newMessage]);
+        }
+        if (message.agent === 'CommunityManager') {
+          setArticle(message.message);
+        }
+        if (message.agent === 'GraphicDesigner') {
+          setImgUrl(message.message);
+        }
+      });
+
+      connection.onclose(async () => {
+        console.log(`[LegalAssistant] Connection closed.`);
+
+        try {
+          await connection.start();
+          console.log(`Connection ID: ${connection.connectionId}`);
+          await connection.invoke('ConnectToAgent', userId);
+          console.log(`[LegalAssistant] Connection re-established.`);
+        } catch (error) {
+          console.error(error);
         }
       });
 
@@ -87,6 +120,7 @@ export default function LegalAssistant() {
 
   console.log(`[LegalAssistant] Rendering.`);
   return (
+    <Background>
     <Container maxWidth="xl" disableGutters >
       <Grid container spacing={3}>
         <Grid item xs={6}>
@@ -132,10 +166,17 @@ export default function LegalAssistant() {
                 </Paper>
                 <Divider />
               </Item>
+              <Item>
+                <Paper elevation={0}>
+                  <CommunityManager article={article} setArticle={setArticle} open={communityManagerOpen} setOpen={setCommunityManagerOpen} imgUrl={imgUrl}/>
+                </Paper>
+                <Divider />
+              </Item>
             </ThemeProvider>
           </Stack>
         </Grid>
       </Grid>
     </Container>
+    </Background>
   );
 }

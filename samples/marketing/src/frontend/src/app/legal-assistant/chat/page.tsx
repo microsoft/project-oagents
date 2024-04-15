@@ -96,49 +96,51 @@ export default function Chat({ messages, setMessages, sendMessage }: ChatProps) 
         />
       </ListItemButton>
       {open && (
-        <Container maxWidth={false}>
-          <h2>Chat Copilot</h2>
-          <Container maxWidth={false}>
-            <div style={{ margin: '0 auto' }}>
-              {messages.map((message, index) => (
-                <div key={index} style={{
-                  margin: '10px',
-                  padding: '10px',
-                  borderRadius: '10px',
-                  backgroundColor: message.sender === 'user' ? '#d1e7dd' : '#d4e2d4',
-                  alignSelf: message.sender === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '80%',
-                  wordWrap: 'break-word'
-                }}>
-                  <strong>{message.sender}:</strong> {message.text}
-                </div>
-              ))}
-            </div>
-          </Container>
-          <Container maxWidth={false}>
-            <Grid container spacing={1} alignItems="flex-end">
-              <Grid item xs={11}>
-                <TextField
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  fullWidth
-                  inputProps={{ style: { height: 'auto' } }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSend(e.target.value);
-                      setMessage('');
-                    }
-                  }}
-                />
-              </Grid>
-              <Grid item xs={1}>
-                <Button style={{ height: '100%' }}>
-                  Send
-                </Button>
-              </Grid>
-            </Grid>
-          </Container>
+        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 50px)' }}>
+        <Container maxWidth={false} style={{ overflowY: 'auto', flex: '1 0 auto' }}>
+          <div style={{ margin: '0 auto' }}>
+            {messages.map((message, index) => (
+              <div key={index} style={{
+                margin: '10px',
+                padding: '10px',
+                borderRadius: '10px',
+                backgroundColor: message.sender === 'user' ? '#d1e7dd' : '#d4e2d4',
+                alignSelf: message.sender === 'user' ? 'flex-end' : 'flex-start',
+                maxWidth: '80%',
+                wordWrap: 'break-word'
+              }}>
+                <strong>{message.sender}:</strong> {message.text}
+              </div>
+            ))}
+          </div>
         </Container>
+        <Container maxWidth={false} style={{ height: '150px' }}>
+          <Grid container spacing={1} alignItems="flex-end">
+            <Grid item xs={11}>
+              <TextField
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                fullWidth
+                inputProps={{ style: { height: 'auto' } }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSend(e.target.value);
+                    setMessage('');
+                  }
+                }}
+              />
+            </Grid>
+            <Grid item xs={1}>
+              <Button style={{ height: '100%' }} onClick={() => {
+                handleSend(message);
+                setMessage('');
+              }}>
+                Send
+              </Button>
+            </Grid>
+          </Grid>
+        </Container>
+      </div>
       )}
     </FireNav>
   );

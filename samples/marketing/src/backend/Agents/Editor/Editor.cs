@@ -28,7 +28,7 @@ public class Editor : AiAgent<EditorState>
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.NewRequest):
+            case nameof(EventTypes.UserChatInput):
                 //item.Data.TryGetValue("context", out var context);
                 //this._state.State.Data.Article = "I have written an article";
 

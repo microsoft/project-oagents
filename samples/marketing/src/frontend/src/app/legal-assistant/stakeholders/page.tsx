@@ -8,7 +8,7 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
 import { styled } from '@mui/material/styles';
-import { Avatar, Box } from '@mui/material';
+import { Avatar, Box, Container } from '@mui/material';
 import Badge, { BadgeProps } from '@mui/material/Badge';
 import { Typography } from '@mui/material';
 import List from '@mui/material/List';
@@ -18,6 +18,7 @@ import ListItemText from '@mui/material/ListItemText';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import PersonIcon from '@mui/icons-material/Person';
 import ListItemIcon from '@mui/material/ListItemIcon';
+import { Title } from '@refinedev/mui';
 
 const GreenStyledBadge = styled(Badge)(({ theme }) => ({
     '& .MuiBadge-badge': {
@@ -78,7 +79,7 @@ const RedStyledBadge = styled(Badge)(({ theme }) => ({
 }));
 
 export default function StakeholderList() {
-    const [open, setOpen] = React.useState(true);
+    const [open, setOpen] = React.useState(false);
 
     console.log(`[LegalAssistant] Rendering.`);
     return (
@@ -98,14 +99,14 @@ export default function StakeholderList() {
                         <PersonIcon />
                     </ListItemIcon>
                     <ListItemText
-                        primary="Relevant Stakeholders"
+                        primary="Auditor"
                         primaryTypographyProps={{
                             fontSize: 15,
                             fontWeight: 'medium',
                             lineHeight: '20px',
                             mb: '2px',
                         }}
-                        secondary="People that have been involved in similar cases in the past"
+                        secondary="Auditing rules"
                         secondaryTypographyProps={{
                             noWrap: true,
                             fontSize: 12,
@@ -125,6 +126,38 @@ export default function StakeholderList() {
                     />
                 </ListItemButton>
                 {open && (
+                    <Box>
+                        <ListItemButton alignItems="flex-start">
+                            <ListItemAvatar>
+                                <Avatar alt="Language check" src="/static/check.png" />
+                            </ListItemAvatar>
+                            <ListItemText
+                                primary="Language check"
+                            />
+                        </ListItemButton>
+                        <ListItemButton alignItems="flex-start">
+                            <ListItemAvatar>
+                                <Avatar alt="Financial check" src="/static/check.png" />
+                            </ListItemAvatar>
+                            <ListItemText
+                                primary="Financial check"
+                            />
+                        </ListItemButton>
+                        <ListItemButton alignItems="flex-start">
+                            <ListItemAvatar>
+                                <Avatar alt="Auto approval" src="/static/check.png" />
+                            </ListItemAvatar>
+                            <ListItemText
+                                primary="Auto approval"
+                            />
+                        </ListItemButton>
+                    </Box>
+                )}
+                {open && (
+                    <p>Questions? These are relevant stakeholders for you:</p>
+                )}
+                {open && (
+                    <Box>
                     <ListItemButton alignItems="flex-start">
                         <ListItemAvatar>
                             <RedStyledBadge
@@ -132,11 +165,11 @@ export default function StakeholderList() {
                                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                                 variant="dot"
                             >
-                                <Avatar alt="Lawrence Law" src="/static/face.jpg" />
+                                <Avatar alt="Lawrence Law" src="/static/face2.jpg" />
                             </RedStyledBadge>
                         </ListItemAvatar>
                         <ListItemText
-                            primary="Lawrence Law"
+                            primary="Lina Maria"
                             secondary={
                                 <React.Fragment>
                                     <Typography
@@ -151,8 +184,6 @@ export default function StakeholderList() {
                             }
                         />
                     </ListItemButton>
-                )}
-                {open && (
                     <ListItemButton alignItems="flex-start">
                         <ListItemAvatar>
                             <GreenStyledBadge
@@ -164,7 +195,7 @@ export default function StakeholderList() {
                             </GreenStyledBadge>
                         </ListItemAvatar>
                         <ListItemText
-                            primary="Law Lawrence"
+                            primary="Lawrence Gevaert"
                             secondary={
                                 <React.Fragment>
                                     <Typography
@@ -173,12 +204,13 @@ export default function StakeholderList() {
                                         variant="body2"
                                         color="text.primary"
                                     >
-                                        Paralegal Officer
+                                        Marketing Manager
                                     </Typography>
                                 </React.Fragment>
                             }
                         />
                     </ListItemButton>
+                    </Box>
                 )}
             </List>
         </Box>

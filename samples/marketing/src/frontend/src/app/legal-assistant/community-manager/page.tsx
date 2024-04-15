@@ -13,16 +13,9 @@ import WorkspacePremiumTwoToneIcon from '@mui/icons-material/WorkspacePremiumTwo
 import GavelIcon from '@mui/icons-material/Gavel';
 import { styled } from '@mui/material/styles';
 import { green, pink } from '@mui/material/colors';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-
-const data = [
-  { icon: <HandshakeTwoToneIcon sx={{ color: green[500] }} />, label: 'Bank vs Mrs Peters - chf 15k - 1 year' },
-  { icon: <GavelIcon  sx={{ color: green[500] }}  />, label: 'Bank vs Mr Pertussi - CHF 0 - 5 months' },
-  { icon: <HandshakeTwoToneIcon  sx={{ color: green[500] }}  />, label: 'Bank vs Mr Rodriguez - CHF 20k - 4 years' },
-  { icon: <HandshakeTwoToneIcon  sx={{ color: pink[500] }}  />, label: 'Bank vs Contoso AG - CHF 1.5M - 4 years' },
-  { icon: <GavelIcon  sx={{ color: pink[500] }}  />, label: 'Bank vs Mr Wang - Won - CHF 2M - 4 years' },
-  { icon: <Public sx={{ color: pink[500] }} />, label: 'Bank vs Governnent - Public Case - CHF 3.7M - 10 years' },
-];
+import AppShortcut from '@mui/icons-material/AttachMoney';
+import LoopIcon from '@mui/icons-material/Loop';
+import { Paper, Card, CardContent, CardHeader, Typography } from '@mui/material';
 
 const FireNav = styled(List)<{ component?: React.ElementType }>({
   '& .MuiListItemButton-root': {
@@ -38,9 +31,16 @@ const FireNav = styled(List)<{ component?: React.ElementType }>({
   },
 });
 
-export default function CostList() {
-  const [open, setOpen] = React.useState(false);
-  console.log(`[LegalAssistant] Rendering.`);
+type CommunityManagerProps = {
+  article: string;
+  setArticle: React.Dispatch<React.SetStateAction<string>>;
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  imgUrl: string;
+};
+
+export default function CommunityManager({ article, setArticle, open, setOpen, imgUrl }: CommunityManagerProps) {
+  console.log(`[CommunityManager] Rendering.`);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -61,18 +61,18 @@ export default function CostList() {
               '&:hover, &:focus': { '& #arrowdownicon': { opacity: open ? 1 : 0 } },
             }}
           >
-            <ListItemIcon sx={{ my: 0, opacity: 1,  class: "menuicon"}}>
-              <AttachMoneyIcon/>
+            <ListItemIcon sx={{ my: 0, opacity: 1, class: "menuicon" }}>
+              <AppShortcut />
             </ListItemIcon>
             <ListItemText
-              primary="Economy of similar cases" 
+              primary="Social Media posts"
               primaryTypographyProps={{
                 fontSize: 15,
                 fontWeight: 'medium',
                 lineHeight: '20px',
                 mb: '2px',
               }}
-              secondary="Cost of similar cases in the past"
+              secondary="Posts in social media"
               secondaryTypographyProps={{
                 noWrap: true,
                 fontSize: 12,
@@ -91,21 +91,42 @@ export default function CostList() {
               }}
             />
           </ListItemButton>
-          {open &&
-            data.map((item) => (
-              <ListItemButton
-                key={item.label}
-                sx={{ py: 0, minHeight: 32, color: 'rgba(255,255,255,.8)' }}
-              >
-                <ListItemIcon sx={{ color: 'inherit' }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.label}
-                  primaryTypographyProps={{ fontSize: 14, fontWeight: 'medium' }}
+          {open && (
+            article === '' || article === null ? (
+              <Box>
+                <LoopIcon
+                  sx={{
+                    animation: "spin 2s linear infinite",
+                    "@keyframes spin": {
+                      "0%": {
+                        transform: "rotate(360deg)",
+                      },
+                      "100%": {
+                        transform: "rotate(0deg)",
+                      },
+                    },
+                  }}
                 />
-              </ListItemButton>
-            ))}
+              </Box>
+            ) : (
+              <Card>
+                <CardContent>
+                    <Typography variant="h5" component="div">
+                      Social media posts on X
+                    </Typography>
+                    <p>{article}</p>
+                    <p style={{ width: '100%', height: '100%' }}>
+                      <img 
+                        src={imgUrl} 
+                        alt="placeholder" 
+                        style={{ width: '100%', height: 'auto' }}/>
+                    </p>
+                    <p>{imgUrl}</p>
+                  </CardContent>
+
+              </Card>
+            )
+          )}
         </Box>
       </FireNav>
     </Box>
