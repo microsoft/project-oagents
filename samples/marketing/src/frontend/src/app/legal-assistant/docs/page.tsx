@@ -18,9 +18,9 @@ import Collapse from '@mui/material/Collapse';
 import FilePresentIcon from '@mui/icons-material/FilePresent';
 
 const data = [
-  { icon: <HandshakeTwoToneIcon />, label: 'Bank vs Mrs Peters - Settled - chf 1.5M - 1 year' },
-  { icon: <WorkspacePremiumTwoToneIcon />, label: 'Bank vs Mr Pertussi - Won - chf0 - 4 years' },
-  { icon: <Public />, label: 'Bank vs Governnent - Public Case - chf 3.7M - 10 years' },
+  { icon: <HandshakeTwoToneIcon />, label: 'Internal guidance for marketing campaigns' },
+  { icon: <WorkspacePremiumTwoToneIcon />, label: 'Belgium law on marketing of alcohol' },
+  { icon: <Public />, label: 'something else' },
 ];
 
 const FireNav = styled(List)<{ component?: React.ElementType }>({
@@ -114,7 +114,7 @@ export default function RelevantDocumentList() {
                     <ListItemIcon>
                       <FolderIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Court cases" />
+                    <ListItemText primary="Internal docs" />
                     {courtCasesOpen ? <ExpandLess /> : <ExpandMore />}
                   </ListItemButton>
                   <Collapse in={courtCasesOpen} timeout="auto" unmountOnExit>
@@ -123,13 +123,13 @@ export default function RelevantDocumentList() {
                         <ListItemIcon sx={{ pl: 4 }}>
                           <img src="/static/icons/docs.png" height={20} width={20} />
                         </ListItemIcon>
-                        <ListItemText primary="[Ongoing] Bank vs other bank in France legal case" />
+                        <ListItemText primary="Marketing campaings general guidelines" />
                       </ListItemButton>
                       <ListItemButton>
                         <ListItemIcon sx={{ pl: 4 }}>
                           <img src="/static/icons/pdf.png" height={20} width={20} />
                         </ListItemIcon>
-                        <ListItemText primary="[Closed] Mr Pertussi vs Bank court decision" />
+                        <ListItemText primary="Marketing regulations in Belgium" />
                       </ListItemButton>
                     </List>
                   </Collapse>
@@ -140,7 +140,7 @@ export default function RelevantDocumentList() {
                     <ListItemIcon>
                       <FolderIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Law" />
+                    <ListItemText primary="Public " />
                     {lawOpen ? <ExpandLess /> : <ExpandMore />}
                   </ListItemButton>
                   <Collapse in={lawOpen} timeout="auto" unmountOnExit>
@@ -149,13 +149,13 @@ export default function RelevantDocumentList() {
                         <ListItemIcon sx={{ pl: 4 }}>
                           <img src="/static/icons/edge.png" height={20} width={20} />
                         </ListItemIcon>
-                        <ListItemText primary="Law on credit cards claims" />
+                        <ListItemText primary="Worldwide discount" />
                       </ListItemButton>
                       <ListItemButton>
                         <ListItemIcon sx={{ pl: 4 }}>
                           <img src="/static/icons/edge.png" height={20} width={20} />
                         </ListItemIcon>
-                        <ListItemText primary="Consumer rights" />
+                        <ListItemText primary="Color week - T-Shitrs 2022" />
                       </ListItemButton>
                     </List>
                   </Collapse>

@@ -16,12 +16,10 @@ import { green, pink } from '@mui/material/colors';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 
 const data = [
-  { icon: <HandshakeTwoToneIcon sx={{ color: green[500] }} />, label: 'Bank vs Mrs Peters - chf 15k - 1 year' },
-  { icon: <GavelIcon  sx={{ color: green[500] }}  />, label: 'Bank vs Mr Pertussi - CHF 0 - 5 months' },
-  { icon: <HandshakeTwoToneIcon  sx={{ color: green[500] }}  />, label: 'Bank vs Mr Rodriguez - CHF 20k - 4 years' },
-  { icon: <HandshakeTwoToneIcon  sx={{ color: pink[500] }}  />, label: 'Bank vs Contoso AG - CHF 1.5M - 4 years' },
-  { icon: <GavelIcon  sx={{ color: pink[500] }}  />, label: 'Bank vs Mr Wang - Won - CHF 2M - 4 years' },
-  { icon: <Public sx={{ color: pink[500] }} />, label: 'Bank vs Governnent - Public Case - CHF 3.7M - 10 years' },
+  { icon: <HandshakeTwoToneIcon sx={{ color: green[500] }} />, label: 'IPA discount form 9-9 - eur 15k' },
+  { icon: <GavelIcon  sx={{ color: green[500] }}  />, label: '2x1 brewery birthday - eur 250k' },
+  { icon: <HandshakeTwoToneIcon  sx={{ color: green[500] }}  />, label: 'Summer day 1 - CHF 180k' },
+  { icon: <HandshakeTwoToneIcon  sx={{ color: pink[500] }}  />, label: 'Worldcup promo 1.5M' },
 ];
 
 const FireNav = styled(List)<{ component?: React.ElementType }>({

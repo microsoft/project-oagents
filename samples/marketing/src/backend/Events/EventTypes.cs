@@ -6,5 +6,6 @@ namespace Microsoft.AI.DevTeam.Events
     {
         UserChatInput,
         ArticleWritten,
+        UserConnected,
     }
 }

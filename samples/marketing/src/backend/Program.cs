@@ -27,6 +27,7 @@ builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 
+builder.Services.AddSingleton<ISignalRClient, SignalRClient>();
 
 // TODO: Only for DEV
 const string AllowDebugOrigin = "AllowDebugOrigin";

@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.SignalR;
 using Orleans.Runtime;
 using Polly.CircuitBreaker;
 using System.Collections.Concurrent;
+using System.IO;
+using Orleans;
 
 namespace Marketing.Hubs
 {
@@ -34,7 +36,7 @@ namespace Marketing.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task ConnectToAgent(string UserId)
+        public async Task ConnectToAgent(string UserId, IClusterClient clusterClient)
         {
             var frontEndMessage = new FrontEndMessage()
             {
@@ -47,7 +49,24 @@ namespace Marketing.Hubs
             _connectionIdByUser.AddOrUpdate(UserId, Context.ConnectionId, (key, oldValue) => Context.ConnectionId);
 
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName: UserId);
-            //await Clients.Group(UserId).SendAsync(method: "ReceiveMessage", arg1: frontEndMessage);
+
+
+            var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
+            var streamId = StreamId.Create(Consts.OrleansNamespace, frontEndMessage.UserId);
+            var stream = streamProvider.GetStream<Event>(streamId);
+            var data = new Dictionary<string, string>
+            {
+                { "UserId", frontEndMessage.UserId },
+                { "userMessage", frontEndMessage.Message},
+            };
+            await stream.OnNextAsync(new Event
+            {
+                Type = nameof(EventTypes.UserConnected),
+                Message = frontEndMessage.Message,
+                Data = data
+            });
+
+
         }
 
         public async Task ChatMessage(FrontEndMessage frontEndMessage, IClusterClient clusterClient)
