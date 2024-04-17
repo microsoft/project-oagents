@@ -107,7 +107,7 @@ export default function LegalAssistant() {
         message: message,
         agent: 'Chat'
       };
-      await connection.invoke('ChatMessage', frontEndMessage);
+      await connection.invoke('ProcessMessage', frontEndMessage);
       console.log(`[LegalAssistant] Sent message: ${message}`);
     } else {
       console.error(`[LegalAssistant] Connection not established.`);

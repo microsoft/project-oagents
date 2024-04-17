@@ -17,11 +17,15 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>, IGraphicDesigner
     
     private readonly ILogger<GraphicDesigner> _logger;
     private readonly IConfiguration _configuration;
-    public GraphicDesigner([PersistentState("state", "messages")] IPersistentState<AgentState<GraphicDesignerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger, IConfiguration configuration) 
+    private readonly ISignalRClient _signalRClient;
+
+    public GraphicDesigner([PersistentState("state", "messages")] IPersistentState<AgentState<GraphicDesignerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger, IConfiguration configuration, ISignalRClient signalRClient) 
     : base(state, memory, kernel)
     {
         _logger = logger;
         _configuration = configuration;
+        _signalRClient = signalRClient;
+
         if (state.State.Data == null)
         {
             state.State.Data = new GraphicDesignerState();
@@ -45,23 +49,7 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>, IGraphicDesigner
                 string uri = imageUrl.AbsoluteUri;
                 _state.State.Data.imageUrl = uri;
 
-                ArticleHub._allHubs.TryGetValue(item.Data["UserId"], out var articleHub);
-                articleHub.SendMessageToSpecificClient(item.Data["UserId"], uri, AgentTypes.GraphicDesigner);
-
-                //await AddKnowledge(instruction, "waf", context);
-
-                //await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
-                //{
-                //    Type = nameof(EventTypes.ArticleWritten),
-                //    Data = new Dictionary<string, string> {
-                //            { "org", item.Data["org"] },
-                //            { "repo", item.Data["repo"] },
-                //            { "issueNumber", item.Data["issueNumber"] },
-                //            { "code", lastCode },
-                //            { "parentNumber", item.Data["parentNumber"] }
-                //        },
-                //    Message = lastCode
-                //});
+                _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], uri, AgentTypes.GraphicDesigner);
                 break;
             default:
                 break;

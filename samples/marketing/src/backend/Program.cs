@@ -76,10 +76,6 @@ builder.Host.UseOrleans(siloBuilder =>
                .AddMemoryGrainStorage("messages");
     siloBuilder.UseInMemoryReminderService();
     siloBuilder.UseDashboard(x => x.HostSelf = true);
-    //siloBuilder.ConfigureServices(services =>
-    //{
-    //    // services.AddSingleton<IArticleHub, ArticleHub>();
-    //}
 });
 
 builder.Services.Configure<JsonSerializerOptions>(options =>

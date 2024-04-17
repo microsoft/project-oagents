@@ -15,12 +15,15 @@ public class Writer : AiAgent<WriterState>, IWriter
     protected override string Namespace => Consts.OrleansNamespace;
     
     private readonly ILogger<GraphicDesigner> _logger;
+    private readonly ISignalRClient _signalRClient;
 
-    public Writer([PersistentState("state", "messages")] IPersistentState<AgentState<WriterState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger) 
+    public Writer([PersistentState("state", "messages")] IPersistentState<AgentState<WriterState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger, ISignalRClient signalRClient) 
     : base(state, memory, kernel)
     {
         _logger = logger;
-        if(state.State.Data == null)
+        _signalRClient = signalRClient;
+
+        if (state.State.Data == null)
         {
             state.State.Data = new WriterState();
         }
@@ -51,8 +54,7 @@ public class Writer : AiAgent<WriterState>, IWriter
                     Message = newArticle
                 });
 
-                ArticleHub._allHubs.TryGetValue(item.Data["UserId"], out var articleHub);
-                await articleHub.SendMessageToSpecificClient(item.Data["UserId"], newArticle, AgentTypes.Chat);
+                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], newArticle, AgentTypes.Chat);
 
                 break;
             default:

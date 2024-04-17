@@ -12,64 +12,25 @@ namespace Marketing.Hubs
 {
     public class ArticleHub: Hub<IArticleHub>
     {
-        private readonly IHubContext<ArticleHub> _hubContext;
-        public static ConcurrentDictionary<string, string> _connectionIdByUser { get; set; } = new ConcurrentDictionary<string, string>();
-        public static ConcurrentDictionary<string, string> _allConnections { get; set; } = new ConcurrentDictionary<string, string>();
-        public static ConcurrentDictionary<string, ArticleHub> _allHubs { get; set; } = new ConcurrentDictionary<string, ArticleHub>();
-
-        public ArticleHub(IHubContext<ArticleHub> hubContext)
-        {
-            _hubContext = hubContext;
-        }
-
         public override async Task OnConnectedAsync()
         {
-            _allConnections.TryAdd(Context.ConnectionId, string.Empty);
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             string removedUserId;
-            _allConnections.TryRemove(Context.ConnectionId, out removedUserId);
-            _connectionIdByUser.TryRemove(removedUserId, out _);
+            SignalRConnectionsDB.ConnectionIdByUser.TryRemove(Context.ConnectionId, out _);
             await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task ConnectToAgent(string UserId, IClusterClient clusterClient)
-        {
-            var frontEndMessage = new FrontEndMessage()
-            {
-                UserId = UserId,
-                Message = "Connected to agents",
-                Agent = AgentTypes.Chat.ToString()
-            };
-
-            _allHubs.TryAdd(UserId, this);
-            _connectionIdByUser.AddOrUpdate(UserId, Context.ConnectionId, (key, oldValue) => Context.ConnectionId);
-
-            await Groups.AddToGroupAsync(Context.ConnectionId, groupName: UserId);
-
-
-            var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
-            var streamId = StreamId.Create(Consts.OrleansNamespace, frontEndMessage.UserId);
-            var stream = streamProvider.GetStream<Event>(streamId);
-            var data = new Dictionary<string, string>
-            {
-                { "UserId", frontEndMessage.UserId },
-                { "userMessage", frontEndMessage.Message},
-            };
-            await stream.OnNextAsync(new Event
-            {
-                Type = nameof(EventTypes.UserConnected),
-                Message = frontEndMessage.Message,
-                Data = data
-            });
-
-
-        }
-
-        public async Task ChatMessage(FrontEndMessage frontEndMessage, IClusterClient clusterClient)
+        /// <summary>
+        /// This method is called when a new message from the client arrives.
+        /// </summary>
+        /// <param name="frontEndMessage"></param>
+        /// <param name="clusterClient"></param>
+        /// <returns></returns>
+        public async Task ProcessMessage(FrontEndMessage frontEndMessage, IClusterClient clusterClient)
         {
             var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
             var streamId = StreamId.Create(Consts.OrleansNamespace, frontEndMessage.UserId);
@@ -87,18 +48,35 @@ namespace Marketing.Hubs
                 Message = frontEndMessage.Message,
                 Data = data
             });
+
         }
 
-        public async Task SendMessageToSpecificClient(string userId, string message, AgentTypes agentType)
+        public async Task ConnectToAgent(string UserId, IClusterClient clusterClient)
         {
-            var connectionId = _connectionIdByUser[userId];
             var frontEndMessage = new FrontEndMessage()
             {
-                UserId = userId,
-                Message = message,
-                Agent = agentType.ToString()
+                UserId = UserId,
+                Message = "Connected to agents",
+                Agent = AgentTypes.Chat.ToString()
             };
-            await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveMessage", frontEndMessage);
+
+            SignalRConnectionsDB.ConnectionIdByUser.AddOrUpdate(UserId, Context.ConnectionId, (key, oldValue) => Context.ConnectionId);
+
+            // Notify the agents that a new user got connected.
+            var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
+            var streamId = StreamId.Create(Consts.OrleansNamespace, frontEndMessage.UserId);
+            var stream = streamProvider.GetStream<Event>(streamId);
+            var data = new Dictionary<string, string>
+            {
+                { "UserId", frontEndMessage.UserId },
+                { "userMessage", frontEndMessage.Message},
+            };
+            await stream.OnNextAsync(new Event
+            {
+                Type = nameof(EventTypes.UserConnected),
+                Message = frontEndMessage.Message,
+                Data = data
+            });
         }
     }
 }

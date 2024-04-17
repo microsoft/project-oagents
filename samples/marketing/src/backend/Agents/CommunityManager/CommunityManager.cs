@@ -13,12 +13,14 @@ namespace Microsoft.AI.DevTeam;
 public class CommunityManager : AiAgent<CommunityManagerState>, ICommunityManager
 {
     protected override string Namespace => Consts.OrleansNamespace;
-    
+
+    private readonly ISignalRClient _signalRClient;
     private readonly ILogger<GraphicDesigner> _logger;
 
-    public CommunityManager([PersistentState("state", "messages")] IPersistentState<AgentState<CommunityManagerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger) 
+    public CommunityManager([PersistentState("state", "messages")] IPersistentState<AgentState<CommunityManagerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger, ISignalRClient signalRClient) 
     : base(state, memory, kernel)
     {
+        _signalRClient = signalRClient;
         _logger = logger;
         if(state.State.Data == null)
         {
@@ -39,23 +41,8 @@ public class CommunityManager : AiAgent<CommunityManagerState>, ICommunityManage
                 string newPost = await CallFunction(CommunityManagerPrompts.WritePost, context);
                 _state.State.Data.WrittenPost = newPost;
 
-                ArticleHub._allHubs.TryGetValue(item.Data["UserId"], out var articleHub);
-                articleHub.SendMessageToSpecificClient(item.Data["UserId"], newPost, AgentTypes.CommunityManager);
+                _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], newPost, AgentTypes.CommunityManager);
 
-                //await AddKnowledge(instruction, "waf", context);
-
-                //await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
-                //{
-                //    Type = nameof(EventTypes.ArticleWritten),
-                //    Data = new Dictionary<string, string> {
-                //            { "org", item.Data["org"] },
-                //            { "repo", item.Data["repo"] },
-                //            { "issueNumber", item.Data["issueNumber"] },
-                //            { "code", lastCode },
-                //            { "parentNumber", item.Data["parentNumber"] }
-                //        },
-                //    Message = lastCode
-                //});
                 break;
             default:
                 break;

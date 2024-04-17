@@ -3,21 +3,14 @@ using System.Collections.Concurrent;
 
 namespace Marketing.Hubs
 {
-
     public interface ISignalRClient
     {
-        Task SendMessageToAll(string user, string message);
+        Task SendMessageToSpecificClient(string userId, string message, AgentTypes agentType);
     }
 
     public class SignalRClient : ISignalRClient
     {
-        private static ConcurrentDictionary<string, string> _connectionIdByUser { get; set; } = new ConcurrentDictionary<string, string>();
-        private static ConcurrentDictionary<string, string> _allConnections { get; set; } = new ConcurrentDictionary<string, string>();
-        private static ConcurrentDictionary<string, ArticleHub> _allHubs { get; set; } = new ConcurrentDictionary<string, ArticleHub>();
-
-
         private readonly IHubContext<ArticleHub> _hubContext;
-
         public SignalRClient(IHubContext<ArticleHub> hubContext)
         {
             _hubContext = hubContext;
@@ -25,7 +18,7 @@ namespace Marketing.Hubs
 
         public async Task SendMessageToSpecificClient(string userId, string message, AgentTypes agentType)
         {
-            var connectionId = _connectionIdByUser[userId];
+            var connectionId = SignalRConnectionsDB.ConnectionIdByUser[userId];
             var frontEndMessage = new FrontEndMessage()
             {
                 UserId = userId,
