@@ -91,7 +91,7 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
 
     private async Task HandleClosingIssue(long issueNumber, long? parentNumber, string skillName, string functionName, string org, string repo)
     {
-        var subject = $"{org}/{repo}/{issueNumber}";
+        var subject = $"{org}-{repo}-{issueNumber}";
         var eventType = (skillName, functionName) switch
         {
             ("PM", "Readme") => nameof(GithubFlowEventType.ReadmeChainClosed),
@@ -121,7 +121,7 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
         try
         {
             _logger.LogInformation("Handling new ask");
-            var subject = $"{org}/{repo}/{issueNumber}";
+            var subject = $"{org}-{repo}-{issueNumber}";
             var eventType = (skillName, functionName) switch
             {
                 ("Do", "It") => nameof(GithubFlowEventType.NewAsk),

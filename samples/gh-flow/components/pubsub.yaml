@@ -3,6 +3,10 @@ kind: Component
 metadata:
   name: agents-pubsub
 spec:
-  type: pubsub.in-memory
+  type: pubsub.redis
   version: v1
-  metadata: []
+  metadata:
+  - name: redisHost
+    value: localhost:6379
+  - name: redisPassword
+    value: ""

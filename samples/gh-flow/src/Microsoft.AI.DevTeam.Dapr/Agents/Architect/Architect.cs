@@ -9,7 +9,7 @@ namespace Microsoft.AI.DevTeam.Dapr;
 
 
 // The architect has Org+Repo scope and is holding the knowledge of the high level architecture of the project
-public class Architect : AiAgent<ArchitectState>
+public class Architect : AiAgent<ArchitectState>,IDaprAgent
 {
     public Architect(ActorHost host, DaprClient client, ISemanticTextMemory memory, Kernel kernel)
     : base(host, client, memory, kernel)

@@ -1,4 +1,3 @@
-
 using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
@@ -7,7 +6,6 @@ using Microsoft.AI.Agents.Dapr;
 using Microsoft.AI.DevTeam.Dapr.Events;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.AI.DevTeam.Dapr;
 
@@ -27,7 +25,7 @@ public class ProductManager : AiAgent<ProductManagerState>, IDaprAgent
         {
             case nameof(GithubFlowEventType.ReadmeRequested):
                 {
-                     var context = item.ToGithubContext();
+                    var context = item.ToGithubContext();
                     var readme = await CreateReadme(item.Data["input"]);
                     var data = context.ToData();
                     data["result"]=readme;

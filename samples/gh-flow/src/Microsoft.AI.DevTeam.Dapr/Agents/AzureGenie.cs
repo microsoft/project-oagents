@@ -1,12 +1,9 @@
-﻿
-using CloudNative.CloudEvents;
-using Dapr.Actors;
+﻿using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Dapr;
 using Microsoft.AI.DevTeam.Dapr.Events;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.AI.DevTeam.Dapr;
 
@@ -25,47 +22,27 @@ public class AzureGenie : Agent, IDaprAgent
         {
             case nameof(GithubFlowEventType.ReadmeCreated):
             {
-                var data = item.Data;
-                var parentNumber = long.Parse(data["parentNumber"].ToString());
-                var issueNumber = long.Parse(data["issueNumber"].ToString());
-                var org = data["org"].ToString();
-                var repo = data["repo"].ToString();
-                var subject = $"{org}/{repo}/{issueNumber}";
-                await Store(org,repo, parentNumber, issueNumber, "readme", "md", "output", data["readme"].ToString());
+                var context = item.ToGithubContext();
+                await Store(context.Org,context.Repo, context.ParentNumber.Value, context.IssueNumber, "readme", "md", "output", item.Data["readme"]);
                 await PublishEvent(Consts.PubSub, Consts.MainTopic, new Event
                 {
                     Type = nameof(GithubFlowEventType.ReadmeStored),
-                    Subject = subject,
-                    Data = new Dictionary<string, string> {
-                            { "org", org },
-                            { "repo", repo },
-                            { "issueNumber", $"{issueNumber}" },
-                            { "parentNumber", $"{parentNumber}" }
-                        }
+                    Subject = context.Subject,
+                    Data = context.ToData()
                 });
             }
                 
                 break;
             case nameof(GithubFlowEventType.CodeCreated):
             {
-                var data = item.Data;
-                var parentNumber = long.Parse(data["parentNumber"].ToString());
-                var issueNumber = long.Parse(data["issueNumber"].ToString());
-                var org = data["org"].ToString();
-                var repo = data["repo"].ToString();
-                var subject = $"{org}/{repo}/{issueNumber}";
-                await Store(org,repo, parentNumber, issueNumber, "run", "sh", "output", data["code"].ToString());
-                await RunInSandbox(org, repo, parentNumber, issueNumber);
+                var context = item.ToGithubContext();
+                await Store(context.Org,context.Repo, context.ParentNumber.Value, context.IssueNumber, "run", "sh", "output", item.Data["code"]);
+                await RunInSandbox(context.Org,context.Repo, context.ParentNumber.Value, context.IssueNumber);
                 await PublishEvent(Consts.PubSub, Consts.MainTopic, new Event
                 {
                     Type = nameof(GithubFlowEventType.SandboxRunCreated),
-                    Subject = subject,
-                    Data = new Dictionary<string, string> {
-                            { "org", org },
-                            { "repo", repo },
-                            { "issueNumber", $"{issueNumber}" },
-                            { "parentNumber", $"{parentNumber}" }
-                        }
+                    Subject = context.Subject,
+                    Data = context.ToData()
                 });
             }
                 

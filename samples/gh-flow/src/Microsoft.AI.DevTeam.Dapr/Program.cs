@@ -14,14 +14,8 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Dapr;
 using Dapr.Actors.Client;
 using Dapr.Actors;
-using CloudEvent = CloudNative.CloudEvents.CloudEvent;
 using Microsoft.AI.DevTeam.Dapr;
 using Microsoft.AI.DevTeam.Dapr.Events;
-using System.Text;
-using CloudNative.CloudEvents.SystemTextJson;
-using System.Net.Mime;
-using Microsoft.AI.Agents.Abstractions;
-using Microsoft.AI.Agents.Dapr;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<WebhookEventProcessor, GithubWebHookProcessor>();
@@ -51,7 +45,10 @@ builder.Services.AddActors(
     options =>
     {
         options.UseJsonSerialization = true;
-        
+        options.JsonSerializerOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        options.ReentrancyConfig = new ActorReentrancyConfig {
+            Enabled = true
+        };
         options.Actors.RegisterActor<Dev>();
         options.Actors.RegisterActor<DeveloperLead>();
         options.Actors.RegisterActor<ProductManager>();
@@ -154,8 +151,12 @@ static async Task HandleEvent(IActorProxyFactory proxyFactory, string type, stri
 {
     try
     {
-        var agent = proxyFactory.CreateActorProxy<IDaprAgent>(new ActorId(evt.Data.Subject), type);
-        await agent.HandleEvent(evt.Data);
+        var proxyOptions = new ActorProxyOptions
+        {
+            RequestTimeout = Timeout.InfiniteTimeSpan
+        };
+        var proxy = proxyFactory.Create(new ActorId(evt.Data.Subject), type, proxyOptions);
+        await proxy.InvokeMethodAsync(method, evt.Data);
     }
     catch (Exception ex)
     {

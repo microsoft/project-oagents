@@ -26,7 +26,7 @@ public abstract class AiAgent<T> : Agent, IAiAgent
    
     protected override async Task OnActivateAsync()
     {
-        state = await StateManager.GetStateAsync<AgentState<T>>(StateStore);
+        state = await StateManager.GetOrAddStateAsync(StateStore, new AgentState<T>());
     } 
 
     public void AddToHistory(string message, ChatUserType userType)
