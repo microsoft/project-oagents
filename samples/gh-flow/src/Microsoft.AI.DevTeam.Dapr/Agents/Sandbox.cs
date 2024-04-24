@@ -1,19 +1,15 @@
-﻿using Dapr.Actors;
-using Dapr.Actors.Runtime;
+﻿using Dapr.Actors.Runtime;
 using Dapr.Client;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Dapr;
 using Microsoft.AI.DevTeam.Dapr.Events;
 
 namespace Microsoft.AI.DevTeam.Dapr;
-public class Sandbox : Agent, IDaprAgent
+public class Sandbox : Agent, IDaprAgent, IRemindable
 {
     private const string ReminderName = "SandboxRunReminder";
+    public string StateStore = "agents-statestore";
     private readonly IManageAzure _azService;
-   // private readonly IReminderRegistry _reminderRegistry;
-   // private IGrainReminder? _reminder;
-
-    //protected readonly IPersistentState<SandboxMetadata> _state;
 
     public Sandbox(ActorHost host, DaprClient client, IManageAzure azService) : base(host, client)
     {
@@ -38,60 +34,66 @@ public class Sandbox : Agent, IDaprAgent
 
     public async Task ScheduleCommitSandboxRun(string org, string repo, long parentIssueNumber, long issueNumber)
     {
-        // await StoreState(org, repo, parentIssueNumber, issueNumber);
-        // _reminder = await _reminderRegistry.RegisterOrUpdateReminder(
-        //     callingGrainId: this.GetGrainId(),
-        //     reminderName: ReminderName,
-        //     dueTime: TimeSpan.Zero,
-        //     period: TimeSpan.FromMinutes(1));
+        await StoreState(org, repo, parentIssueNumber, issueNumber);
+        await this.RegisterReminderAsync(
+            ReminderName, 
+            null,
+            TimeSpan.Zero, 
+            TimeSpan.FromMinutes(1));
     }
-
-    // async Task IRemindable.ReceiveReminder(string reminderName, TickStatus status)
-    // {
-    //     // if (!_state.State.IsCompleted)
-    //     // {
-    //     //     var sandboxId =  $"sk-sandbox-{_state.State.Org}-{_state.State.Repo}-{_state.State.ParentIssueNumber}-{_state.State.IssueNumber}";
-    //     //     if (await _azService.IsSandboxCompleted(sandboxId))
-    //     //     {
-    //     //         await _azService.DeleteSandbox(sandboxId);
-    //     //         await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
-    //     //         {
-    //     //             Type = nameof(GithubFlowEventType.SandboxRunFinished),
-    //     //             Data = new Dictionary<string, string> {
-    //     //                 { "org", _state.State.Org },
-    //     //                 { "repo", _state.State.Repo },
-    //     //                 { "issueNumber", _state.State.IssueNumber.ToString() },
-    //     //                 { "parentNumber", _state.State.ParentIssueNumber.ToString() }
-    //     //             }
-    //     //         });
-    //     //         await Cleanup();
-    //     //     }
-    //     // }
-    //     // else
-    //     // {
-    //     //     await Cleanup();
-    //     // }
-    // }
 
     private async Task StoreState(string org, string repo, long parentIssueNumber, long issueNumber)
     {
-        // _state.State.Org = org;
-        // _state.State.Repo = repo;
-        // _state.State.ParentIssueNumber = parentIssueNumber;
-        // _state.State.IssueNumber = issueNumber;
-        // _state.State.IsCompleted = false;
-        // await _state.WriteStateAsync();
+        var state  = new SandboxMetadata {
+            Org = org,
+            Repo = repo,
+            IssueNumber = issueNumber,
+            ParentIssueNumber = parentIssueNumber,
+            IsCompleted = false
+        };
+        await StateManager.SetStateAsync(
+                StateStore,
+                state);
+    }
+    private async Task Cleanup()
+    {
+        var agentState = await StateManager.GetStateAsync<SandboxMetadata>(StateStore);
+        agentState.IsCompleted = true;
+        await UnregisterReminderAsync(ReminderName);
+        await StateManager.SetStateAsync(
+                StateStore,
+                agentState);
     }
 
-   
-
-    // private async Task Cleanup()
-    // {
-    //     _state.State.IsCompleted = true;
-    //     await _reminderRegistry.UnregisterReminder(
-    //         this.GetGrainId(), _reminder);
-    //     await _state.WriteStateAsync();
-    // }
+    public async Task ReceiveReminderAsync(string reminderName, byte[] state, TimeSpan dueTime, TimeSpan period)
+    {
+        var agentState = await StateManager.GetStateAsync<SandboxMetadata>(StateStore);
+        if (!agentState.IsCompleted)
+        {
+            var sandboxId =  $"sk-sandbox-{agentState.Org}-{agentState.Repo}-{agentState.ParentIssueNumber}-{agentState.IssueNumber}";
+            if (await _azService.IsSandboxCompleted(sandboxId))
+            {
+                await _azService.DeleteSandbox(sandboxId);
+                var data = new Dictionary<string, string> {
+                        { "org", agentState.Org },
+                        { "repo", agentState.Repo },
+                        { "issueNumber", agentState.IssueNumber.ToString() },
+                        { "parentNumber", agentState.ParentIssueNumber.ToString() }
+                    };
+                var subject = $"{agentState.Org}-{agentState.Repo}-{agentState.IssueNumber}";
+                await PublishEvent(Consts.PubSub,Consts.MainTopic, new Event {
+                     Type = nameof(GithubFlowEventType.SandboxRunFinished),
+                     Subject = subject,
+                    Data = data
+                });
+                await Cleanup();
+            }
+        }
+        else
+        {
+            await Cleanup();
+        }
+    }
 }
 
 public class SandboxMetadata
