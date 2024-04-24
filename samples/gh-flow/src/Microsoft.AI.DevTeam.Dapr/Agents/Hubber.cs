@@ -44,7 +44,7 @@ public class Hubber : Agent, IDaprAgent
                 break;
             case nameof(GithubFlowEventType.DevPlanCreated):
                 {
-                     var context = item.ToGithubContext();
+                    var context = item.ToGithubContext();
                     var plan = JsonSerializer.Deserialize<DevLeadPlanResponse>(item.Data["plan"]);
                     var prompts = plan.steps.SelectMany(s => s.subtasks.Select(st => st.prompt));
                     

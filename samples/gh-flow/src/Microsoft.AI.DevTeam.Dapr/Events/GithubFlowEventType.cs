@@ -43,7 +43,7 @@ namespace Microsoft.AI.DevTeam.Dapr.Events
                             { "org", context.Org },
                             { "repo", context.Repo },
                             { "issueNumber", $"{context.IssueNumber}" },
-                            { "parentNumber", context.ParentNumber.HasValue? default: context.ParentNumber.ToString() }
+                            { "parentNumber", context.ParentNumber.HasValue? context.ParentNumber.ToString(): default }
             };
         }
 
