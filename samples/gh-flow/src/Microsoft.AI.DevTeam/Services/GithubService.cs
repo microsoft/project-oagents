@@ -51,9 +51,27 @@ public class GithubService : IManageGithub
                             {
                                 var value = reader.ReadToEnd();
 
-                                await _ghClient.Repository.Content.CreateFile(
+                                try
+                                {
+                                    // Check if the file exists
+                                    var existingFiles = await _ghClient.Repository.Content.GetAllContentsByRef(org, repo, filePath, branch);
+                                    var existingFile = existingFiles.First();
+                                    // If the file exists, update it
+                                    var updateChangeSet = await _ghClient.Repository.Content.UpdateFile(
                                         org, repo, filePath,
-                                        new CreateFileRequest($"Commit message", value, branch)); // TODO: add more meaningfull commit message
+                                        new UpdateFileRequest("Updated file via AI", value, existingFile.Sha, branch)); // TODO: add more meaningful commit message
+                                }
+                                catch (NotFoundException)
+                                {
+                                    // If the file doesn't exist, create it
+                                    var createChangeSet = await _ghClient.Repository.Content.CreateFile(
+                                        org, repo, filePath,
+                                        new CreateFileRequest("Created file via AI", value, branch)); // TODO: add more meaningful commit message
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, $"Error while uploading file {item.Name}");
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -80,7 +98,8 @@ public class GithubService : IManageGithub
         try
         {
             var ghRepo = await _ghClient.Repository.Get(org, repo);
-            if (ghRepo.Size == 0)
+            var contents = await _ghClient.Repository.Content.GetAllContents(org, repo);
+            if (!contents.Any())
             {
                 // Create a new file and commit it to the repository
                 var createChangeSet = await _ghClient.Repository.Content.CreateFile(
@@ -90,7 +109,6 @@ public class GithubService : IManageGithub
                     new CreateFileRequest("Initial commit", "# Readme")
                 );
             }
-
             await _ghClient.Git.Reference.CreateBranch(org, repo, branch, ghRepo.DefaultBranch);
         }
         catch (Exception ex)
