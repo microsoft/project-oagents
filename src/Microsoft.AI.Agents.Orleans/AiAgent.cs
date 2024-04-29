@@ -9,16 +9,21 @@ namespace Microsoft.AI.Agents.Orleans;
 
 public abstract class AiAgent<T> : Agent, IAiAgent
 {
-    public AiAgent(
-        [PersistentState("state", "messages")] IPersistentState<AgentState<T>> state, ISemanticTextMemory memory, Kernel kernel)
+    protected IPersistentState<AgentState<T>> _state;
+    private readonly ISemanticTextMemory _memory;
+    private readonly Kernel _kernel;
+
+    public AiAgent([PersistentState("state", "messages")] IPersistentState<AgentState<T>> state, ISemanticTextMemory memory, Kernel kernel)
     {
+        if(state?.State == null)
+        {
+            state.State = new AgentState<T>();
+            state.State.Data = Activator.CreateInstance<T>();
+        }   
         _state = state;
         _memory = memory;
         _kernel = kernel;
     }
-    protected IPersistentState<AgentState<T>> _state;
-    private readonly ISemanticTextMemory _memory;
-    private readonly Kernel _kernel;
 
     public void AddToHistory(string message, ChatUserType userType)
     {

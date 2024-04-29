@@ -22,11 +22,6 @@ public class Writer : AiAgent<WriterState>, IWriter
     {
         _logger = logger;
         _signalRClient = signalRClient;
-
-        if (state.State.Data == null)
-        {
-            state.State.Data = new WriterState();
-        }
     }
 
     public async override Task HandleEvent(Event item)

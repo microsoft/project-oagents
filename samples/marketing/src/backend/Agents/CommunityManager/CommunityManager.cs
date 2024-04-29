@@ -22,10 +22,6 @@ public class CommunityManager : AiAgent<CommunityManagerState>, ICommunityManage
     {
         _signalRClient = signalRClient;
         _logger = logger;
-        if(state.State.Data == null)
-        {
-            state.State.Data = new CommunityManagerState();
-        }
     }
 
     public async override Task HandleEvent(Event item)

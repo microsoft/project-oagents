@@ -9,6 +9,8 @@ namespace Marketing.Agents.GraphicDesigner
 {
     public class GraphicDesignerOpenAIClient
     {
+        private readonly int MAX_PROMPT_LENGTH = 999;
+
         private readonly HttpClient _httpClient;
         private readonly ILogger _logger;
         private readonly string _apiKey;
@@ -24,13 +26,15 @@ namespace Marketing.Agents.GraphicDesigner
 
         public async Task<Uri> GenerateImage(string prompt)
         {
-
             OpenAIClient client = new(new Uri(_apiEndpoint), new AzureKeyCredential(_apiKey));
+
+            prompt = GraphicDesignerPrompts.GenerateImage.Replace("{{$input}}", prompt);
+            prompt = prompt.Length > MAX_PROMPT_LENGTH ? prompt.Substring(0, MAX_PROMPT_LENGTH) : prompt;
 
             Response<ImageGenerations> imageGenerations = await client.GetImageGenerationsAsync(
                 new ImageGenerationOptions()
                 {
-                    Prompt = GraphicDesignerPrompts.GenerateImage.Replace("{{$input}}", prompt).Substring(1,999),
+                    Prompt = prompt,
                     Size = ImageSize.Size1024x1024,
                     ImageCount = 1,
                     DeploymentName = "dall-e-3"

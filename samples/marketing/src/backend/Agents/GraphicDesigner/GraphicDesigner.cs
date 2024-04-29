@@ -4,6 +4,7 @@ using Marketing.Hubs;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
+using Microsoft.Identity.Client;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
@@ -25,11 +26,6 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>, IGraphicDesigner
         _logger = logger;
         _configuration = configuration;
         _signalRClient = signalRClient;
-
-        if (state.State.Data == null)
-        {
-            state.State.Data = new GraphicDesignerState();
-        }
     }
 
     public async override Task HandleEvent(Event item)

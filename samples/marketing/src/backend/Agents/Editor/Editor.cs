@@ -21,11 +21,6 @@ public class Editor : AiAgent<EditorState>
     {
         _logger = logger;
         _signalRClient = signalRClient;
-
-        if (state.State.Data == null)
-        {
-            state.State.Data = new EditorState();
-        }
     }
 
     public async override Task HandleEvent(Event item)
