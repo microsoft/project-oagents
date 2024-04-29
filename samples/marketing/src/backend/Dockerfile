@@ -9,15 +9,15 @@ ENV ASPNETCORE_URLS=http://+:5274
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 ARG configuration=Release
 COPY . .
-RUN dotnet restore "src/apps/gh-flow/gh-flow.csproj"
-WORKDIR "/src/apps/gh-flow"
-RUN dotnet build "gh-flow.csproj" -c $configuration -o /app/build
+RUN dotnet restore "src/apps/marketing/marketing.csproj"
+WORKDIR "/src/apps/marketing"
+RUN dotnet build "marketing.csproj" -c $configuration -o /app/build
 
 FROM build AS publish
 ARG configuration=Release
-RUN dotnet publish "gh-flow.csproj" -c $configuration -o /app/publish
+RUN dotnet publish "marketing.csproj" -c $configuration -o /app/publish
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "gh-flow.dll"]
+ENTRYPOINT ["dotnet", "marketing.dll"]
