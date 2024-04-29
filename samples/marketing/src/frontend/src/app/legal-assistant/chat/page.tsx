@@ -41,7 +41,7 @@ type Message = {
 type ChatProps = {
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-  sendMessage: (message: string) => void;
+  sendMessage: (message: string, agent: string) => void;
 };
 
 export default function Chat({ messages, setMessages, sendMessage }: ChatProps) {
@@ -50,7 +50,7 @@ export default function Chat({ messages, setMessages, sendMessage }: ChatProps) 
 
   const handleSend = (message:string) => {
     setMessages([...messages, { sender: 'user', text: message }]);
-    sendMessage(message);
+    sendMessage(message, "chat");
   };
 
   return (

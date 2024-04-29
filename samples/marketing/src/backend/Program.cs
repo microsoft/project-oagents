@@ -26,23 +26,26 @@ builder.Services.AddControllers();
 builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
-
 builder.Services.AddSingleton<ISignalRClient, SignalRClient>();
 
-// TODO: Only for DEV
-const string AllowDebugOrigin = "AllowDebugOrigin";
-builder.Services.AddCors(options =>
+
+// Allow any CORS origin if in DEV
+const string AllowDebugOriginPolicy = "AllowDebugOrigin";
+if (builder.Environment.IsDevelopment())
 {
-    options.AddPolicy(AllowDebugOrigin,
-        builder =>
-        {
-            builder
-            .WithOrigins("http://localhost:3000") // client url
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-        });
-});
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy(AllowDebugOriginPolicy,
+                       builder =>
+                       {
+                builder
+                .WithOrigins("http://localhost:3000") // client url
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+            });
+    });
+}
 
 builder.Services.AddOptions<OpenAIOptions>()
     .Configure<IConfiguration>((settings, configuration) =>
@@ -86,7 +89,7 @@ builder.Services.Configure<JsonSerializerOptions>(options =>
 var app = builder.Build();
 
 app.UseRouting();
-app.UseCors(AllowDebugOrigin);
+app.UseCors(AllowDebugOriginPolicy);
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();

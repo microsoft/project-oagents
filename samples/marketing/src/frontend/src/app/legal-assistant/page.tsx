@@ -63,7 +63,7 @@ export default function LegalAssistant() {
 
       //setup handler
       connection.on('ReceiveMessage', (message: SignalRMessage) => {
-        console.log(`[LegalAssistant][${message.userId}] Received message from ${message.agent}: ${message.message}`);
+        console.log(`[MainPage][${message.userId}] Received message from ${message.agent}: ${message.message}`);
         if (message.agent === 'Chat') {
           const newMessage = { sender: 'agent', text: message.message };
           setMessages(prevMessages => [...prevMessages, newMessage]);
@@ -77,13 +77,13 @@ export default function LegalAssistant() {
       });
 
       connection.onclose(async () => {
-        console.log(`[LegalAssistant] Connection closed.`);
+        console.log(`[MainPage] Connection closed.`);
 
         try {
           await connection.start();
           console.log(`Connection ID: ${connection.connectionId}`);
           await connection.invoke('ConnectToAgent', userId);
-          console.log(`[LegalAssistant] Connection re-established.`);
+          console.log(`[MainPage] Connection re-established.`);
         } catch (error) {
           console.error(error);
         }
@@ -94,23 +94,24 @@ export default function LegalAssistant() {
       await connection.invoke('ConnectToAgent', userId);
 
       setConnection(connection);
-      console.log(`[LegalAssistant] Connection established.`);
+      console.log(`[MainPage] Connection established.`);
     } catch (error) {
       console.error(error);
     }
   };
 
-  const sendMessage = async (message: string) => {
+  const sendMessage = async (message: string, agent: string) => {
     if (connection) {
       const frontEndMessage:SignalRMessage = { 
         userId: userId, 
         message: message,
-        agent: 'Chat'
+        agent: agent
       };
+      console.log(`[MainPage][${{agent}}] Sending message: ${message}`);
       await connection.invoke('ProcessMessage', frontEndMessage);
-      console.log(`[LegalAssistant] Sent message: ${message}`);
+      console.log(`[MainPage][${{agent}}] message sent`);
     } else {
-      console.error(`[LegalAssistant] Connection not established.`);
+      console.error(`[MainPage] Connection not established.`);
     }
   }
 

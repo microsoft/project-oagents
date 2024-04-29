@@ -33,6 +33,16 @@ public class Writer : AiAgent<WriterState>, IWriter
     {
         switch (item.Type)
         {
+            case nameof(EventTypes.UserConnected):
+                // The user reconnected, let's send the last message if we have one
+                if(_state.State.History?.Last().Message == null)
+                {                     
+                    return;
+                }
+                var lastMessage = _state.State.History.Last().Message;
+                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], lastMessage, AgentTypes.Chat);
+                break;
+
             case nameof(EventTypes.UserChatInput):                
                 //var lastCode = _state.State.History.Last().Message;
 

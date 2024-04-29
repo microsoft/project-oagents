@@ -36,6 +36,7 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>, IGraphicDesigner
     {
         switch (item.Type)
         {
+            case nameof(EventTypes.UserConnected):
             case nameof(EventTypes.ArticleWritten):                
                 //var lastCode = _state.State.History.Last().Message;
 
