@@ -7,7 +7,7 @@ using Orleans.Runtime;
 
 namespace Microsoft.AI.Agents.Orleans;
 
-public abstract class AiAgent<T> : Agent, IAiAgent
+public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
 {
     protected IPersistentState<AgentState<T>> _state;
     private readonly ISemanticTextMemory _memory;
@@ -18,7 +18,7 @@ public abstract class AiAgent<T> : Agent, IAiAgent
         if(state?.State == null)
         {
             state.State = new AgentState<T>();
-            state.State.Data = Activator.CreateInstance<T>();
+            state.State.Data = new T();
         }   
         _state = state;
         _memory = memory;
