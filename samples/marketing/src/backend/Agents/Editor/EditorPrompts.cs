@@ -1,5 +1,6 @@
 
-namespace Microsoft.AI.DevTeam;
+namespace Marketing.Agents;
+
 public static class EditorPrompts {
     public static string Implement = """
         You are a Developer for an application. 

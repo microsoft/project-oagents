@@ -1,4 +1,3 @@
-#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
 using Marketing.Hubs;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
@@ -7,7 +6,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 
-namespace Microsoft.AI.DevTeam;
+namespace Marketing.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
 public class CommunityManager : AiAgent<CommunityManagerState>, ICommunityManager
@@ -71,4 +70,3 @@ public class CommunityManagerState
     [Id(0)]
     public string WrittenPost { get; set; }
 }
-#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task

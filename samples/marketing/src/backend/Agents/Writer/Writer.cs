@@ -1,13 +1,10 @@
-#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
-using Marketing.Hubs;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
-using Microsoft.AI.DevTeam.Events;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.Marketing.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
 public class Writer : AiAgent<WriterState>, IWriter
@@ -15,13 +12,11 @@ public class Writer : AiAgent<WriterState>, IWriter
     protected override string Namespace => Consts.OrleansNamespace;
     
     private readonly ILogger<GraphicDesigner> _logger;
-    private readonly ISignalRClient _signalRClient;
 
-    public Writer([PersistentState("state", "messages")] IPersistentState<AgentState<WriterState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger, ISignalRClient signalRClient) 
+    public Writer([PersistentState("state", "messages")] IPersistentState<AgentState<WriterState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger) 
     : base(state, memory, kernel)
     {
         _logger = logger;
-        _signalRClient = signalRClient;
     }
 
     public async override Task HandleEvent(Event item)
@@ -35,7 +30,10 @@ public class Writer : AiAgent<WriterState>, IWriter
                     return;
                 }
                 var lastMessage = _state.State.History.Last().Message;
-                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], lastMessage, AgentTypes.Chat);
+
+                // TODO
+                // send a meaningful message to the user
+
                 break;
 
             case nameof(EventTypes.UserChatInput):                
@@ -59,7 +57,7 @@ public class Writer : AiAgent<WriterState>, IWriter
                     Message = newArticle
                 });
 
-                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], newArticle, AgentTypes.Chat);
+
 
                 break;
             default:
@@ -84,5 +82,3 @@ public class WriterState
     [Id(0)]
     public string WrittenArticle { get; set; }
 }
-
-#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task

@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Microsoft.AI.DevTeam;
+namespace Marketing;
+
 public class OpenAIOptions
 {
     [Required]

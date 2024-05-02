@@ -1,4 +1,4 @@
-﻿namespace Microsoft.AI.DevTeam;
+﻿namespace Marketing.Options;
 
 public static class Consts
 {

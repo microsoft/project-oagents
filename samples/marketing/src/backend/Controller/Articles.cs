@@ -1,6 +1,4 @@
 ﻿using Microsoft.AI.Agents.Abstractions;
-using Microsoft.AI.DevTeam;
-using Microsoft.AI.DevTeam.Events;
 using Microsoft.AspNetCore.Mvc;
 using Orleans;
 using Orleans.Runtime;
@@ -27,6 +25,7 @@ namespace Marketing.Controller
         {
             _client = client;
         }
+
         // GET api/<Post>/5
         [HttpGet("{id}")]
         public async Task<string> Get(string id)
@@ -59,6 +58,5 @@ namespace Marketing.Controller
 
             return $"Task {UserId} accepted";
         }
-
     }
 }

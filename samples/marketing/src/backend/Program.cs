@@ -1,22 +1,13 @@
 using System.Text.Json;
 using Azure;
 using Azure.AI.OpenAI;
-using Microsoft.AI.DevTeam;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
-using Octokit.Webhooks;
-using Octokit.Webhooks.AspNetCore;
-using Azure.Identity;
-using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Connectors.Qdrant;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using System.Configuration;
-using Microsoft.OpenApi.Models;
-using Microsoft.AI.Agents.Abstractions;
-using Marketing.Hubs;
-using Microsoft.SemanticKernel.Services;
+using Marketing.SignalRHub;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient(CreateKernel);

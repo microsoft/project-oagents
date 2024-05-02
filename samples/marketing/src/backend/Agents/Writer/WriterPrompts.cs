@@ -1,5 +1,5 @@
 
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.Marketing.Agents;
 public static class WriterPrompts
 {
     public static string Write = """

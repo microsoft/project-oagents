@@ -13,14 +13,13 @@ public class Editor : AiAgent<EditorState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
     
-    private readonly ILogger<Editor> _logger;
+    private readonly ILogger<SignalR> _logger;
     private readonly ISignalRClient _signalRClient;
 
-    public Editor([PersistentState("state", "messages")] IPersistentState<AgentState<EditorState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<Editor> logger, ISignalRClient signalRClient) 
+    public Editor([PersistentState("state", "messages")] IPersistentState<AgentState<EditorState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<SignalR> logger) 
     : base(state, memory, kernel)
     {
         _logger = logger;
-        _signalRClient = signalRClient;
     }
 
     public async override Task HandleEvent(Event item)
@@ -39,7 +38,6 @@ public class Editor : AiAgent<EditorState>
             case nameof(EventTypes.UserChatInput):
                 //item.Data.TryGetValue("context", out var context);
                 //this._state.State.Data.Article = "I have written an article";
-
                 break;
             default:
                 break;

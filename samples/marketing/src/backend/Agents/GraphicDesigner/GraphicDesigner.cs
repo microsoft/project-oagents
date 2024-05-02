@@ -9,7 +9,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 
-namespace Microsoft.AI.DevTeam;
+namespace Marketing.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
 public class GraphicDesigner : AiAgent<GraphicDesignerState>, IGraphicDesigner

@@ -1,5 +1,5 @@
+namespace Marketing.Agents;
 
-namespace Microsoft.AI.DevTeam;
 public static class CommunityManagerPrompts
 {
     public static string WritePost = """

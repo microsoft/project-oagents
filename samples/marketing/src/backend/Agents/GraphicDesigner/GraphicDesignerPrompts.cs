@@ -1,5 +1,5 @@
 
-namespace Microsoft.AI.DevTeam;
+namespace Marketing.Agents;
 public static class GraphicDesignerPrompts
 {
     public static string GenerateImage = """

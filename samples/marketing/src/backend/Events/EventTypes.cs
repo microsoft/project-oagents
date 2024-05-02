@@ -1,11 +1,8 @@
-using Microsoft.AI.Agents.Abstractions;
+namespace Marketing.Events;
 
-namespace Microsoft.AI.DevTeam.Events
+public enum EventTypes
 {
-    public enum EventTypes
-    {
-        UserChatInput,
-        ArticleWritten,
-        UserConnected,
-    }
+    UserChatInput,
+    ArticleWritten,
+    UserConnected,
 }

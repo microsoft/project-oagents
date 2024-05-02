@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Microsoft.AI.DevTeam;
+namespace Marketing.Options;
 public class ServiceOptions
 {
     private string _ingesterUrl;
