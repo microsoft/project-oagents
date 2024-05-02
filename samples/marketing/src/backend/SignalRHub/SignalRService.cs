@@ -3,15 +3,10 @@ using System.Collections.Concurrent;
 
 namespace Marketing.SignalRHub;
 
-public interface ISignalRClient
-{
-    Task SendMessageToSpecificClient(string userId, string message, AgentTypes agentType);
-}
-
-public class SignalRClient : ISignalRClient
+public class SignalRService : ISignalRService
 {
     private readonly IHubContext<ArticleHub> _hubContext;
-    public SignalRClient(IHubContext<ArticleHub> hubContext)
+    public SignalRService(IHubContext<ArticleHub> hubContext)
     {
         _hubContext = hubContext;
     }

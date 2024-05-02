@@ -1,14 +1,11 @@
-﻿using Microsoft.AI.Agents.Abstractions;
-using Microsoft.AI.DevTeam.Events;
-using Microsoft.AI.DevTeam;
+﻿namespace Marketing.SignalRHub;
+
+using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AspNetCore.SignalR;
 using Orleans.Runtime;
-using Polly.CircuitBreaker;
-using System.Collections.Concurrent;
-using System.IO;
-using Orleans;
+using Marketing.Options;
+using Marketing.Events;
 
-namespace Marketing.SignalRHub;
 public class ArticleHub : Hub<IArticleHub>
 {
     public override async Task OnConnectedAsync()

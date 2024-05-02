@@ -1,24 +1,17 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
-using Microsoft.AI.DevTeam;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
-using Newtonsoft.Json;
-using System.Text;
 
 namespace Marketing.Agents;
 
 public class GraphicDesignerOpenAIClient
 {
     private readonly int MAX_PROMPT_LENGTH = 999;
-
-    private readonly HttpClient _httpClient;
     private readonly ILogger _logger;
     private readonly string _apiKey;
     private readonly string _apiEndpoint;
 
     public GraphicDesignerOpenAIClient(ILogger logger, IConfiguration configuration)
     {
-        _httpClient = new HttpClient();
         _logger = logger;
         _apiKey = configuration["OAIOptionsImages:ApiKey"];
         _apiEndpoint = configuration["OAIOptionsImages:ApiEndpoint"];

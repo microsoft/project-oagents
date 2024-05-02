@@ -1,10 +1,4 @@
-﻿using Microsoft.AI.Agents.Abstractions;
-using Microsoft.AI.DevTeam.Events;
-using Microsoft.AI.DevTeam;
-using Orleans.Runtime;
-using System.Text.RegularExpressions;
-
-namespace Marketing.SignalRHub;
+﻿namespace Marketing.SignalRHub;
 
 public interface IArticleHub
 {

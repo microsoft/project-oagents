@@ -1,7 +1,7 @@
-using Marketing.Hubs;
+using Marketing.Events;
+using Marketing.Options;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
-using Microsoft.AI.DevTeam.Events;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
@@ -9,17 +9,15 @@ using Orleans.Runtime;
 namespace Marketing.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-public class CommunityManager : AiAgent<CommunityManagerState>, ICommunityManager
+public class CommunityManager : AiAgent<CommunityManagerState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
 
-    private readonly ISignalRClient _signalRClient;
     private readonly ILogger<GraphicDesigner> _logger;
 
-    public CommunityManager([PersistentState("state", "messages")] IPersistentState<AgentState<CommunityManagerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger, ISignalRClient signalRClient) 
+    public CommunityManager([PersistentState("state", "messages")] IPersistentState<AgentState<CommunityManagerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger) 
     : base(state, memory, kernel)
     {
-        _signalRClient = signalRClient;
         _logger = logger;
     }
 
@@ -29,44 +27,45 @@ public class CommunityManager : AiAgent<CommunityManagerState>, ICommunityManage
         {
             case nameof(EventTypes.UserConnected):
                 // The user reconnected, let's send the last message if we have one
-                if (_state.State.History?.Last().Message == null)
+                string lastMessage = _state.State.History.LastOrDefault()?.Message;
+                if (lastMessage == null)
                 {
                     return;
                 }
-                var lastMessage = _state.State.History.Last().Message;
-                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], lastMessage, AgentTypes.Chat);
+
+                SendDesignedCreatedEvent(lastMessage, item.Data["UserId"]);
                 break;
-            case nameof(EventTypes.ArticleWritten):                
+
+            case nameof(EventTypes.ArticleCreated):                
                 //var lastCode = _state.State.History.Last().Message;
 
-                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleWritten)}. UserMessage: {item.Message}");
+                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}. UserMessage: {item.Message}");
                     
                 var context = new KernelArguments { ["input"] = AppendChatHistory(item.Message) };
-                string newPost = await CallFunction(CommunityManagerPrompts.WritePost, context);
-                _state.State.Data.WrittenPost = newPost;
-
-                _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], newPost, AgentTypes.CommunityManager);
-
+                string socialMediaPost = await CallFunction(CommunityManagerPrompts.WritePost, context);
+                _state.State.Data.WrittenSocialMediaPost = socialMediaPost;
+                SendDesignedCreatedEvent(socialMediaPost, item.Data["UserId"]);
                 break;
+
             default:
                 break;
         }
     }
 
+    private async Task SendDesignedCreatedEvent(string socialMediaPost, string userId)
+    {
+        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
+        {
+            Type = nameof(EventTypes.SocialMediaPostCreated),
+            Data = new Dictionary<string, string> {
+                            { "UserId", userId },
+                        },
+            Message = socialMediaPost
+        });
+    }
+
     public Task<String> GetArticle()
     {
-        return Task.FromResult(_state.State.Data.WrittenPost);
+        return Task.FromResult(_state.State.Data.WrittenSocialMediaPost);
     }
-}
-
-public interface ICommunityManager : IGrainWithStringKey
-{
-    Task<String> GetArticle();
-}
-
-[GenerateSerializer]
-public class CommunityManagerState
-{
-    [Id(0)]
-    public string WrittenPost { get; set; }
 }

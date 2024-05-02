@@ -8,6 +8,7 @@ using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Connectors.Qdrant;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Marketing.SignalRHub;
+using Marketing.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient(CreateKernel);
@@ -17,7 +18,7 @@ builder.Services.AddControllers();
 builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
-builder.Services.AddSingleton<ISignalRClient, SignalRClient>();
+builder.Services.AddSingleton<ISignalRService, SignalRService>();
 
 
 // Allow any CORS origin if in DEV

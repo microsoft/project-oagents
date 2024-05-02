@@ -1,10 +1,7 @@
-#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
-using Marketing.Agents.GraphicDesigner;
-using Marketing.Hubs;
+using Marketing.Events;
+using Marketing.Options;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
-using Microsoft.AI.DevTeam.Events;
-using Microsoft.Identity.Client;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
@@ -12,20 +9,18 @@ using Orleans.Runtime;
 namespace Marketing.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-public class GraphicDesigner : AiAgent<GraphicDesignerState>, IGraphicDesigner
+public class GraphicDesigner : AiAgent<GraphicDesignerState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
-    
+
     private readonly ILogger<GraphicDesigner> _logger;
     private readonly IConfiguration _configuration;
-    private readonly ISignalRClient _signalRClient;
 
-    public GraphicDesigner([PersistentState("state", "messages")] IPersistentState<AgentState<GraphicDesignerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger, IConfiguration configuration, ISignalRClient signalRClient) 
+    public GraphicDesigner([PersistentState("state", "messages")] IPersistentState<AgentState<GraphicDesignerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger, IConfiguration configuration)
     : base(state, memory, kernel)
     {
         _logger = logger;
         _configuration = configuration;
-        _signalRClient = signalRClient;
     }
 
     public async override Task HandleEvent(Event item)
@@ -33,41 +28,45 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>, IGraphicDesigner
         switch (item.Type)
         {
             case nameof(EventTypes.UserConnected):
-            case nameof(EventTypes.ArticleWritten):                
-                //var lastCode = _state.State.History.Last().Message;
+                // The user reconnected, let's send the last message if we have one
+                string lastMessage = _state.State.History.LastOrDefault()?.Message;
+                if (lastMessage == null)
+                {
+                    return;
+                }
 
-                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleWritten)}. UserMessage: {item.Message}");
-                    
+                SendDesignedCreatedEvent(lastMessage, item.Data["UserId"]);
+
+                break;
+            case nameof(EventTypes.ArticleCreated):
+                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}. UserMessage: {item.Message}");
+
                 var context = new KernelArguments { ["input"] = AppendChatHistory(item.Message) };
 
                 var openAIClient = new GraphicDesignerOpenAIClient(_logger, _configuration);
-                var imageUrl = await openAIClient.GenerateImage(item.Message);
+                var imageUri = await openAIClient.GenerateImage(item.Message);
+                string AbsoluteUri = imageUri.AbsoluteUri;
 
-                string uri = imageUrl.AbsoluteUri;
-                _state.State.Data.imageUrl = uri;
+                _state.State.Data.imageUrl = AbsoluteUri;
 
-                _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], uri, AgentTypes.GraphicDesigner);
+                SendDesignedCreatedEvent(AbsoluteUri, item.Data["UserId"]);
+
                 break;
+
             default:
                 break;
         }
     }
 
-    public Task<String> GetPicture()
+    private async Task SendDesignedCreatedEvent(string AbsoluteImageUri, string userId)
     {
-        return Task.FromResult(_state.State.Data.imageUrl);
+        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
+        {
+            Type = nameof(EventTypes.GraphicDesignCreated),
+            Data = new Dictionary<string, string> {
+                            { "UserId", userId },
+                        },
+            Message = AbsoluteImageUri
+        });
     }
 }
-
-public interface IGraphicDesigner : IGrainWithStringKey
-{
-    Task<String> GetPicture();
-}
-
-[GenerateSerializer]
-public class GraphicDesignerState
-{
-    [Id(0)]
-    public string imageUrl { get; set; }
-}
-#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task

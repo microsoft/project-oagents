@@ -1,5 +1,5 @@
 
-namespace Microsoft.Marketing.Agents;
+namespace Marketing.Agents;
 public static class WriterPrompts
 {
     public static string Write = """

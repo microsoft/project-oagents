@@ -5,4 +5,4 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Reliability", "CA2007:Consider calling ConfigureAwait on the awaited task", Justification = "<Pending>", Scope = "member", Target = "~M:Marketing.Agents.SignalR.HandleEvent(Microsoft.AI.Agents.Abstractions.Event)~System.Threading.Tasks.Task")]
+[assembly: SuppressMessage("Reliability", "CA2007:Consider calling ConfigureAwait on the awaited task", Justification = "BackEnd application", Scope = "member")]

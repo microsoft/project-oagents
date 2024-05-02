@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Marketing;
+namespace Marketing.Options;
 
 public class OpenAIOptions
 {
