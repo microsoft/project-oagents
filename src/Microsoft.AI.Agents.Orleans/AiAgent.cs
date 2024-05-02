@@ -13,7 +13,7 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
     private readonly ISemanticTextMemory _memory;
     private readonly Kernel _kernel;
 
-    public AiAgent([PersistentState("state", "messages")] IPersistentState<AgentState<T>> state, ISemanticTextMemory memory, Kernel kernel)
+    public AiAgent([PersistentState("state", "messages")] IPersistentState<AgentState<T>> state, ISemanticTextMemory memory, Kernel kernel) 
     {
         if(state?.State == null)
         {
