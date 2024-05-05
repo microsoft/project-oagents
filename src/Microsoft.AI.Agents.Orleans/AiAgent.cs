@@ -10,8 +10,9 @@ namespace Microsoft.AI.Agents.Orleans;
 public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
 {
     protected IPersistentState<AgentState<T>> _state;
+    protected Kernel _kernel;
     private readonly ISemanticTextMemory _memory;
-    private readonly Kernel _kernel;
+    
 
     public AiAgent([PersistentState("state", "messages")] IPersistentState<AgentState<T>> state, ISemanticTextMemory memory, Kernel kernel) 
     {

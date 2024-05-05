@@ -4,6 +4,7 @@ using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
+using Microsoft.SemanticKernel.TextToImage;
 using Orleans.Runtime;
 
 namespace Marketing.Agents;
@@ -41,15 +42,12 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
             case nameof(EventTypes.ArticleCreated):
                 _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}. UserMessage: {item.Message}");
 
-                var context = new KernelArguments { ["input"] = AppendChatHistory(item.Message) };
+                var dallEService = _kernel.GetRequiredService<ITextToImageService>();
+                var imageUri = await dallEService.GenerateImageAsync(item.Message, 1024, 1024);
 
-                var openAIClient = new GraphicDesignerOpenAIClient(_logger, _configuration);
-                var imageUri = await openAIClient.GenerateImage(item.Message);
-                string AbsoluteUri = imageUri.AbsoluteUri;
+                _state.State.Data.imageUrl = imageUri;
 
-                _state.State.Data.imageUrl = AbsoluteUri;
-
-                SendDesignedCreatedEvent(AbsoluteUri, item.Data["UserId"]);
+                SendDesignedCreatedEvent(imageUri, item.Data["UserId"]);
 
                 break;
 
