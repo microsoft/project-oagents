@@ -1,10 +1,20 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
-name: ai-dev-team
+name: marketing
+metadata:
+    template: azd-init@1.8.2
 services:
-  gh-flow:
-    project: "src/Microsoft.AI.DevTeam/Microsoft.AI.DevTeam.csproj"
-    language: csharp
-    host: containerapp
-    docker:
-      context: ../../../
+    backend:
+        project: src\backend
+        host: containerapp
+        language: dotnet
+        docker:
+            path: Dockerfile
+            context: ../../../../
+    frontend:
+        project: src\frontend
+        host: containerapp
+        language: ts
+        dist: build
+        docker:
+            path: Dockerfile

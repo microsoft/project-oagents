@@ -26,20 +26,29 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
 
     public async override Task HandleEvent(Event item)
     {
+        string lastMessage;
+
         switch (item.Type)
         {
             case nameof(EventTypes.UserConnected):
                 // The user reconnected, let's send the last message if we have one
-                string lastMessage = _state.State.History.LastOrDefault()?.Message;
+                lastMessage = _state.State.History.LastOrDefault()?.Message;
                 if (lastMessage == null)
                 {
                     return;
                 }
 
-                SendDesignedCreatedEvent(lastMessage, item.Data["UserId"]);
+                await SendDesignedCreatedEvent(lastMessage, item.Data["UserId"]);
 
                 break;
             case nameof(EventTypes.ArticleCreated):
+                lastMessage = _state.State.History.LastOrDefault()?.Message;
+                if (lastMessage != null)
+                {
+                    await SendDesignedCreatedEvent(lastMessage, item.Data["UserId"]);
+                    return;
+                }
+
                 _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}. UserMessage: {item.Message}");
 
                 var dallEService = _kernel.GetRequiredService<ITextToImageService>();
@@ -47,7 +56,7 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
 
                 _state.State.Data.imageUrl = imageUri;
 
-                SendDesignedCreatedEvent(imageUri, item.Data["UserId"]);
+                await SendDesignedCreatedEvent(imageUri, item.Data["UserId"]);
 
                 break;
 
