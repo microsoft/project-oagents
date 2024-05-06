@@ -1,9 +1,11 @@
-# Running the frontend
+## TODO: describe the frontend app
 
-This is the front end application for the project. It is a React application.
+## How I started
+```
+npm -i
+```
 
-## How to run it locally
-```powershell
-# You simply need to run the following command
-npm run dev
+## How to run it
+```shell
+    npm run dev
 ```
