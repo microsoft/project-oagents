@@ -42,13 +42,6 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
 
                 break;
             case nameof(EventTypes.ArticleCreated):
-                lastMessage = _state.State.History.LastOrDefault()?.Message;
-                if (lastMessage != null)
-                {
-                    await SendDesignedCreatedEvent(lastMessage, item.Data["UserId"]);
-                    return;
-                }
-
                 _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}. UserMessage: {item.Message}");
 
                 var dallEService = _kernel.GetRequiredService<ITextToImageService>();
