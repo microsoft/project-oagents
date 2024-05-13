@@ -10,6 +10,7 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Marketing.SignalRHub;
 using Marketing.Options;
 using Marketing;
+using Orleans.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient(CreateKernel);
@@ -64,6 +65,9 @@ builder.Services.AddOptions<ServiceOptions>()
 
 builder.Host.UseOrleans(siloBuilder =>
 {
+    siloBuilder.Services.AddSerializer( sb => {
+        sb.AddNewtonsoftJsonSerializer(isSupported: t => true);
+    });
     siloBuilder.UseLocalhostClustering()
                .AddMemoryStreams("StreamProvider")
                .AddMemoryGrainStorage("PubSubStore")

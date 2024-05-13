@@ -30,7 +30,7 @@
     <PackageReference Include="Microsoft.Orleans.Streaming.EventHubs" Version="8.1.0" />
     <PackageReference Include="Microsoft.Orleans.Reminders" Version="8.1.0" />
     <PackageReference Include="Microsoft.Orleans.Streaming" Version="8.1.0" />
-     <PackageReference Include="Microsoft.Orleans.Serialization.NewtonsoftJson" Version="8.1.0" />
+    <PackageReference Include="Microsoft.Orleans.Serialization.NewtonsoftJson" Version="8.1.0" />
     <PackageReference Include="OrleansDashboard" Version="8.0.0" />
 
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
