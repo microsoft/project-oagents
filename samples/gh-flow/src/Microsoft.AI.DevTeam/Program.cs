@@ -12,7 +12,6 @@ using Microsoft.Extensions.Http.Resilience;
 using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Connectors.Qdrant;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using System.Configuration;
 using Orleans.Configuration;
 using Orleans.Serialization;
 

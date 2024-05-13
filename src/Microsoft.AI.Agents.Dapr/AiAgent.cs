@@ -9,7 +9,7 @@ using Microsoft.SemanticKernel.Memory;
 
 namespace Microsoft.AI.Agents.Dapr;
 
-public abstract class AiAgent<T> : Agent, IAiAgent
+public abstract class AiAgent<T> : Agent, IAiAgent where T: class, new()
 {
     public string StateStore = "agents-statestore";
     public AiAgent(ActorHost host, DaprClient client,ISemanticTextMemory memory, Kernel kernel)
