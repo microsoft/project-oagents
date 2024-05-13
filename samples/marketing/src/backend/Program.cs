@@ -65,9 +65,6 @@ builder.Services.AddOptions<ServiceOptions>()
 
 builder.Host.UseOrleans(siloBuilder =>
 {
-    siloBuilder.Services.AddSerializer( sb => {
-        sb.AddNewtonsoftJsonSerializer(isSupported: t => true);
-    });
     siloBuilder.UseLocalhostClustering()
                .AddMemoryStreams("StreamProvider")
                .AddMemoryGrainStorage("PubSubStore")

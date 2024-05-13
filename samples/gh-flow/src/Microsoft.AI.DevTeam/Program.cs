@@ -87,9 +87,6 @@ builder.Services.AddSingleton<IAnalyzeCode, CodeAnalyzer>();
 builder.Host.UseOrleans(siloBuilder =>
 {
     siloBuilder.UseDashboard(x => x.HostSelf = true);
-    siloBuilder.Services.AddSerializer( sb => {
-        sb.AddNewtonsoftJsonSerializer(isSupported: t => true);
-    });
     if (builder.Environment.IsDevelopment())
     {
         siloBuilder.UseLocalhostClustering()
