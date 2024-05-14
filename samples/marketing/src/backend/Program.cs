@@ -55,14 +55,6 @@ builder.Services.AddOptions<QdrantOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
-builder.Services.AddOptions<ServiceOptions>()
-    .Configure<IConfiguration>((settings, configuration) =>
-    {
-        configuration.GetSection(nameof(ServiceOptions)).Bind(settings);
-    })
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
-
 builder.Host.UseOrleans(siloBuilder =>
 {
     siloBuilder.UseLocalhostClustering()
