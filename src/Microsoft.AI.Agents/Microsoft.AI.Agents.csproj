@@ -4,6 +4,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageId>ProjectOagents.Core</PackageId>
+    <Version>0.0.1-alpha</Version>
+    <Authors>kostapetan-ms</Authors>
+    <Description>Project Oagents Core Library</Description>
+    <Tags>ai-agents;event-driven-agents</Tags>
   </PropertyGroup>
 
   <ItemGroup>
