@@ -87,16 +87,16 @@ builder.Services.AddSingleton<IAnalyzeCode, CodeAnalyzer>();
 builder.Host.UseOrleans(siloBuilder =>
 {
     siloBuilder.UseDashboard(x => x.HostSelf = true);
-    siloBuilder.Services.AddSerializer(sb =>
-    {
-        sb.AddNewtonsoftJsonSerializer(isSupported: t => true);
-    });
     if (builder.Environment.IsDevelopment())
     {
         siloBuilder.UseLocalhostClustering()
                .AddMemoryStreams("StreamProvider")
                .AddMemoryGrainStorage("PubSubStore")
                .AddMemoryGrainStorage("messages");
+
+    siloBuilder.UseInMemoryReminderService();
+    siloBuilder.UseDashboard(x => x.HostSelf = true);
+
         siloBuilder.UseInMemoryReminderService();
     }
     else
@@ -140,12 +140,11 @@ builder.Host.UseOrleans(siloBuilder =>
                 o.DatabaseName = "persistence";
                 o.IsResourceCreationEnabled = true;
             });
-        //TODO: replace with EventHub
-        siloBuilder
-              .AddMemoryStreams("StreamProvider")
-              .AddMemoryGrainStorage("PubSubStore");
-    }
-
+         //TODO: replace with EventHub
+         siloBuilder
+               .AddMemoryStreams("StreamProvider")
+               .AddMemoryGrainStorage("PubSubStore");
+    }    
 });
 
 builder.Services.Configure<JsonSerializerOptions>(options =>

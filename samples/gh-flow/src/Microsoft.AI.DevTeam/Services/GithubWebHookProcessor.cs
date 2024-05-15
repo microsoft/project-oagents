@@ -109,8 +109,9 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
 
     private async Task HandleClosingIssue(long issueNumber, long? parentNumber, string skillName, string functionName, string suffix, string org, string repo)
     {
+        var subject =  suffix+issueNumber.ToString();
         var streamProvider = _client.GetStreamProvider("StreamProvider");
-        var streamId = StreamId.Create(Consts.MainNamespace, suffix + issueNumber.ToString());
+        var streamId = StreamId.Create(Consts.MainNamespace, subject);
         var stream = streamProvider.GetStream<Event>(streamId);
         var eventType = (skillName, functionName) switch
         {
@@ -130,6 +131,7 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
         await stream.OnNextAsync(new Event
         {
             Type = eventType,
+            Subject = subject,
             Data = data
         });
     }
@@ -139,8 +141,9 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
         try
         {
             _logger.LogInformation("Handling new ask");
+            var subject =  suffix+issueNumber.ToString();
             var streamProvider = _client.GetStreamProvider("StreamProvider");
-            var streamId = StreamId.Create(Consts.MainNamespace, suffix + issueNumber.ToString());
+            var streamId = StreamId.Create(Consts.MainNamespace, subject);
             var stream = streamProvider.GetStream<Event>(streamId);
 
             var eventType = (skillName, functionName) switch
@@ -156,12 +159,14 @@ public sealed class GithubWebHookProcessor : WebhookEventProcessor
                 { "org", org },
                 { "repo", repo },
                 { "issueNumber", issueNumber.ToString() },
-                { "parentNumber", parentNumber?.ToString()}
+                { "parentNumber", parentNumber?.ToString()},
+                { "input", input}
+
             };
             await stream.OnNextAsync(new Event
             {
                 Type = eventType,
-                Message = input,
+                Subject = subject,
                 Data = data
             });
         }
