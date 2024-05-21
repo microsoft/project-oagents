@@ -1,8 +1,8 @@
 on:
     workflow_dispatch:
     push:
-      branches:
-        - main
+      # branches:
+      #   - main
       paths:
         - samples/marketing/*
     pull_request:
