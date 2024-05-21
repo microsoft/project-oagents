@@ -498,3 +498,4 @@ sk-azfunc-server/local.settings.json
 temp
 .mono/**
 **/values.xml
+/samples/support-center/src/backend/appsettings.Development.json
