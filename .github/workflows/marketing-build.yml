@@ -2,6 +2,8 @@
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
   pull_request:
     branches:
       - '**'
@@ -15,11 +17,11 @@ jobs:
 
       - name: Build the backend
         run: |
-          docker build -t marketing-backend -f samples/marketing/backend/Dockerfile .
+          docker build -t marketing-backend -f samples/marketing/src/backend/Dockerfile .
         shell: pwsh
 
       - name: Build the frontend
         run: |
-          cd samples/marketing/frontend/
+          cd samples/marketing/src/frontend/
           docker build -t marketing-frontend .
         shell: pwsh
