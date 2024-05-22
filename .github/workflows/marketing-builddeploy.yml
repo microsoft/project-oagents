@@ -12,6 +12,13 @@ run-name: Marketing Sample Build and Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      azdnostate:
+        type: choice
+        description: azd --no-state flag
+        options: 
+        - false
+        - true
   push:
     branches:
       - main
@@ -70,7 +77,11 @@ jobs:
       #     AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Provision Infrastructure
-        run: azd provision --no-prompt --environment ${{ secrets.MARKETING_AZURE_ENV_NAME }}
+        run: |
+          azd provision `
+          --no-prompt `
+          --environment ${{ secrets.MARKETING_AZURE_ENV_NAME }} `
+          --no-state:${{github.event.inputs.azdnostate }}
 
       - name: Deploy Application
         run: azd deploy --no-prompt --environment ${{ secrets.MARKETING_AZURE_ENV_NAME }}
