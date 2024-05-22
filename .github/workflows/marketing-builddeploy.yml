@@ -1,18 +1,26 @@
-on:
-    workflow_dispatch:
-    push:
-      branches:
-        - main
-      paths:
-        - samples/marketing/*
-    pull_request:
-      branches:
-        - '**'
-  
 # GitHub Actions workflow to deploy to Azure using azd
 # To configure required secrets for connecting to Azure, simply run `azd pipeline config`
 # Set up permissions for deploying with secretless Azure federated credentials
 # https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux#set-up-azure-login-with-openid-connect-authentication
+
+# This workflow needs Owner rights on the Azure Subscription:
+# $assignee = "<Enterprise_App_Object_ID>"
+# $scope = "/subscriptions/<Subscription_ID>
+# az role assignment create --assignee $assignee --role "Owner"  --scope $scope
+
+run-name: Marketing Sample Build and Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - samples/marketing/*
+  pull_request:
+    branches:
+      - 'main'
+  
 permissions:
   id-token: write
   contents: read
@@ -26,11 +34,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      AZURE_CLIENT_ID: ${{ secrets.MARKETING_AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.MARKETING_AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.MARKETING_AZURE_SUBSCRIPTION_ID }}
       AZURE_ENV_NAME: ${{ secrets.MARKETING_AZURE_ENV_NAME }}
       AZURE_LOCATION: ${{ secrets.MARKETING_AZURE_LOCATION }}
+      AZURE_TENANT_ID: ${{ secrets.MARKETING_AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.MARKETING_AZURE_CLIENT_ID }}
+      # AZURE_CREDENTIALS: ${{ secrets.MARKETING_AZURE_CREDENTIALS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
