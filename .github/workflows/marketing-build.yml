@@ -1,4 +1,4 @@
-run-name: '[PR #${{github.event.pull_request.number}}] [Marketing Sample] Build and Deploy frontend and backend'
+run-name: '[PR #${{github.event.pull_request.number}}] [Marketing Sample] Build frontend and backend containers'
 
 
 on:
