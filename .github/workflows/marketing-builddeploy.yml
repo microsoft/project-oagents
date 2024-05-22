@@ -17,8 +17,8 @@ on:
         type: choice
         description: azd --no-state flag
         options: 
-        - false
-        - true
+        - 'false'
+        - 'true'
   push:
     branches:
       - main
@@ -76,12 +76,21 @@ jobs:
       #   env:
       #     AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Set --no-state flag for azd
+        id: no-state
+        run: |
+          if [[ "${{ github.event.inputs.azdnostate }}" == "true" ]]; then
+            echo "::set-output name=flag::--no-state"
+          else
+            echo "::set-output name=flag::"
+          fi
+
       - name: Provision Infrastructure
         run: |
           azd provision `
           --no-prompt `
           --environment ${{ secrets.MARKETING_AZURE_ENV_NAME }} `
-          --no-state:${{github.event.inputs.azdnostate }}
+          ${{ steps.no-state.outputs.flag }}
 
       - name: Deploy Application
         run: azd deploy --no-prompt --environment ${{ secrets.MARKETING_AZURE_ENV_NAME }}
