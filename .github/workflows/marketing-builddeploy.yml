@@ -17,6 +17,11 @@ permissions:
   id-token: write
   contents: read
 
+defaults:
+  run:
+    shell: pwsh
+    working-directory: ./samples/marketing
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -41,7 +46,6 @@ jobs:
             --client-id "$Env:AZURE_CLIENT_ID" `
             --federated-credential-provider "github" `
             --tenant-id "$Env:AZURE_TENANT_ID"
-        shell: pwsh
 
       # - name: Log in with Azure (Client Credentials)
       #   if: ${{ env.AZURE_CREDENTIALS != '' }}
@@ -57,7 +61,7 @@ jobs:
       #     AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Provision Infrastructure
-        run: azd provision --no-prompt
+        run: azd provision --no-prompt --environment ${{ secrets.MARKETING_AZURE_ENV_NAME }}
 
       - name: Deploy Application
-        run: azd deploy --no-prompt
+        run: azd deploy --no-prompt --environment ${{ secrets.MARKETING_AZURE_ENV_NAME }}
