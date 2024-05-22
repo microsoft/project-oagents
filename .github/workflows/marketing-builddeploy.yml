@@ -79,18 +79,20 @@ jobs:
       - name: Set --no-state flag for azd
         id: no-state
         run: |
-          if [[ "${{ github.event.inputs.azdnostate }}" == "true" ]]; then
-            echo "::set-output name=flag::--no-state"
-          else
-            echo "::set-output name=flag::"
-          fi
+          if ("${{ github.event.inputs.azdnostate }}" -eq "true") {
+            echo "::set-output name=azd-no-state-flag::--no-state"
+            Write-Warning "Using --no-state flag for azd provision"
+          } else {
+            Write-Verbose "No --no-state flag for azd provision" -Verbose
+            echo "::set-output name=azd-no-state-flag::"
+          }
 
       - name: Provision Infrastructure
         run: |
           azd provision `
           --no-prompt `
           --environment ${{ secrets.MARKETING_AZURE_ENV_NAME }} `
-          ${{ steps.no-state.outputs.flag }}
+          ${{ steps.no-state.outputs.azd-no-state-flag }}
 
       - name: Deploy Application
         run: azd deploy --no-prompt --environment ${{ secrets.MARKETING_AZURE_ENV_NAME }}
