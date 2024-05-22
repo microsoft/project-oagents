@@ -23,7 +23,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <None Update="azure-well-architected.pdf">
+    <None Update="vfcon106047.pdf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
