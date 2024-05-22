@@ -1,4 +1,4 @@
-run-name: Marketing Sample Build and Deploy
+run-name: Marketing Sample - Build frontend and backend
 
 on:
   workflow_dispatch:

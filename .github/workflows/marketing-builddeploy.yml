@@ -8,7 +8,7 @@
 # $scope = "/subscriptions/<Subscription_ID>
 # az role assignment create --assignee $assignee --role "Owner"  --scope $scope
 
-run-name: Marketing Sample Build and Deploy
+run-name: Marketing Sample - Build and Deploy frontend and backend
 
 on:
   workflow_dispatch:
