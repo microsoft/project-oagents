@@ -2,8 +2,8 @@ namespace SupportCenter.Events;
 
 public enum EventTypes
 {
-    //UserChatInput,
-    //ArticleCreated,
+    CustomerInfoRequested,
+    CustomerInfoRetrieved,
     //UserConnected,
     //GraphicDesignCreated,
     //SocialMediaPostCreated,

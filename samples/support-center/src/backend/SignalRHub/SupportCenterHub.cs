@@ -40,7 +40,7 @@ public class SupportCenterHub : Hub<ISupportCenterHub>
 
         await stream.OnNextAsync(new Event
         {
-            Type = nameof(EventTypes.UserChatInput),
+            //Type = nameof(EventTypes.UserChatInput),
             Data = data
         });
 
@@ -68,7 +68,7 @@ public class SupportCenterHub : Hub<ISupportCenterHub>
             };
         await stream.OnNextAsync(new Event
         {
-            Type = nameof(EventTypes.UserConnected),
+            //Type = nameof(EventTypes.UserConnected),
             Data = data
         });
     }

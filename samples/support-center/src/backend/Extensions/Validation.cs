@@ -2,8 +2,8 @@
 
 namespace SupportCenter.Core
 {
-    /* This class is used to extend the validation functionality of the application.
-     *
+    /* 
+     * This class is used to extend the validation functionality of the application.
      */
     public static class ValidationExtensions
     {

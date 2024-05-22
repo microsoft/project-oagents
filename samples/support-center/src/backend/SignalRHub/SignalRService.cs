@@ -1,16 +1,9 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using System.Collections.Concurrent;
 
 namespace SupportCenter.SignalRHub;
 
-public class SignalRService : ISignalRService
+public class SignalRService(IHubContext<SupportCenterHub> hubContext) : ISignalRService
 {
-    private readonly IHubContext<ArticleHub> _hubContext;
-    public SignalRService(IHubContext<ArticleHub> hubContext)
-    {
-        _hubContext = hubContext;
-    }
-
     public async Task SendMessageToSpecificClient(string userId, string message, AgentTypes agentType)
     {
         var connectionId = SignalRConnectionsDB.ConnectionIdByUser[userId];
@@ -20,6 +13,6 @@ public class SignalRService : ISignalRService
             Message = message,
             Agent = agentType.ToString()
         };
-        await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveMessage", frontEndMessage);
+        await hubContext.Clients.Client(connectionId).SendAsync("ReceiveMessage", frontEndMessage);
     }
 }

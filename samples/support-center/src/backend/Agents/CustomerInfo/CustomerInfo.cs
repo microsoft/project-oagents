@@ -1,72 +1,79 @@
-using Marketing.Events;
-using Marketing.Options;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
+using SupportCenter.Data.CosmosDb;
+using SupportCenter.Events;
+using SupportCenter.Options;
 
-namespace Marketing.Agents;
+namespace SupportCenter.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-public class CommunityManager : AiAgent<CommunityManagerState>
+public class CustomerInfo : AiAgent<CustomerInfoState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
 
-    private readonly ILogger<GraphicDesigner> _logger;
+    private readonly ILogger<CustomerInfo> _logger;
+    private readonly ICustomerRepository _customerRepository;
 
-    public CommunityManager([PersistentState("state", "messages")] IPersistentState<AgentState<CommunityManagerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger) 
+    public CustomerInfo(
+        [PersistentState("state", "messages")] IPersistentState<AgentState<CustomerInfoState>> state,
+        Kernel kernel,
+        ISemanticTextMemory memory,
+        ILogger<CustomerInfo> logger,
+        ICustomerRepository customerRepository)
     : base(state, memory, kernel)
     {
         _logger = logger;
+        _customerRepository = customerRepository;
     }
 
     public async override Task HandleEvent(Event item)
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.UserConnected):
-                // The user reconnected, let's send the last message if we have one
-                string lastMessage = _state.State.History.LastOrDefault()?.Message;
-                if (lastMessage == null)
+            case nameof(EventTypes.CustomerInfoRequested):
+                // Handle customer info request
+                string userId = item.Data["UserId"];
+                Customer? customer = await GetCustomerInfoAsync(userId);
+                if (customer == null)
                 {
+                    _logger.LogWarning("[{Agent}] Customer info not found for user {userId}", nameof(CustomerInfo), userId);
                     return;
                 }
-
-                await SendDesignedCreatedEvent(lastMessage, item.Data["UserId"]);
+                await SendCustomerInfoEvent(userId, customer.Name ?? "No User");
                 break;
-
-            case nameof(EventTypes.ArticleCreated):   
-            {
-                var article = item.Data["article"]; 
-
-                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}. Article: {article}");
-                    
-                var context = new KernelArguments { ["input"] = AppendChatHistory(article) };
-                string socialMediaPost = await CallFunction(CommunityManagerPrompts.WritePost, context);
-                _state.State.Data.WrittenSocialMediaPost = socialMediaPost;
-                await SendDesignedCreatedEvent(socialMediaPost, item.Data["UserId"]);
-                break;
-            }     
             default:
                 break;
         }
     }
 
-    private async Task SendDesignedCreatedEvent(string socialMediaPost, string userId)
+    private async Task<Customer?> GetCustomerInfoAsync(string userId)
+    {
+        var customer = await _customerRepository.GetCustomerByIdAsync(userId);
+        if (customer == null)
+        {
+            _logger.LogWarning("[{Agent}] Customer not found for user {userId}", nameof(CustomerInfo), userId);
+            return null;
+        }
+        return new Customer
+        {
+            Name = customer?.Name,
+            Email = customer?.Email,
+            Phone = customer?.Phone
+        };
+    }
+
+    private async Task SendCustomerInfoEvent(string userId, string customerInfo)
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
-            Type = nameof(EventTypes.SocialMediaPostCreated),
+            Type = nameof(EventTypes.CustomerInfoRetrieved),
             Data = new Dictionary<string, string> {
-                            { "UserId", userId },
-                            { nameof(socialMediaPost), socialMediaPost}
-                        }
+                { "UserId", userId },
+                { nameof(customerInfo), customerInfo}
+            }
         });
-    }
-
-    public Task<String> GetArticle()
-    {
-        return Task.FromResult(_state.State.Data.WrittenSocialMediaPost);
     }
 }
