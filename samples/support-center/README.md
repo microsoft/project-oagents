@@ -1,16 +1,16 @@
 # [In progress] Support Center application
 
-This is a demo application for a Customer Support Center use case, that showcase the different features of the AI Agent framework.
+This is a demo application for a Customer Support Center use case, that showcases the different features of the AI Agent framework.
 Acting as the initial point of contact for customers, this agent will autonomously handle generic inquiries and, based on user intent, delegate actions to the appropriate human personnel. The agent will also provide comprehensive summaries and manage all customer interactions.
 
 The agents are designed to be able to interact with each other and the user to achieve their goals.
 
 In the Support Center scenario, several types of agents can be identified based on the tasks and interactions typically seen in customer support scenarios. Here are potential agents for this use case:
 
-### Master Agent
+### Dispatcher Agent
 - **Role**: Orchestrates the overall process, delegates tasks to sub-agents,and ensures seamless customer support.
 - **Responsibilities**:
-	- Delegate tasks to *sub-agents* and *human agents* based on customerintent.
+	- Delegate tasks to *sub-agents* and *human agents* based on customer intent.
 	- Maintain a session state to keep track of customer interactions.
 	- Manage event dispatching and responses.
 
@@ -25,12 +25,12 @@ In the Support Center scenario, several types of agents can be identified based 
 - **Responsibilities**:
 	- Understand customer queries.
 	- Provide accurate and context-aware responses.
-#### Customer Info Update Agent
+#### Customer Info Agent
 - **Role**: Updates customer information such as addresses, contact details, etc.
 - **Responsibilities**:
 	- Validate and update customer information in the database.
 	- Notify relevant stakeholders of updates.
-#### Invoice Investigation Agent
+#### Invoice Agent
 - **Role**: Investigates customer invoice-related issues.
 - **Responsibilities**:	
 	- Analyze customer invoices for discrepancies.
@@ -45,49 +45,49 @@ In the Support Center scenario, several types of agents can be identified based 
 The Support Center application is designed to handle customer inquiries and delegate tasks to the appropriate agents. The following is a high-level overview of the event flow and agent interactions in the Support Center application:
 
 **1. Initial Inquiry** 
-	- Customer initiates a session with the Master Agent.
-	- Master Agent identifies the type of inquiry and dispatches to the appropriate sub-agent.
+	- Customer initiates a session with the Dispatcher Agent.
+	- Dispatcher Agent identifies the type of inquiry and dispatches to the appropriate sub-agent.
 **2. Authentication**
-	- If customer authentication is required, the Master Agent dispatches to the User Authentication Agent.
+	- If customer authentication is required, the Dispatcher Agent dispatches to the User Authentication Agent.
 	- The User Authentication Agent verifies the customer and reports back.
 **3. QnA**
-	- For generic queries, the Master Agent delegates to the QnA Agent.
+	- For generic queries, the Dispatcher Agent delegates to the QnA Agent.
 	- The QnA Agent responds to the customer based on the inquiry.
 **4. Specific Task Handling**
-	- For specific tasks, the Master Agent delegates to the relevant sub agent:
-		- Customer Info Update Agent: Updates customer information.
-		- Invoice Investigation Agent: Investigates invoice issues.
+	- For specific tasks, the Dispatcher Agent delegates to the relevant sub agent:
+		- Customer Info Agent: Reads and Updates customer information.
+		- Invoice Agent: Investigates invoice issues.
 		- Discount Agent: Handles discount requests.
 **5. Human Agent Involvement**
-	- For complex issues or escalations, the Master Agent delegate to humana gents.
+	- For complex issues or escalations, the Dispatcher Agent delegate to humana gents.
 	- Human agents receive comprehensive interaction summaries for context.
 **6. Post-Interaction**
-	- The Master Agent ensures post-interaction tasks, such as callbacks, are scheduled.
+	- The Dispatcher Agent ensures post-interaction tasks, such as callbacks, are scheduled.
 	- Summaries and transcripts are saved for future reference.
 
 ```mermaid
 graph TD;  
-    CustomerQuery[Customer Query] -->|Initial Contact| MasterAgent;  
+    CustomerQuery[Customer Query] -->|Initial Contact| DispatcherAgent;  
       
-    MasterAgent -->|Authenticate Customer| UserAuthAgent;  
-    UserAuthAgent -->|Authentication Result| MasterAgent;  
+    DispatcherAgent -->|Authenticate Customer| UserAuthAgent;  
+    UserAuthAgent -->|Authentication Result| DispatcherAgent;  
       
-    MasterAgent -->|Generic Query| QnAAgent;  
-    QnAAgent -->|Query Response| MasterAgent;  
+    DispatcherAgent -->|Generic Query| QnAAgent;  
+    QnAAgent -->|Query Response| DispatcherAgent;  
       
-    MasterAgent -->|Update Customer Info| CustomerInfoUpdateAgent;  
-    CustomerInfoUpdateAgent -->|Update Result| MasterAgent;  
+    DispatcherAgent -->|Update Customer Info| CustomerInfoUpdateAgent;  
+    CustomerInfoUpdateAgent -->|Update Result| DispatcherAgent;  
       
-    MasterAgent -->|Investigate Invoice| InvoiceInvestigationAgent;  
-    InvoiceInvestigationAgent -->|Investigation Result| MasterAgent;  
+    DispatcherAgent -->|Investigate Invoice| InvoiceInvestigationAgent;  
+    InvoiceInvestigationAgent -->|Investigation Result| DispatcherAgent;  
       
-    MasterAgent -->|Handle Discount| DiscountAgent;  
-    DiscountAgent -->|Discount Result| MasterAgent;  
+    DispatcherAgent -->|Handle Discount| DiscountAgent;  
+    DiscountAgent -->|Discount Result| DispatcherAgent;  
   
-    MasterAgent -->|Escalate to Human Agent| HumanAgent;  
-    HumanAgent -->|Interaction Summary| MasterAgent;  
+    DispatcherAgent -->|Escalate to Human Agent| HumanAgent;  
+    HumanAgent -->|Interaction Summary| DispatcherAgent;  
       
-    MasterAgent -->|Post-Interaction Tasks| PostInteractionTasks;  
+    DispatcherAgent -->|Post-Interaction Tasks| PostInteractionTasks;  
 ```
 
 ![Agents](readme-media/screenshot.png)
