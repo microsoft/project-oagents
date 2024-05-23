@@ -11,17 +11,26 @@ public class DispatcherPrompts
         There may be multiple intents, but you should choose the most appropriate one.
         If you think that the message is not clear, you can ask the customer for more information.
 
-        You can choose between: {{$choices}}.
+        You can choose between the following intents:  
+        {{#each choices}}  
+        - {{this.Name}}: {{this.Description}}  
+        {{/each}}  
 
         Here are few examples:
-        - User Input: Can you send a very quick approval to the marketing team?
-        - Intent: SendMessage
+        - User Input: Can you help me in updating my address?
+        - Intent: CustomerInfo
 
-        - User Input: Can you send the full update to the marketing team?
-        - Intent: SendEmail
+        - User Input: Could you check whether my invoice has been correctly payed?
+        - Intent: Invoice
 
         Here is the user input:
         User Input: {{$input}}
         Intent: 
         """;
+}
+
+public class Choice(string name, string description)
+{
+    public string Name { get; set; } = name;
+    public string Description { get; set; } = description;
 }

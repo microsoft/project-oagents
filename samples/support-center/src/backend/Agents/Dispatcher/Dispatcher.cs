@@ -5,6 +5,7 @@ using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 using SupportCenter.Events;
 using SupportCenter.Options;
+using System.Text.Json;
 
 namespace SupportCenter.Agents;
 
@@ -13,7 +14,12 @@ public class Dispatcher : AiAgent<DispatcherState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
     private readonly ILogger<Dispatcher> _logger;
-    private static string[] Choices => ["QnA", "Discount", "Invoice", "Customer Info"];
+    private static Choice[] Choices => [
+        new Choice("QnA", "The customer is asking a question."),
+        new Choice("Discount", "The customer is asking for a discount about a product or service."),
+        new Choice("Invoice", "The customer is asking for an invoice"),
+        new Choice("Customer Info", "The customer is asking for reading or updating his or her information or profile.")
+    ];
 
     public Dispatcher(
         [PersistentState("state", "messages")] IPersistentState<AgentState<DispatcherState>> state,
@@ -29,12 +35,14 @@ public class Dispatcher : AiAgent<DispatcherState>
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.UserChatInput):
-                var userId = item.Data["UserId"];
+            case nameof(EventTypes.UserChatInput):  // should be only this enum
+            case nameof(EventTypes.UserQuestionRequested):  
+                var userId = item.Data["userId"];
                 var userMessage = item.Data["userMessage"];
 
                 var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
-                context.Add("choices", Choices);
+                string choicesJson = JsonSerializer.Serialize(Choices);
+                context.Add("choices", choicesJson);
                 string intent = await CallFunction(DispatcherPrompts.GetIntent, context);
 
                 await SendDispatcherEvent(userId, intent);

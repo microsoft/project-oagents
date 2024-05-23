@@ -30,10 +30,10 @@ public class QnA : AiAgent<QnAState>
         {
             case nameof(EventTypes.UserQuestionRequested):
                 {
-                    var userQuestion = item.Data["userQuestion"];
-                    _logger.LogInformation($"[{nameof(QnA)}] Event {nameof(EventTypes.UserQuestionRequested)}. UserQuestion: {userQuestion}");
+                    var userMessage = item.Data["userMessage"];
+                    _logger.LogInformation($"[{nameof(QnA)}] Event {nameof(EventTypes.UserQuestionRequested)}. UserQuestion: {userMessage}");
                     
-                    var context = new KernelArguments { ["input"] = AppendChatHistory(userQuestion)};
+                    var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage)};
                     var instruction = "Consider the following knowledge:!vfcon106047!";
                     var enhancedContext = await AddKnowledge(instruction, "vfcon106047", context);
                     string answer = await CallFunction(QnAPrompts.Answer, enhancedContext);
