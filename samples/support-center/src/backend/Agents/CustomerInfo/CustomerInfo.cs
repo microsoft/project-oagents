@@ -69,7 +69,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
-            Type = nameof(EventTypes.CustomerInfoRetrieved),
+            Type = nameof(EventTypes.CustomerInfoProvided),
             Data = new Dictionary<string, string> {
                 { "UserId", userId },
                 { nameof(customerInfo), customerInfo}

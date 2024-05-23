@@ -29,7 +29,12 @@ public class Dispatcher : AiAgent<DispatcherState>
     {
         switch (item.Type)
         {
-            
+            case nameof(EventTypes.UserChatInput):
+                var userId = item.Data["UserId"];
+                
+
+                await SendDispatcherEvent(userId, customerInfo);
+                break;
             default:
                 break;
         }
