@@ -131,7 +131,7 @@ static Kernel CreateKernel(IServiceProvider provider)
     }
 
     // Text to Image
-    openAIClient = new OpenAIClient(new Uri(openAiConfig.ImageEndpoint), new AzureKeyCredential(openAiConfig.ImageApiKey), clientOptions);
+    /*openAIClient = new OpenAIClient(new Uri(openAiConfig.ImageEndpoint), new AzureKeyCredential(openAiConfig.ImageApiKey), clientOptions);
     if (openAiConfig.ImageEndpoint.Contains(".azure", StringComparison.OrdinalIgnoreCase))
     {
         ArgumentException.ThrowIfNullOrEmpty(openAiConfig.ImageDeploymentOrModelId, nameof(openAiConfig.ImageDeploymentOrModelId));
@@ -140,7 +140,7 @@ static Kernel CreateKernel(IServiceProvider provider)
     else
     {
         builder.Services.AddOpenAITextToImage(openAiConfig.ImageApiKey);
-    }
+    }*/
 
     // Embeddings
     openAIClient = new OpenAIClient(new Uri(openAiConfig.EmbeddingsEndpoint), new AzureKeyCredential(openAiConfig.EmbeddingsApiKey), clientOptions);

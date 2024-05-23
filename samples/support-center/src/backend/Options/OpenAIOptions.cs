@@ -21,10 +21,10 @@ public class OpenAIOptions
     public string? ChatDeploymentOrModelId { get; set; }
 
     // TextToImage
-    [Required]
+    /*[Required]
     public string? ImageEndpoint { get; set; }
     [Required]
     public string? ImageApiKey { get; set; }
     // When using OpenAI, this is not required.
-    public string? ImageDeploymentOrModelId { get; set; }
+    public string? ImageDeploymentOrModelId { get; set; }*/
 }
