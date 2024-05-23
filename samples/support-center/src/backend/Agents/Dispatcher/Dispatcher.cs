@@ -12,8 +12,8 @@ namespace SupportCenter.Agents;
 public class Dispatcher : AiAgent<DispatcherState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
-
     private readonly ILogger<Dispatcher> _logger;
+    private static string[] Choices => ["QnA", "Discount", "Invoice", "Customer Info"];
 
     public Dispatcher(
         [PersistentState("state", "messages")] IPersistentState<AgentState<DispatcherState>> state,
@@ -29,16 +29,37 @@ public class Dispatcher : AiAgent<DispatcherState>
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.UserQuestionReceived):
+            case nameof(EventTypes.UserChatInput):
                 var userId = item.Data["UserId"];
-                await SendDispatcherEvent(userId, customerInfo);
+                var userMessage = item.Data["userMessage"];
+
+                var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
+                context.Add("choices", Choices);
+                string intent = await CallFunction(DispatcherPrompts.GetIntent, context);
+
+                await SendDispatcherEvent(userId, intent);
                 break;
             default:
                 break;
         }
     }
 
-    private async Task SendDispatcherEvent(string userId, string customerInfo)
+    private async Task SendDispatcherEvent(string userId, string intent)
     {
+        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
+        {
+            Type = intent switch
+            {
+                "QnA" => nameof(EventTypes.UserQuestionRequested),
+                "Discount" => nameof(EventTypes.DiscountRequested),
+                "Invoice" => nameof(EventTypes.InvoiceRequested),
+                "Customer Info" => nameof(EventTypes.CustomerInfoRequested),
+                _ => nameof(EventTypes.Unknown)
+            },
+            Data = new Dictionary<string, string>
+            {
+                { "UserId", userId }
+            }
+        });
     }
 }

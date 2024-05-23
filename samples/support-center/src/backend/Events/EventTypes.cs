@@ -4,11 +4,15 @@ public enum EventTypes
 {
     UserChatInput,
     UserConnected,
+    UserQuestionRequested,
+    UserQuestionAnswered,
     CustomerInfoRequested,
     CustomerInfoRetrieved,
-    UserQuestionReceived,
-    UserQuestionAnswered,
-    //UserConnected,
-    //GraphicDesignCreated,
-    //SocialMediaPostCreated,
+    QnARequested,
+    QnARetrieved,
+    DiscountRequested,
+    DiscountRetrieved,
+    InvoiceRequested,
+    InvoiceRetrieved,
+    Unknown
 }

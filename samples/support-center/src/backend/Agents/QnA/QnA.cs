@@ -11,6 +11,7 @@ namespace SupportCenter.Agents;
 public class QnA : AiAgent<QnAState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
+    
 
     private readonly ILogger<QnA> _logger;
 
@@ -27,10 +28,10 @@ public class QnA : AiAgent<QnAState>
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.UserQuestionReceived):
+            case nameof(EventTypes.UserQuestionRequested):
                 {
                     var userQuestion = item.Data["userQuestion"];
-                    _logger.LogInformation($"[{nameof(QnA)}] Event {nameof(EventTypes.UserQuestionReceived)}. UserQuestion: {userQuestion}");
+                    _logger.LogInformation($"[{nameof(QnA)}] Event {nameof(EventTypes.UserQuestionRequested)}. UserQuestion: {userQuestion}");
                     
                     var context = new KernelArguments { ["input"] = AppendChatHistory(userQuestion)};
                     var instruction = "Consider the following knowledge:!vfcon106047!";

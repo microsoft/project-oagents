@@ -1,9 +1,8 @@
-﻿using SupportCenter.Agents;
-using SupportCenter.Events;
-using SupportCenter.Options;
-using Microsoft.AI.Agents.Abstractions;
+﻿using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using Orleans.Runtime;
+using SupportCenter.Events;
+using SupportCenter.Options;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -29,25 +28,25 @@ namespace SupportCenter.Agents
         }
 
         // POST api/<Post>/5
-        [HttpPost("{UserId}")]public async Task<string> Post(string UserId, [FromBody] string userMessage)
+        [HttpPost("{userId}")]public async Task<string> Post(string userId, [FromBody] string userMessage)
         {
             var streamProvider = _client.GetStreamProvider("StreamProvider");
-            var streamId = StreamId.Create(Consts.OrleansNamespace, UserId);
+            var streamId = StreamId.Create(Consts.OrleansNamespace, userId);
             var stream = streamProvider.GetStream<Event>(streamId);
 
             var data = new Dictionary<string, string>
             {
-                { nameof(UserId), UserId.ToString() },
+                { nameof(userId), userId.ToString() },
                 { nameof(userMessage), userMessage },
             };
 
             await stream.OnNextAsync(new Event
             {
-                Type = nameof(EventTypes.UserQuestionReceived),
+                Type = nameof(EventTypes.UserQuestionRequested),
                 Data = data
             });
 
-            return $"Task {UserId} accepted";
+            return $"Task {userId} accepted";
         }
     }
 }
