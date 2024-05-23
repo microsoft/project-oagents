@@ -3,11 +3,10 @@ using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
-using SupportCenter.Agents;
+using SupportCenter.Events;
 using SupportCenter.Options;
 
-namespace Marketing.Agents;
-
+namespace SupportCenter.Agents;
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
 public class QnA : AiAgent<QnAState>
 {
@@ -28,8 +27,34 @@ public class QnA : AiAgent<QnAState>
     {
         switch (item.Type)
         {
+            case nameof(EventTypes.UserQuestionReceived):
+                {
+                    var userQuestion = item.Data["userQuestion"];
+                    _logger.LogInformation($"[{nameof(QnA)}] Event {nameof(EventTypes.UserQuestionReceived)}. UserQuestion: {userQuestion}");
+                    
+                    var context = new KernelArguments { ["input"] = AppendChatHistory(userQuestion)};
+                    var instruction = "Consider the following knowledge:!vfcon106047!";
+                    var enhancedContext = await AddKnowledge(instruction, "vfcon106047", context);
+                    string answer = await CallFunction(QnAPrompts.Answer, enhancedContext);
+
+                    await SendAnswerEvent(answer, item.Data["UserId"]);
+                    break;
+                }
             default:
                 break;
         }
     }
+
+    private async Task SendAnswerEvent(string answer, string userId)
+    {
+        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
+        {
+            Type = nameof(EventTypes.UserQuestionAnswered),
+            Data = new Dictionary<string, string> {
+                            { "UserId", userId },
+                            { "Answer", answer },
+                        }
+        });
+    }
+
 }
