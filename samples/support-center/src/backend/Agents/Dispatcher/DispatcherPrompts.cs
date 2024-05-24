@@ -12,9 +12,7 @@ public class DispatcherPrompts
         If you think that the message is not clear, you can ask the customer for more information.
 
         You can choose between the following intents:  
-        {{#each choices}}  
-        - {{this.Name}}: {{this.Description}}  
-        {{/each}}  
+        {{$choices}}  
 
         Here are few examples:
         - User Input: Can you help me in updating my address?

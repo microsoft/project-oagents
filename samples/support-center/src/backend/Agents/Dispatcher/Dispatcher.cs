@@ -41,8 +41,7 @@ public class Dispatcher : AiAgent<DispatcherState>
                 var userMessage = item.Data["userMessage"];
 
                 var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
-                string choicesJson = JsonSerializer.Serialize(Choices);
-                context.Add("choices", choicesJson);
+                context.Add("choices", SerializeChoices(Choices));
                 string intent = await CallFunction(DispatcherPrompts.GetIntent, context);
 
                 await SendDispatcherEvent(userId, intent);
@@ -50,6 +49,11 @@ public class Dispatcher : AiAgent<DispatcherState>
             default:
                 break;
         }
+    }
+
+    private static string SerializeChoices(Choice[] choices)
+    {
+        return string.Join("\n", choices.Select(c => $"- {c.Name}: {c.Description}"));
     }
 
     private async Task SendDispatcherEvent(string userId, string intent)
