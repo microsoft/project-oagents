@@ -42,7 +42,7 @@ namespace SupportCenter.Agents
 
             await stream.OnNextAsync(new Event
             {
-                Type = nameof(EventTypes.UserQuestionRequested),
+                Type = nameof(EventTypes.UserChatInput),
                 Data = data
             });
 

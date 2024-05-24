@@ -15,9 +15,9 @@ public class Dispatcher : AiAgent<DispatcherState>
     protected override string Namespace => Consts.OrleansNamespace;
     private readonly ILogger<Dispatcher> _logger;
     private static Choice[] Choices => [
-        new Choice("QnA", "The customer is asking a question."),
+        new Choice("QnA", "The customer is asking a question. When the request is generic or can't be classified differently, use this choice."),
         new Choice("Discount", "The customer is asking for a discount about a product or service."),
-        new Choice("Invoice", "The customer is asking for an invoice"),
+        new Choice("Invoice", "The customer is asking for an invoice."),
         new Choice("Customer Info", "The customer is asking for reading or updating his or her information or profile.")
     ];
 
@@ -36,7 +36,6 @@ public class Dispatcher : AiAgent<DispatcherState>
         switch (item.Type)
         {
             case nameof(EventTypes.UserChatInput):  // should be only this enum
-            case nameof(EventTypes.UserQuestionRequested):  
                 var userId = item.Data["userId"];
                 var userMessage = item.Data["userMessage"];
 
