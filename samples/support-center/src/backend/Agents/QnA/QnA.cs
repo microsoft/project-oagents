@@ -38,7 +38,7 @@ public class QnA : AiAgent<QnAState>
                     var enhancedContext = await AddKnowledge(instruction, "vfcon106047", context);
                     string answer = await CallFunction(QnAPrompts.Answer, enhancedContext);
 
-                    await SendAnswerEvent(answer, item.Data["UserId"]);
+                    await SendAnswerEvent(answer, item.Data["userId"]);
                     break;
                 }
             default:
