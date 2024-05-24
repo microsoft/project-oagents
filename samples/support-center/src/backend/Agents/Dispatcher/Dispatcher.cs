@@ -43,7 +43,12 @@ public class Dispatcher : AiAgent<DispatcherState>
                 context.Add("choices", SerializeChoices(Choices));
                 string intent = await CallFunction(DispatcherPrompts.GetIntent, context);
 
-                await SendDispatcherEvent(userId, intent);
+                await SendDispatcherEvent(userId, intent, userMessage);
+                break;
+            case nameof(EventTypes.UserQuestionAnswered):  // should be only this enum
+                //Send respone with SignalR
+                 userMessage = item.Data["answer"];
+                _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(EventTypes.UserQuestionAnswered)}. Answer: {item.Data["answer"]}");                    
                 break;
             default:
                 break;
@@ -55,7 +60,7 @@ public class Dispatcher : AiAgent<DispatcherState>
         return string.Join("\n", choices.Select(c => $"- {c.Name}: {c.Description}"));
     }
 
-    private async Task SendDispatcherEvent(string userId, string intent)
+    private async Task SendDispatcherEvent(string userId, string intent, string userMessage)
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
@@ -66,10 +71,11 @@ public class Dispatcher : AiAgent<DispatcherState>
                 "Invoice" => nameof(EventTypes.InvoiceRequested),
                 "Customer Info" => nameof(EventTypes.CustomerInfoRequested),
                 _ => nameof(EventTypes.Unknown)
-            },
+            },            
             Data = new Dictionary<string, string>
             {
-                { "UserId", userId }
+                { "userId", userId },
+                { "userMessage", userMessage },
             }
         });
     }
