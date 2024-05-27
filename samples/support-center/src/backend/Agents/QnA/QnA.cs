@@ -52,8 +52,8 @@ public class QnA : AiAgent<QnAState>
         {
             Type = nameof(EventTypes.QnARetrieved),
             Data = new Dictionary<string, string> {
-                            { "UserId", userId },
-                            { "Answer", answer },
+                            { "userId", userId },
+                            { "answer", answer },
                         }
         });
     }
