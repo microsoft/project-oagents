@@ -4,8 +4,6 @@ public enum EventTypes
 {
     UserChatInput,
     UserConnected,
-    UserQuestionRequested,
-    UserQuestionAnswered,
     CustomerInfoRequested,
     CustomerInfoRetrieved,
     QnARequested,

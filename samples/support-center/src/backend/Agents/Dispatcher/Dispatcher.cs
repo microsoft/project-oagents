@@ -5,7 +5,6 @@ using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 using SupportCenter.Events;
 using SupportCenter.Options;
-using System.Text.Json;
 
 namespace SupportCenter.Agents;
 
@@ -14,6 +13,7 @@ public class Dispatcher : AiAgent<DispatcherState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
     private readonly ILogger<Dispatcher> _logger;
+
     private static Choice[] Choices => [
         new Choice("QnA", "The customer is asking a question. When the request is generic or can't be classified differently, use this choice."),
         new Choice("Discount", "The customer is asking for a discount about a product or service."),
@@ -33,9 +33,11 @@ public class Dispatcher : AiAgent<DispatcherState>
 
     public async override Task HandleEvent(Event item)
     {
+        _logger.LogInformation("[{Dispatcher}] Event {EventType}. Data: {EventData}", nameof(Dispatcher), item.Type, item.Data);
+
         switch (item.Type)
         {
-            case nameof(EventTypes.UserChatInput):  // should be only this enum
+            case nameof(EventTypes.UserChatInput):
                 var userId = item.Data["userId"];
                 var userMessage = item.Data["userMessage"];
 
@@ -61,7 +63,7 @@ public class Dispatcher : AiAgent<DispatcherState>
         {
             Type = intent switch
             {
-                "QnA" => nameof(EventTypes.UserQuestionRequested),
+                "QnA" => nameof(EventTypes.QnARequested),
                 "Discount" => nameof(EventTypes.DiscountRequested),
                 "Invoice" => nameof(EventTypes.InvoiceRequested),
                 "Customer Info" => nameof(EventTypes.CustomerInfoRequested),
