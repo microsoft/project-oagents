@@ -38,7 +38,7 @@ public class Dispatcher : AiAgent<DispatcherState>
         switch (item.Type)
         {
             case nameof(EventTypes.UserChatInput):
-                var userId = item.Data["userId"];
+                var userId = item.Data["UserId"];
                 var userMessage = item.Data["userMessage"];
 
                 var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
@@ -46,11 +46,6 @@ public class Dispatcher : AiAgent<DispatcherState>
                 string intent = await CallFunction(DispatcherPrompts.GetIntent, context);
 
                 await SendDispatcherEvent(userId, intent, userMessage);
-                break;
-            case nameof(EventTypes.UserQuestionAnswered):  // should be only this enum
-                //Send respone with SignalR
-                 userMessage = item.Data["answer"];
-                _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(EventTypes.UserQuestionAnswered)}. Answer: {item.Data["answer"]}");                    
                 break;
             default:
                 break;
@@ -76,7 +71,7 @@ public class Dispatcher : AiAgent<DispatcherState>
             },            
             Data = new Dictionary<string, string>
             {
-                { "userId", userId },
+                { "UserId", userId },
                 { "userMessage", userMessage },
             }
         });

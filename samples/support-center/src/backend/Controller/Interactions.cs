@@ -36,7 +36,7 @@ namespace SupportCenter.Agents
 
             var data = new Dictionary<string, string>
             {
-                { nameof(userId), userId.ToString() },
+                { "UserId", userId.ToString() }, //lowercase to upper for now, how should we have this?
                 { nameof(userMessage), userMessage },
             };
 
