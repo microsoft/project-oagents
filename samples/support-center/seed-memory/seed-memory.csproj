@@ -24,7 +24,22 @@
   
   <ItemGroup>
     <None Update="vfcon106047.pdf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>      
+    </None>
+    <None Update="Benefit_Options.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>      
+    </None>
+    <None Update="employee_handbook.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>      
+    </None>
+    <None Update="Northwind_Health_Plus_Benefits_Details.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>      
+    </None>
+    <None Update="Northwind_Standard_Benefits_Details.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>      
+    </None>
+    <None Update="role_library.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>      
     </None>
   </ItemGroup>
 </Project>
