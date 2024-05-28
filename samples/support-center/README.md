@@ -14,7 +14,7 @@ In the Support Center scenario, several types of agents can be identified based 
 	- Maintain a session state to keep track of customer interactions.
 	- Manage event dispatching and responses.
 
-### Sub Agent
+## Sub Agent
 #### User Authentication Agent
 - **Role**: Handles customer authentication and authorization.
 - **Responsibilities**:
@@ -47,47 +47,55 @@ The Support Center application is designed to handle customer inquiries and dele
 **1. Initial Inquiry** 
 	- Customer initiates a session with the Dispatcher Agent.
 	- Dispatcher Agent identifies the type of inquiry and dispatches to the appropriate sub-agent.
+
 **2. Authentication**
 	- If customer authentication is required, the Dispatcher Agent dispatches to the User Authentication Agent.
 	- The User Authentication Agent verifies the customer and reports back.
+
 **3. QnA**
 	- For generic queries, the Dispatcher Agent delegates to the QnA Agent.
 	- The QnA Agent responds to the customer based on the inquiry.
+
 **4. Specific Task Handling**
 	- For specific tasks, the Dispatcher Agent delegates to the relevant sub agent:
 		- Customer Info Agent: Reads and Updates customer information.
 		- Invoice Agent: Investigates invoice issues.
 		- Discount Agent: Handles discount requests.
+
 **5. Human Agent Involvement**
 	- For complex issues or escalations, the Dispatcher Agent delegate to humana gents.
 	- Human agents receive comprehensive interaction summaries for context.
+
 **6. Post-Interaction**
 	- The Dispatcher Agent ensures post-interaction tasks, such as callbacks, are scheduled.
 	- Summaries and transcripts are saved for future reference.
 
 ```mermaid
-graph TD;  
-    CustomerQuery[Customer Query] -->|Initial Contact| DispatcherAgent;  
-      
-    DispatcherAgent -->|Authenticate Customer| UserAuthAgent;  
-    UserAuthAgent -->|Authentication Result| DispatcherAgent;  
-      
-    DispatcherAgent -->|Generic Query| QnAAgent;  
-    QnAAgent -->|Query Response| DispatcherAgent;  
-      
-    DispatcherAgent -->|Update Customer Info| CustomerInfoUpdateAgent;  
-    CustomerInfoUpdateAgent -->|Update Result| DispatcherAgent;  
-      
-    DispatcherAgent -->|Investigate Invoice| InvoiceInvestigationAgent;  
-    InvoiceInvestigationAgent -->|Investigation Result| DispatcherAgent;  
-      
-    DispatcherAgent -->|Handle Discount| DiscountAgent;  
-    DiscountAgent -->|Discount Result| DispatcherAgent;  
-  
-    DispatcherAgent -->|Escalate to Human Agent| HumanAgent;  
-    HumanAgent -->|Interaction Summary| DispatcherAgent;  
-      
-    DispatcherAgent -->|Post-Interaction Tasks| PostInteractionTasks;  
+graph TD
+    User[Customer] --> FE
+    FE -->|request| APIs
+    APIs -->|request| Dispatcher
+    Dispatcher -->|notif| SignalR
+
+    Dispatcher --> QnA
+    QnA --> Dispatcher
+
+    Dispatcher --> Invoice
+    Invoice --> Dispatcher
+
+    Dispatcher --> Discount
+    Discount --> Dispatcher
+
+    Dispatcher --> CustomerInfo
+    CustomerInfo --> Dispatcher
+
+    QnA --> SupportCenterAgent
+    Invoice --> SupportCenterAgent
+    Discount --> SupportCenterAgent
+    CustomerInfo --> SupportCenterAgent
+    SupportCenterAgent -->|human agent gets a summary| Dispatcher  
+    SignalR -->|notif| FE
+    classDef default fill:#222,stroke:#333,stroke-width:3px; 
 ```
 
 ![Agents](readme-media/screenshot.png)
