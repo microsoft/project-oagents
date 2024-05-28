@@ -11,14 +11,12 @@ namespace SupportCenter.Agents;
 public class QnA : AiAgent<QnAState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
-    
-
     private readonly ILogger<QnA> _logger;
 
     public QnA([PersistentState("state", "messages")] IPersistentState<AgentState<QnAState>> state,
         Kernel kernel,
         ISemanticTextMemory memory,
-        ILogger<QnA> logger) 
+        ILogger<QnA> logger)
     : base(state, memory, kernel)
     {
         _logger = logger;
@@ -32,8 +30,8 @@ public class QnA : AiAgent<QnAState>
                 {
                     var userMessage = item.Data["userMessage"];
                     _logger.LogInformation($"[{nameof(QnA)}] Event {nameof(EventTypes.QnARequested)}. UserQuestion: {userMessage}");
-                    
-                    var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage)};
+
+                    var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
                     var instruction = "Consider the following knowledge:!vfcon106047!";
                     var enhancedContext = await AddKnowledge(instruction, "vfcon106047", context);
                     string answer = await CallFunction(QnAPrompts.Answer, enhancedContext);
@@ -46,16 +44,15 @@ public class QnA : AiAgent<QnAState>
         }
     }
 
-    private async Task SendAnswerEvent(string answer, string userId)
+    private async Task SendAnswerEvent(string qnaAnswer, string userId)
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
             Type = nameof(EventTypes.QnARetrieved),
             Data = new Dictionary<string, string> {
-                            { "UserId", userId },
-                            { "qnaResponse", answer },
-                        }
+                { nameof(userId), userId },
+                { nameof(qnaAnswer), qnaAnswer }
+            }
         });
     }
-
 }

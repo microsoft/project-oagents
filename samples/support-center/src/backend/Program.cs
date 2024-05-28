@@ -59,9 +59,7 @@ builder.Services.Configure<JsonSerializerOptions>(options =>
     options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 });
 
-
 WebApplication app = builder.Build();
-
 
 app.UseRouting();
 app.UseCors(AllowDebugOriginPolicy);

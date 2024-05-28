@@ -21,7 +21,6 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
     private readonly IServiceProvider _serviceProvider;
     private readonly ICustomerRepository _customerRepository;
     private readonly IChatCompletionService _chatCompletionService;
-    private readonly Kernel _kernel;
 
     public CustomerInfo(
         [PersistentState("state", "messages")] IPersistentState<AgentState<CustomerInfoState>> state,
@@ -49,7 +48,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 var userId = item.Data["userId"];
                 var userMessage = item.Data["userMessage"];
 
-                // Enable auto function calling
+                // Enable auto function calling.
                 OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
                 {
                     ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
@@ -60,7 +59,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                     .Replace("{{$userMessage}}", userMessage);
 
                 var msgContent = await _chatCompletionService.GetChatMessageContentAsync(prompt, openAIPromptExecutionSettings, _kernel);
-                await SendCustomerInfoEvent(userId, (string)msgContent.ToString());
+                await SendCustomerInfoEvent(userId, msgContent.ToString());
                 break;
             default:
                 break;
@@ -73,7 +72,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
         {
             Type = nameof(EventTypes.CustomerInfoRetrieved),
             Data = new Dictionary<string, string> {
-                { "UserId", userId },
+                { nameof(userId), userId },
                 { nameof(customerInfo), customerInfo}
             }
         });

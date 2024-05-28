@@ -38,7 +38,7 @@ public class Dispatcher : AiAgent<DispatcherState>
         switch (item.Type)
         {
             case nameof(EventTypes.UserChatInput):
-                var userId = item.Data["UserId"];
+                var userId = item.Data["userId"];
                 var userMessage = item.Data["userMessage"];
 
                 var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
@@ -47,7 +47,7 @@ public class Dispatcher : AiAgent<DispatcherState>
 
                 await SendDispatcherEvent(userId, intent, userMessage);
                 break;
-            case nameof(EventTypes.QnARetrieved):  // should be only this enum
+            case nameof(EventTypes.QnARetrieved):
                 //Send respone with SignalR
                  userMessage = item.Data["answer"];
                 _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(EventTypes.QnARetrieved)}. Answer: {item.Data["answer"]}");                    
@@ -76,8 +76,8 @@ public class Dispatcher : AiAgent<DispatcherState>
             },            
             Data = new Dictionary<string, string>
             {
-                { "UserId", userId },
-                { "userMessage", userMessage },
+                { nameof(userId), userId },
+                { nameof(userMessage), userMessage },
             }
         });
     }
