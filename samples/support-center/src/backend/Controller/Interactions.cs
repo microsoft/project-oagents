@@ -8,14 +8,6 @@ using SupportCenter.Options;
 
 namespace SupportCenter.Agents
 {
-
-    [GenerateSerializer]
-    public class Asd
-    {
-        [Id(0)]
-        public string Name { get; set; }
-    }
-
     [Route("api/[controller]")]
     [ApiController]
     public class Interactions : ControllerBase
@@ -42,7 +34,7 @@ namespace SupportCenter.Agents
 
             await stream.OnNextAsync(new Event
             {
-                Type = nameof(EventTypes.UserChatInput),
+                Type = nameof(EventType.UserChatInput),
                 Data = data
             });
 

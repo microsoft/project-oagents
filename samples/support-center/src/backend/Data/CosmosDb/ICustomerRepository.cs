@@ -7,5 +7,6 @@ namespace SupportCenter.Data.CosmosDb
         Task<Customer?> GetCustomerByIdAsync(string customerId);
         Task<IEnumerable<Customer>> GetCustomersAsync();
         Task InsertCustomerAsync(Customer customer);
+        Task UpdateCustomerAsync(Customer customer);
     }
 }

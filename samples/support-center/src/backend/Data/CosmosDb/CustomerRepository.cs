@@ -41,5 +41,10 @@ namespace SupportCenter.Data.CosmosDb
         {
             await InsertItemAsync(customer);
         }
+
+        public async Task UpdateCustomerAsync(Customer customer)
+        {
+            await UpsertItemAsync(customer);
+        }
     }
 }

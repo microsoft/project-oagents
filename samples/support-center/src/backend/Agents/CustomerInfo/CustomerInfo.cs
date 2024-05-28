@@ -44,7 +44,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.CustomerInfoRequested):
+            case nameof(EventType.CustomerInfoRequested):
                 var userId = item.Data["userId"];
                 var userMessage = item.Data["userMessage"];
 
@@ -70,7 +70,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
-            Type = nameof(EventTypes.CustomerInfoRetrieved),
+            Type = nameof(EventType.CustomerInfoRetrieved),
             Data = new Dictionary<string, string> {
                 { nameof(userId), userId },
                 { nameof(customerInfo), customerInfo}

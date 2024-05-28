@@ -26,10 +26,10 @@ public class QnA : AiAgent<QnAState>
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.QnARequested):
+            case nameof(EventType.QnARequested):
                 {
                     var userMessage = item.Data["userMessage"];
-                    _logger.LogInformation($"[{nameof(QnA)}] Event {nameof(EventTypes.QnARequested)}. UserQuestion: {userMessage}");
+                    _logger.LogInformation($"[{nameof(QnA)}] Event {nameof(EventType.QnARequested)}. UserQuestion: {userMessage}");
 
                     var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
                     var instruction = "Consider the following knowledge:!vfcon106047!";
@@ -48,7 +48,7 @@ public class QnA : AiAgent<QnAState>
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
-            Type = nameof(EventTypes.QnARetrieved),
+            Type = nameof(EventType.QnARetrieved),
             Data = new Dictionary<string, string> {
                 { nameof(userId), userId },
                 { nameof(qnaAnswer), qnaAnswer }

@@ -1,6 +1,6 @@
 namespace SupportCenter.Events;
 
-public enum EventTypes
+public enum EventType
 {
     UserChatInput,
     UserConnected,

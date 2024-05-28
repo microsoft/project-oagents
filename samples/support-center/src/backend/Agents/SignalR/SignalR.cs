@@ -24,22 +24,22 @@ public class SignalR : Agent
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.QnARetrieved):
+            case nameof(EventType.QnARetrieved):
                 var qnaResponse = item.Data["qnaResponse"]; 
                 await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], qnaResponse, AgentTypes.Chat);
                 break;
 
-            case nameof(EventTypes.InvoiceRetrieved):
+            case nameof(EventType.InvoiceRetrieved):
                 var invoice = item.Data["invoice"];
                 await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], invoice, AgentTypes.Invoice);
                 break;
 
-            case nameof(EventTypes.CustomerInfoRetrieved):
+            case nameof(EventType.CustomerInfoRetrieved):
                 var customerInfo = item.Data["customerInfo"]; 
                 await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], customerInfo, AgentTypes.CustomerInfo);
                 break;
 
-            case nameof(EventTypes.DiscountRetrieved):
+            case nameof(EventType.DiscountRetrieved):
                 var discount = item.Data["discount"];
                 await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], discount, AgentTypes.Discount);
                 break;
