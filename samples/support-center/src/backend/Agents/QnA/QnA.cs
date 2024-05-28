@@ -38,7 +38,7 @@ public class QnA : AiAgent<QnAState>
                     var enhancedContext = await AddKnowledge(instruction, "vfcon106047", context);
                     string answer = await CallFunction(QnAPrompts.Answer, enhancedContext);
 
-                    await SendAnswerEvent(answer, item.Data["userId"]);
+                    await SendAnswerEvent(answer, item.Data["UserId"]);
                     break;
                 }
             default:
@@ -52,8 +52,8 @@ public class QnA : AiAgent<QnAState>
         {
             Type = nameof(EventTypes.QnARetrieved),
             Data = new Dictionary<string, string> {
-                            { "userId", userId },
-                            { "answer", answer },
+                            { "UserId", userId },
+                            { "qnaResponse", answer },
                         }
         });
     }
