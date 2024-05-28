@@ -1,12 +1,12 @@
 ﻿using Microsoft.Azure.Cosmos;
 using SupportCenter.Data.CosmosDb.Entities;
-using SupportCenter.Data.CosmosDb.Configurations;
+using SupportCenter.Options;
 
 namespace SupportCenter.Data.CosmosDb
 {
     public abstract class CosmosDbRepository<TEntity, TOptions>
         where TEntity : Entity
-        where TOptions : CosmosDbConfiguration
+        where TOptions : CosmosDbOptions
     {
         protected readonly ILogger Logger;
         protected readonly Container Container;
@@ -14,16 +14,16 @@ namespace SupportCenter.Data.CosmosDb
         protected CosmosDbRepository(TOptions options, ILogger logger)
         {
             Logger = logger;
-            CosmosDbConfiguration configuration = options;
+            CosmosDbOptions configuration = options;
 
             var containerConfiguration = configuration.Containers?.FirstOrDefault(c => c.EntityName == typeof(TEntity).Name)
                 ?? throw new InvalidOperationException($"Container configuration for {typeof(TEntity).Name} not found.");
 
             var client = new CosmosClient(configuration.AccountUri, configuration.AccountKey);
-            client.CreateDatabaseIfNotExistsAsync(containerConfiguration.DatabaseName).Wait();
+            client.CreateDatabaseIfNotExistsAsync(containerConfiguration.DatabaseName);
 
             var database = client.GetDatabase(containerConfiguration.DatabaseName);
-            database.CreateContainerIfNotExistsAsync(containerConfiguration.ContainerName, containerConfiguration.PartitionKey ?? "/partitionKey").Wait();
+            database.CreateContainerIfNotExistsAsync(containerConfiguration.ContainerName, containerConfiguration.PartitionKey ?? "/partitionKey");
 
             Container = database.GetContainer(containerConfiguration.ContainerName);
         }

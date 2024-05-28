@@ -1,8 +1,13 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace SupportCenter.Options;
-public class CosmosDbOptions
+namespace SupportCenter.Options
 {
-    [Required]
-    public string? ConnectionString { get; set; }
+    public class CosmosDbOptions
+    {
+        public string? AccountUri { get; set; }
+
+        public string? AccountKey { get; set; }
+
+        public IEnumerable<CosmosDbContainerOptions>? Containers { get; set; }
+    }
 }

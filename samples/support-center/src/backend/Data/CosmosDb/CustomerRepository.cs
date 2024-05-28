@@ -1,12 +1,14 @@
 ﻿using Microsoft.Azure.Cosmos;
-using SupportCenter.Data.CosmosDb.Configurations;
+using Microsoft.Extensions.Options;
 using SupportCenter.Data.CosmosDb.Entities;
+using SupportCenter.Options;
 
 namespace SupportCenter.Data.CosmosDb
 {
-    public class CustomerRepository : CosmosDbRepository<Customer, CosmosDbConfiguration>, ICustomerRepository
+    public class CustomerRepository : CosmosDbRepository<Customer, CosmosDbOptions>, ICustomerRepository
     {
-        public CustomerRepository(CosmosDbConfiguration options, ILogger logger) : base(options, logger) { }
+        public CustomerRepository(IOptions<CosmosDbOptions> options, ILogger<CustomerRepository> logger)
+            : base(options.Value, logger) { }
 
         public async Task<Customer?> GetCustomerByIdAsync(string customerId)
         {
@@ -20,6 +22,24 @@ namespace SupportCenter.Data.CosmosDb
                 customer = response.FirstOrDefault();
             }
             return customer;
+        }
+
+        public async Task<IEnumerable<Customer>> GetCustomersAsync()
+        {
+            var query = new QueryDefinition("SELECT * FROM c");
+            var iterator = Container.GetItemQueryIterator<Customer>(query);
+            var customers = new List<Customer>();
+            while (iterator.HasMoreResults)
+            {
+                var response = await iterator.ReadNextAsync();
+                customers.AddRange(response);
+            }
+            return customers;
+        }
+
+        public async Task InsertCustomerAsync(Customer customer)
+        {
+            await InsertItemAsync(customer);
         }
     }
 }

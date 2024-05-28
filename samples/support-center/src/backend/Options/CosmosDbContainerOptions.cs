@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace SupportCenter.Data.CosmosDb.Configurations
+namespace SupportCenter.Options
 {
-    public class CosmosDbContainerConfiguration
+    public class CosmosDbContainerOptions
     {
         [Required]
         public string? DatabaseName { get; set; }

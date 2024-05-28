@@ -1,17 +1,17 @@
-using System.Text.Json;
 using Azure;
 using Azure.AI.OpenAI;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
-using Microsoft.Extensions.Http.Resilience;
-using Microsoft.SemanticKernel.Memory;
-using Microsoft.SemanticKernel.Connectors.Qdrant;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using SupportCenter.SignalRHub;
-using Marketing;
+using Microsoft.SemanticKernel.Connectors.Qdrant;
+using Microsoft.SemanticKernel.Memory;
 using Orleans.Serialization;
-using SupportCenter.Options;
 using SupportCenter.Core;
+using SupportCenter.Extensions;
+using SupportCenter.Options;
+using SupportCenter.SignalRHub;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient(CreateKernel);
@@ -23,14 +23,14 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ISignalRService, SignalRService>();
 
-
 // Allow any CORS origin if in DEV
 const string AllowDebugOriginPolicy = "AllowDebugOrigin";
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy(AllowDebugOriginPolicy, builder => {
+        options.AddPolicy(AllowDebugOriginPolicy, builder =>
+        {
             builder
             .WithOrigins("http://localhost:3000") // client url
             .AllowAnyHeader()
@@ -40,21 +40,9 @@ if (builder.Environment.IsDevelopment())
     });
 }
 
-builder.Services.AddOptions<OpenAIOptions>()
-    .Configure<IConfiguration>((settings, configuration) =>
-    {
-        configuration.GetSection(nameof(OpenAIOptions)).Bind(settings);
-    })
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
-
-builder.Services.AddOptions<QdrantOptions>()
-    .Configure<IConfiguration>((settings, configuration) =>
-    {
-        configuration.GetSection(nameof(QdrantOptions)).Bind(settings);
-    })
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
+builder.Services.ExtendOptions();
+builder.Services.ExtendServices();
+builder.Services.RegisterNativeFunctions();
 
 builder.Host.UseOrleans(siloBuilder =>
 {
@@ -71,7 +59,9 @@ builder.Services.Configure<JsonSerializerOptions>(options =>
     options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 });
 
-var app = builder.Build();
+
+WebApplication app = builder.Build();
+
 
 app.UseRouting();
 app.UseCors(AllowDebugOriginPolicy);
@@ -126,7 +116,6 @@ static Kernel CreateKernel(IServiceProvider provider)
     }
     else
     {
-
         builder.Services.AddOpenAIChatCompletion(openAiConfig.ChatDeploymentOrModelId, openAIClient);
     }
 

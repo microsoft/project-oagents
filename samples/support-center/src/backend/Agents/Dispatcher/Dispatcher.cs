@@ -28,7 +28,7 @@ public class Dispatcher : AiAgent<DispatcherState>
         ILogger<Dispatcher> logger)
     : base(state, memory, kernel)
     {
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async override Task HandleEvent(Event item)
@@ -47,10 +47,10 @@ public class Dispatcher : AiAgent<DispatcherState>
 
                 await SendDispatcherEvent(userId, intent, userMessage);
                 break;
-            case nameof(EventTypes.UserQuestionAnswered):  // should be only this enum
+            case nameof(EventTypes.QnARetrieved):  // should be only this enum
                 //Send respone with SignalR
                  userMessage = item.Data["answer"];
-                _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(EventTypes.UserQuestionAnswered)}. Answer: {item.Data["answer"]}");                    
+                _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(EventTypes.QnARetrieved)}. Answer: {item.Data["answer"]}");                    
                 break;
             default:
                 break;

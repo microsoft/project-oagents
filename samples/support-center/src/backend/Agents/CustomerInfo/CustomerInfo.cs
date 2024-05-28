@@ -1,11 +1,14 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 using SupportCenter.Data.CosmosDb;
 using SupportCenter.Events;
 using SupportCenter.Options;
+using SupportCenter.Plugins.CustomerPlugin;
 
 namespace SupportCenter.Agents;
 
@@ -15,18 +18,27 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
     protected override string Namespace => Consts.OrleansNamespace;
 
     private readonly ILogger<CustomerInfo> _logger;
+    private readonly IServiceProvider _serviceProvider;
     private readonly ICustomerRepository _customerRepository;
+    private readonly IChatCompletionService _chatCompletionService;
+    private readonly Kernel _kernel;
 
     public CustomerInfo(
         [PersistentState("state", "messages")] IPersistentState<AgentState<CustomerInfoState>> state,
         Kernel kernel,
         ISemanticTextMemory memory,
         ILogger<CustomerInfo> logger,
+        IServiceProvider serviceProvider,
         ICustomerRepository customerRepository)
     : base(state, memory, kernel)
     {
         _logger = logger;
+        _serviceProvider = serviceProvider;
         _customerRepository = customerRepository;
+        _kernel = kernel;
+
+        _kernel.ImportPluginFromObject(serviceProvider.GetRequiredService<CustomerData>(), "CustomerPlugin");
+        _chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
     }
 
     public async override Task HandleEvent(Event item)
@@ -34,35 +46,25 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
         switch (item.Type)
         {
             case nameof(EventTypes.CustomerInfoRequested):
-                // Handle customer info request
-                string userId = item.Data["UserId"];
-                Customer? customer = await GetCustomerInfoAsync(userId);
-                if (customer == null)
+                var userId = item.Data["userId"];
+                var userMessage = item.Data["userMessage"];
+
+                // Enable auto function calling
+                OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
                 {
-                    _logger.LogWarning("[{Agent}] Customer info not found for user {userId}", nameof(CustomerInfo), userId);
-                    return;
-                }
-                await SendCustomerInfoEvent(userId, customer.Name ?? "No User");
+                    ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+                };
+
+                var prompt = CustomerInfoPrompts.GetCustomerInfo
+                    .Replace("{{$userId}}", userId)
+                    .Replace("{{$userMessage}}", userMessage);
+
+                var msgContent = await _chatCompletionService.GetChatMessageContentAsync(prompt, openAIPromptExecutionSettings, _kernel);
+                await SendCustomerInfoEvent(userId, (string)msgContent.ToString());
                 break;
             default:
                 break;
         }
-    }
-
-    private async Task<Customer?> GetCustomerInfoAsync(string userId)
-    {
-        var customer = await _customerRepository.GetCustomerByIdAsync(userId);
-        if (customer == null)
-        {
-            _logger.LogWarning("[{Agent}] Customer not found for user {userId}", nameof(CustomerInfo), userId);
-            return null;
-        }
-        return new Customer
-        {
-            Name = customer?.Name,
-            Email = customer?.Email,
-            Phone = customer?.Phone
-        };
     }
 
     private async Task SendCustomerInfoEvent(string userId, string customerInfo)

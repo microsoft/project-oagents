@@ -3,10 +3,10 @@
 public class CustomerInfoState
 {
     [Id(0)]
-    public Customer? Info { get; set; }
+    public CustomerInfoInternal? Info { get; set; }
 }
 
-public class Customer
+public class CustomerInfoInternal
 {
     public string? Name { get; set; }
     public string? Email { get; set; }
