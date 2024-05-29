@@ -2,8 +2,8 @@ using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Memory;
+using Microsoft.SemanticKernel.Planning;
 using Orleans.Runtime;
 using SupportCenter.Data.CosmosDb;
 using SupportCenter.Events;
@@ -48,18 +48,14 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 var userId = item.Data["userId"];
                 var userMessage = item.Data["userMessage"];
 
-                // Enable auto function calling.
-                OpenAIPromptExecutionSettings openAIPromptExecutionSettings = new()
-                {
-                    ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
-                };
-
                 var prompt = CustomerInfoPrompts.GetCustomerInfo
                     .Replace("{{$userId}}", userId)
                     .Replace("{{$userMessage}}", userMessage);
-
-                var msgContent = await _chatCompletionService.GetChatMessageContentAsync(prompt, openAIPromptExecutionSettings, _kernel);
-                await SendCustomerInfoEvent(userId, msgContent.ToString());
+#pragma warning disable SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+                var planner = new FunctionCallingStepwisePlanner();
+                var result = await planner.ExecuteAsync(_kernel, prompt);
+                await SendCustomerInfoEvent(userId, result.FinalAnswer);
+#pragma warning restore SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
                 break;
             default:
                 break;
