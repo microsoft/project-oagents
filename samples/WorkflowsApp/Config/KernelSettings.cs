@@ -1,8 +1,4 @@
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System.IO;
-using System;
 
 internal class KernelSettings
 {
