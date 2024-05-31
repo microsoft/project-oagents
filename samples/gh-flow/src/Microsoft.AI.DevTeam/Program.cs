@@ -87,15 +87,16 @@ builder.Services.AddSingleton<IAnalyzeCode, CodeAnalyzer>();
 builder.Host.UseOrleans(siloBuilder =>
 {
     siloBuilder.UseDashboard(x => x.HostSelf = true);
-    siloBuilder.Services.AddSerializer( sb => {
-        sb.AddNewtonsoftJsonSerializer(isSupported: t => true);
-    });
     if (builder.Environment.IsDevelopment())
     {
         siloBuilder.UseLocalhostClustering()
                .AddMemoryStreams("StreamProvider")
                .AddMemoryGrainStorage("PubSubStore")
                .AddMemoryGrainStorage("messages");
+
+    siloBuilder.UseInMemoryReminderService();
+    siloBuilder.UseDashboard(x => x.HostSelf = true);
+
         siloBuilder.UseInMemoryReminderService();
     }
     else
@@ -111,24 +112,24 @@ builder.Host.UseOrleans(siloBuilder =>
             options.ResponseTimeout = TimeSpan.FromMinutes(3);
             options.SystemResponseTimeout = TimeSpan.FromMinutes(3);
         });
-         siloBuilder.Configure<ClientMessagingOptions>(options =>
-        {
-            options.ResponseTimeout = TimeSpan.FromMinutes(3);
-        });
-        siloBuilder.UseCosmosClustering( o =>
+        siloBuilder.Configure<ClientMessagingOptions>(options =>
+       {
+           options.ResponseTimeout = TimeSpan.FromMinutes(3);
+       });
+        siloBuilder.UseCosmosClustering(o =>
             {
                 o.ConfigureCosmosClient(cosmosDbconnectionString);
                 o.ContainerName = "devteam";
                 o.DatabaseName = "clustering";
                 o.IsResourceCreationEnabled = true;
             });
-        
-        siloBuilder.UseCosmosReminderService( o => 
+
+        siloBuilder.UseCosmosReminderService(o =>
         {
-                o.ConfigureCosmosClient(cosmosDbconnectionString);
-                o.ContainerName = "devteam";
-                o.DatabaseName = "reminders";
-                o.IsResourceCreationEnabled = true;
+            o.ConfigureCosmosClient(cosmosDbconnectionString);
+            o.ContainerName = "devteam";
+            o.DatabaseName = "reminders";
+            o.IsResourceCreationEnabled = true;
         });
         siloBuilder.AddCosmosGrainStorage(
             name: "messages",
@@ -144,7 +145,6 @@ builder.Host.UseOrleans(siloBuilder =>
                .AddMemoryStreams("StreamProvider")
                .AddMemoryGrainStorage("PubSubStore");
     }    
-
 });
 
 builder.Services.Configure<JsonSerializerOptions>(options =>
