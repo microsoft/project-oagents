@@ -119,6 +119,37 @@ graph TD
 
     class User,FE,APIs,Dispatcher,SignalR,QnA,Invoice,Discount,CustomerInfo,SupportCenterAgent highlight;
 ```
+## Example Flow Description
+
+![Support Center](docs/media/screenshot.png)
+
+The screenshot depicts a conversation flow between a user (customer) and the AI agent in the Support Center application.
+Here is a step-by-step description of the flow:
+1. **User Initiation**:
+The user initiates the conversation by stating: *"I'm moving to another city, so I need to change my address. Can you help me with that?"*
+This message is sent to the frontend, which then forwards it to the backend API.
+2. **Dispatcher Agent Handling**:
+The backend API receives the user's request and forwards it to the Dispatcher Agent.
+The Dispatcher Agent analyzes the intent of the user's message and determines that the request is related to updating customer information.
+The Dispatcher Agent delegates the task to the Customer Info Agent.
+3. **Customer Info Agent Request**:
+The Customer Info Agent processes the request and responds with: *"Could you please provide your new address? I need this information to update your records."*
+This response is sent back to the frontend via SignalR, and the frontend displays the message to the user.
+4. **User Response**:
+The user provides their new address by saying: *"Sure here it is: caramba23"*.
+This message is sent to the frontend, which then forwards it to the backend API.
+5. **Dispatcher Agent Clarification**:
+The backend API receives the user's new address and forwards it to the Dispatcher Agent.
+The Dispatcher Agent determines that further clarification is needed and delegates the task to the Customer Info Agent.
+The Customer Info Agent responds with: *"Could you please clarify what you want to do with the provided information 'caramba23'? Do you want to update any information or retrieve data related to this?"*
+This response is sent back to the frontend via SignalR, and the frontend displays the message to the user.
+6. **User Confirmation**:
+The user confirms their intention by saying: *"my new address is caramba23"*.
+This message is sent to the frontend, which then forwards it to the backend API.
+7. **Customer Info Agent Update**:
+The backend API receives the user's confirmation and forwards it to the Customer Info Agent.
+The Customer Info Agent processes the update and responds with: *"Your address has been successfully updated to 'caramba23'."*
+This response is sent back to the frontend via SignalR, and the frontend displays the message to the user.
 
 ## Requirements to run locally
 
