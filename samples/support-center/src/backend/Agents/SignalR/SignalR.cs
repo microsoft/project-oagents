@@ -1,6 +1,7 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using SupportCenter.Events;
+using SupportCenter.Extensions;
 using SupportCenter.Options;
 using SupportCenter.SignalRHub;
 
@@ -10,7 +11,7 @@ namespace Marketing.Agents;
 public class SignalR : Agent
 {
     protected override string Namespace => Consts.OrleansNamespace;
-    
+
     private readonly ILogger<SignalR> _logger;
     private readonly ISignalRService _signalRClient;
 
@@ -22,30 +23,31 @@ public class SignalR : Agent
 
     public async override Task HandleEvent(Event item)
     {
+        string? messageId = item.Data.GetValueOrDefault<string>("id");
+        string? userId = item.Data.GetValueOrDefault<string>("userId");
+        string? answer = item.Data.GetValueOrDefault<string>("answer");
+
+        var type = AgentType.Unknown;
+
         switch (item.Type)
         {
             case nameof(EventType.QnARetrieved):
-                var qnaResponse = item.Data["qnaResponse"]; 
-                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], qnaResponse, AgentTypes.Chat);
+                type = AgentType.QnA;
                 break;
-
             case nameof(EventType.InvoiceRetrieved):
-                var invoice = item.Data["invoice"];
-                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], invoice, AgentTypes.Invoice);
+                type = AgentType.Invoice;
                 break;
-
             case nameof(EventType.CustomerInfoRetrieved):
-                var customerInfo = item.Data["customerInfo"]; 
-                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], customerInfo, AgentTypes.CustomerInfo);
+                type = AgentType.CustomerInfo;
                 break;
-
             case nameof(EventType.DiscountRetrieved):
-                var discount = item.Data["discount"];
-                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], discount, AgentTypes.Discount);
+                type = AgentType.Discount;
                 break;
-
             default:
                 break;
         }
+
+        if (type != AgentType.Unknown && userId != null && answer != null)
+            await _signalRClient.SendMessageToSpecificClient(messageId, userId, answer, type);
     }
 }

@@ -4,9 +4,9 @@ namespace SupportCenter.SignalRHub;
 
 public interface ISupportCenterHub
 {
-    public Task ConnectToAgent(string UserId);
+    public Task ConnectToAgent(string userId);
 
-    public Task ChatMessage(FrontEndMessage frontEndMessage, IClusterClient clusterClient);
+    public Task ChatMessage(ChatMessage frontEndMessage, IClusterClient clusterClient);
 
     public Task SendMessageToSpecificClient(string userId, string message);
 }

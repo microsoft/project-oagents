@@ -1,0 +1,44 @@
+{
+  "name": "support-center-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "azure": "vite --mode azureConfig",
+    "local": "vite --mode localConfig",
+    "dev": "vite",
+    "build": "tsc && vite build --mode demo",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@azure/msal-browser": "^3.5.0",
+    "@azure/msal-react": "^2.0.7",
+    "@fluentui/react-components": "^9.37.4",
+    "@microsoft/signalr": "^8.0.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.4.3",
+    "luxon": "^3.4.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-markdown": "^9.0.0",
+    "react-router-dom": "^6.18.0",
+    "remark-gfm": "^4.0.0",
+    "remark-supersub": "^1.0.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.4.2",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "@types/uuid": "^9.0.8",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.0"
+  }
+}

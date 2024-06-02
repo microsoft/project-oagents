@@ -1,0 +1,21 @@
+.messages-container {
+  overflow: hidden auto;
+  min-height: calc(90vh - 250px);
+  max-height: calc(90vh - 250px);
+  padding: 10px;
+}
+
+.copilot-message-container,
+.user-message-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.copilot-message-container {
+  justify-content: flex-start;
+}
+
+.user-message-container {
+  justify-content: flex-end;
+}

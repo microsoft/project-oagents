@@ -4,15 +4,16 @@ namespace SupportCenter.SignalRHub;
 
 public class SignalRService(IHubContext<SupportCenterHub> hubContext) : ISignalRService
 {
-    public async Task SendMessageToSpecificClient(string userId, string message, AgentTypes agentType)
+    public async Task SendMessageToSpecificClient(string id, string userId, string message, AgentType agentType)
     {
-        var connectionId = SignalRConnectionsDB.ConnectionIdByUser[userId];
-        var frontEndMessage = new FrontEndMessage()
+        var connectionId = SignalRConnectionsDB.ConnectionIdByUser[userId].ConnectionId ?? throw new Exception("Cannot find connection Id");
+        var chatMessage = new ChatMessage()
         {
+            Id = id,
             UserId = userId,
-            Message = message,
-            Agent = agentType.ToString()
+            Text = message,
+            Sender = agentType.ToString()
         };
-        await hubContext.Clients.Client(connectionId).SendAsync("ReceiveMessage", frontEndMessage);
+        await hubContext.Clients.Client(connectionId).SendAsync("ReceiveMessage", chatMessage);
     }
 }

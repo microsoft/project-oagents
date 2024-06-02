@@ -6,7 +6,7 @@ using SupportCenter.Options;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace SupportCenter.Agents
+namespace SupportCenter.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -20,7 +20,8 @@ namespace SupportCenter.Agents
         }
 
         // POST api/<Post>/5
-        [HttpPost("{userId}")]public async Task<string> Post(string userId, [FromBody] string userMessage)
+        [HttpPost("{userId}")]
+        public async Task<string> Post(string userId, [FromBody] string userMessage)
         {
             var streamProvider = _client.GetStreamProvider("StreamProvider");
             var streamId = StreamId.Create(Consts.OrleansNamespace, userId);

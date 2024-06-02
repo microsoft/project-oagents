@@ -499,3 +499,4 @@ temp
 .mono/**
 **/values.xml
 /samples/support-center/src/backend/appsettings.Development.json
+/samples/support-center/src/frontend/package-lock.json

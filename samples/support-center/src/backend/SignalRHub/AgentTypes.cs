@@ -1,11 +1,12 @@
 namespace SupportCenter.SignalRHub;
 
-public enum AgentTypes
+public enum AgentType
 {
     Chat,
     Dispatcher,
     QnA,
     CustomerInfo,
     Discount,
-    Invoice
+    Invoice,
+    Unknown
 }

@@ -5,6 +5,7 @@ using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 using SupportCenter.Attributes;
 using SupportCenter.Events;
+using SupportCenter.Extensions;
 using SupportCenter.Options;
 using System.Reflection;
 
@@ -34,30 +35,55 @@ public class Dispatcher : AiAgent<DispatcherState>
     {
         _logger.LogInformation("[{Dispatcher}] Event {EventType}. Data: {EventData}", nameof(Dispatcher), item.Type, item.Data);
 
-        var userId = item.Data["userId"];
-        var userMessage = item.Data["userMessage"];
+        string? messageId = item.Data.GetValueOrDefault<string>("id");
+        string? userId = item.Data.GetValueOrDefault<string>("userId");
+        string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
+        string? intent;
 
         switch (item.Type)
         {
+            case nameof(EventType.UserConnected):
+                // The user reconnected, let's send the last message if we have one.
+                string? lastMessage = _state.State.History.LastOrDefault()?.Message;
+                if (lastMessage == null)
+                {
+                    _logger.LogInformation("[{Dispatcher}] Event {EventType}. Data: {EventData}. Last message is missing.", nameof(Dispatcher), item.Type, item.Data);
+                    return;
+                }
+                if (userId == null)
+                {
+                    _logger.LogError("[{Dispatcher}] Event {EventType}. Data: {EventData}. User ID is missing.", nameof(Dispatcher), item.Type, item.Data);
+                    return;
+                }
+                intent = await ExtractIntentAsync(lastMessage);
+                await SendDispatcherEvent(messageId, userId, intent, lastMessage);
+                break;
             case nameof(EventType.UserChatInput):
-                var input = AppendChatHistory(userMessage);
-                var context = new KernelArguments { ["input"] = input };
-                context.Add("choices", GetAndSerializeChoices());
-                string intent = await CallFunction(DispatcherPrompts.GetIntent, context);
 
-                await SendDispatcherEvent(userId, intent, userMessage);
+                intent = await ExtractIntentAsync(userMessage);
+                await SendDispatcherEvent(messageId, userId, intent, userMessage);
                 break;
             case nameof(EventType.QnARetrieved):
             case nameof(EventType.DiscountRetrieved):
             case nameof(EventType.InvoiceRetrieved):
             case nameof(EventType.CustomerInfoRetrieved):
-                //Send response with SignalR
-                userMessage = item.Data["answer"];
+                var answer = item.Data.GetValueOrDefault<string>("answer");
                 _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(EventType.QnARetrieved)}. Answer: {item.Data["answer"]}");
+                AddToHistory(answer, ChatUserType.Agent);
                 break;
             default:
                 break;
         }
+    }
+
+
+    private async Task<string> ExtractIntentAsync(string message)
+    {
+        var input = AppendChatHistory(message);
+
+        var context = new KernelArguments { ["input"] = input };
+        context.Add("choices", GetAndSerializeChoices());
+        return await CallFunction(DispatcherPrompts.GetIntent, context);
     }
 
     private string GetAndSerializeChoices()
@@ -69,7 +95,7 @@ public class Dispatcher : AiAgent<DispatcherState>
         return string.Join("\n", choices.Select(c => $"- {c.Name}: {c.Description}")); ;
     }
 
-    private async Task SendDispatcherEvent(string userId, string intent, string userMessage)
+    private async Task SendDispatcherEvent(string id, string userId, string intent, string userMessage)
     {
         var type = this.GetType()
             .GetCustomAttributes<DispatcherChoice>()
@@ -79,10 +105,11 @@ public class Dispatcher : AiAgent<DispatcherState>
         {
             Type = type,
             Data = new Dictionary<string, string>
-                {
-                    { nameof(userId), userId },
-                    { nameof(userMessage), userMessage },
-                }
+            {
+                { nameof(id), id },
+                { nameof(userId), userId },
+                { nameof(userMessage), userMessage },
+            }
         });
     }
 }

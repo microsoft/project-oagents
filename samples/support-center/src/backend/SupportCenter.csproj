@@ -48,7 +48,6 @@
 
   <ItemGroup>
     <Folder Include="Plugins\DiscountPlugin\" />
-    <Folder Include="Controllers\" />
   </ItemGroup>
 
 </Project>
