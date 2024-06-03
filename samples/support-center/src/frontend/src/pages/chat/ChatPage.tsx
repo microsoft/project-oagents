@@ -75,17 +75,29 @@ export function ChatPage() {
     // Register the ReceiveMessage event
     connection.on("ReceiveMessage", (message: Message) => {
       console.log("Received message:", message);
-      setContext((c) => ({
-        ...c,
-        isLoading: false,
-        conversation: {
-          ...c.conversation,
-          messages: [
-            ...c.conversation.messages,
-            { ...message, sender: SenderType.Agent },
-          ],
-        },
-      }));
+      if (
+        message.sender === SenderType.Notification
+      ) {
+        const progressMessage = message.text;
+        setContext((c) => ({
+          ...c,
+          isTakingTooLong: true,
+          waitingMessage: progressMessage,
+        }));
+      } else {
+        setContext((c) => ({
+          ...c,
+          isLoading: false,
+          isTakingTooLong: false,
+          conversation: {
+            ...c.conversation,
+            messages: [
+              ...c.conversation.messages,
+              { ...message, sender: SenderType.Agent },
+            ],
+          },
+        }));
+      }
     });
 
     setContext((c) => ({
@@ -121,9 +133,9 @@ export function ChatPage() {
 
         streamingConnection?.send("ProcessMessage", userMessage);
 
-        const waitTime = 7000;
+        const waitTime = 20000;
         const waitingMessages =
-          "Please wait... | Please wait while the agents are working for you... | Looking for a solution...";
+          "Please wait while the agents are working for you... | Please wait while the agents are looking for a solution...";
 
         setTimeout(() => {
           const messages = waitingMessages.split("|");

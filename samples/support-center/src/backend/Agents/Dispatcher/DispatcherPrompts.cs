@@ -16,14 +16,15 @@ public class DispatcherPrompts
 
         Here are few examples:
         - User Input: Can you help me in updating my address?
-        - Intent: CustomerInfo
+        - Customer Info
 
         - User Input: Could you check whether my invoice has been correctly payed?
-        - Intent: Invoice
+        - Invoice
 
         Here is the user input:
         User Input: {{$input}}
-        Intent: 
+        
+        Return the intent as a string.
         """;
 }
 

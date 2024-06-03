@@ -8,5 +8,6 @@ public enum AgentType
     CustomerInfo,
     Discount,
     Invoice,
+    Notification,
     Unknown
 }

@@ -62,7 +62,6 @@ public class SupportCenterHub : Hub<ISupportCenterHub>
 
         var data = new Dictionary<string, string>
         {
-            { "id", chatMessage.Id },
             { "userId", chatMessage.UserId },
             { "userMessage", chatMessage.Text},
         };

@@ -12,7 +12,6 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
     protected IPersistentState<AgentState<T>> _state;
     protected Kernel _kernel;
     private readonly ISemanticTextMemory _memory;
-    
 
     public AiAgent([PersistentState("state", "messages")] IPersistentState<AgentState<T>> state, ISemanticTextMemory memory, Kernel kernel) 
     {
@@ -45,7 +44,7 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
 
     public virtual async Task<string> CallFunction(string template, KernelArguments arguments, OpenAIPromptExecutionSettings? settings = null)
     {
-        var propmptSettings = settings ?? new OpenAIPromptExecutionSettings { MaxTokens = 18000, Temperature = 0.8, TopP = 1 };
+        var propmptSettings = settings ?? new OpenAIPromptExecutionSettings { MaxTokens = 4096, Temperature = 0.8, TopP = 1 };
         var function = _kernel.CreateFunctionFromPrompt(template, propmptSettings);
         var result = (await _kernel.InvokeAsync(function, arguments)).ToString();
         AddToHistory(result, ChatUserType.Agent);
@@ -70,5 +69,22 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
         }
         arguments[index] = instruction.Replace($"!{index}!", $"{kbStringBuilder}");
         return arguments;
+    }
+
+    public virtual async Task SendEvent(string type, params (string? name, string? value)[] @params)
+    {
+        var data = new Dictionary<string, string>();
+        foreach (var (name, value) in @params)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(name, nameof(name));
+            ArgumentException.ThrowIfNullOrEmpty(value, nameof(value));
+            data.Add(name, value);
+        }
+        
+        await PublishEvent(Namespace, this.GetPrimaryKeyString(), new Event
+        {
+            Type = type,
+            Data = data
+        });
     }
 }

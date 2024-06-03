@@ -43,7 +43,6 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
 
     public async override Task HandleEvent(Event item)
     {
-        string? messageId = item.Data.GetValueOrDefault<string>("id");
         string? userId = item.Data.GetValueOrDefault<string>("userId");
         string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
 
@@ -56,33 +55,30 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 {
                     return;
                 }
-                //await SendDispatcherEvent(userId, lastMessage, item.Data["userId"]);
                 break;
             case nameof(EventType.CustomerInfoRequested):
+                await SendEvent(nameof(EventType.AgentNotification),
+                    (nameof(userId), userId),
+                    ("message", $"The agent '{this.GetType().Name}' is working on this task..."));
+
+                // Get the customer info via the planner.
                 var prompt = CustomerInfoPrompts.GetCustomerInfo
                     .Replace("{{$userId}}", userId)
                     .Replace("{{$userMessage}}", userMessage);
 #pragma warning disable SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
                 var planner = new FunctionCallingStepwisePlanner();
                 var result = await planner.ExecuteAsync(_kernel, prompt);
-                await SendCustomerInfoEvent(messageId, userId, result.FinalAnswer);
+
+                await SendEvent(nameof(EventType.AgentNotification),
+                    (nameof(userId), userId),
+                    ("message", $"The agent '{this.GetType().Name}' completed the task."));
+                await SendEvent(nameof(EventType.CustomerInfoRetrieved),
+                    (nameof(userId), userId),
+                    ("message", result.FinalAnswer));
 #pragma warning restore SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
                 break;
             default:
                 break;
         }
-    }
-
-    private async Task SendCustomerInfoEvent(string id, string userId, string answer)
-    {
-        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
-        {
-            Type = nameof(EventType.CustomerInfoRetrieved),
-            Data = new Dictionary<string, string> {
-                { nameof(id), id },
-                { nameof(userId), userId },
-                { nameof(answer), answer}
-            }
-        });
     }
 }

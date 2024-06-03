@@ -13,5 +13,6 @@ export interface Message {
 
 export enum SenderType {
   User = 'User',
-  Agent = 'Agent'
+  Agent = 'Agent',
+  Notification = 'Notification'
 }

@@ -35,7 +35,6 @@ public class Dispatcher : AiAgent<DispatcherState>
     {
         _logger.LogInformation("[{Dispatcher}] Event {EventType}. Data: {EventData}", nameof(Dispatcher), item.Type, item.Data);
 
-        string? messageId = item.Data.GetValueOrDefault<string>("id");
         string? userId = item.Data.GetValueOrDefault<string>("userId");
         string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
         string? intent;
@@ -56,20 +55,27 @@ public class Dispatcher : AiAgent<DispatcherState>
                     return;
                 }
                 intent = await ExtractIntentAsync(lastMessage);
-                await SendDispatcherEvent(messageId, userId, intent, lastMessage);
+                await SendDispatcherEvent(userId, intent, lastMessage);
                 break;
-            case nameof(EventType.UserChatInput):
 
+            case nameof(EventType.UserChatInput):
+                await SendEvent(nameof(EventType.AgentNotification),
+                    (nameof(userId), userId),
+                    ("message", $"The agent '{this.GetType().Name}' is extracting the user intent..."));
                 intent = await ExtractIntentAsync(userMessage);
-                await SendDispatcherEvent(messageId, userId, intent, userMessage);
+                await SendEvent(nameof(EventType.AgentNotification),
+                    (nameof(userId), userId),
+                    ("message", $"Calling the '{intent}' agent..."));
+                await SendDispatcherEvent(userId, intent, userMessage);
                 break;
+
             case nameof(EventType.QnARetrieved):
             case nameof(EventType.DiscountRetrieved):
             case nameof(EventType.InvoiceRetrieved):
             case nameof(EventType.CustomerInfoRetrieved):
-                var answer = item.Data.GetValueOrDefault<string>("answer");
-                _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(EventType.QnARetrieved)}. Answer: {item.Data["answer"]}");
-                AddToHistory(answer, ChatUserType.Agent);
+                var message = item.Data.GetValueOrDefault<string>("message");
+                _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(EventType.QnARetrieved)}. Answer: {item.Data["message"]}");
+                AddToHistory(message, ChatUserType.Agent);
                 break;
             default:
                 break;
@@ -95,21 +101,15 @@ public class Dispatcher : AiAgent<DispatcherState>
         return string.Join("\n", choices.Select(c => $"- {c.Name}: {c.Description}")); ;
     }
 
-    private async Task SendDispatcherEvent(string id, string userId, string intent, string userMessage)
+    private async Task SendDispatcherEvent(string userId, string intent, string userMessage)
     {
         var type = this.GetType()
             .GetCustomAttributes<DispatcherChoice>()
             .FirstOrDefault(attr => attr.Name == intent)?.DispatchToEvent.ToString() ?? EventType.Unknown.ToString();
 
-        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
-        {
-            Type = type,
-            Data = new Dictionary<string, string>
-            {
-                { nameof(id), id },
-                { nameof(userId), userId },
-                { nameof(userMessage), userMessage },
-            }
-        });
+        await SendEvent(type,
+            (nameof(userId), userId),
+            (nameof(userMessage), userMessage)
+        );
     }
 }

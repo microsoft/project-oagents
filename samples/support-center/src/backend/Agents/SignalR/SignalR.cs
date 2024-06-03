@@ -23,9 +23,8 @@ public class SignalR : Agent
 
     public async override Task HandleEvent(Event item)
     {
-        string? messageId = item.Data.GetValueOrDefault<string>("id");
         string? userId = item.Data.GetValueOrDefault<string>("userId");
-        string? answer = item.Data.GetValueOrDefault<string>("answer");
+        string? message = item.Data.GetValueOrDefault<string>("message");
 
         var type = AgentType.Unknown;
 
@@ -43,11 +42,14 @@ public class SignalR : Agent
             case nameof(EventType.DiscountRetrieved):
                 type = AgentType.Discount;
                 break;
+            case nameof(EventType.AgentNotification):
+                type = AgentType.Notification;
+                break;
             default:
                 break;
         }
 
-        if (type != AgentType.Unknown && userId != null && answer != null)
-            await _signalRClient.SendMessageToSpecificClient(messageId, userId, answer, type);
+        if (type != AgentType.Unknown && userId != null && message != null)
+            await _signalRClient.SendMessageToSpecificClient(id: Guid.NewGuid().ToString(), userId, message, type);
     }
 }
