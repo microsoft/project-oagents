@@ -45,11 +45,20 @@ public class SignalR : Agent
             case nameof(EventType.AgentNotification):
                 type = AgentType.Notification;
                 break;
-            default:
+            case nameof(EventType.Unknown):
+                type = AgentType.Unknown;
                 break;
+            default:
+                return;
         }
 
-        if (type != AgentType.Unknown && userId != null && message != null)
+        if (type == AgentType.Unknown)
+        {
+            _logger.LogWarning($"[{nameof(SignalR)}] Event {item.Type} is not supported.");
+            message = "Sorry, I don't know how to handle this request. Try to rephrase it.";
+        }
+
+        if (userId != null && message != null)
             await _signalRClient.SendMessageToSpecificClient(id: Guid.NewGuid().ToString(), userId, message, type);
     }
 }

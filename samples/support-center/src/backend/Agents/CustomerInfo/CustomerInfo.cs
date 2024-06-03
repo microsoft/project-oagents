@@ -4,6 +4,8 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Planning;
+using Microsoft.SemanticKernel.Planning.Handlebars;
+using Octokit;
 using Orleans.Runtime;
 using SupportCenter.Data.CosmosDb;
 using SupportCenter.Events;
@@ -61,17 +63,25 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                     (nameof(userId), userId),
                     ("message", $"The agent '{this.GetType().Name}' is working on this task..."));
 
-                // Get the customer info via the planner.
+                // Get the customer info via the planners.
                 var prompt = CustomerInfoPrompts.GetCustomerInfo
                     .Replace("{{$userId}}", userId)
                     .Replace("{{$userMessage}}", userMessage);
 #pragma warning disable SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                var planner = new FunctionCallingStepwisePlanner();
-                var result = await planner.ExecuteAsync(_kernel, prompt);
-
+                // HandlebarsPlanner
+                //var planner = new HandlebarsPlanner();
+                //var plan = await planner.CreatePlanAsync(_kernel, prompt);
+                // var planResult = await plan.InvokeAsync(_kernel);
                 await SendEvent(nameof(EventType.AgentNotification),
                     (nameof(userId), userId),
-                    ("message", $"The agent '{this.GetType().Name}' completed the task."));
+                    ("message", $"The agent '{this.GetType().Name}' created a plan..."));
+
+                // FunctionCallingStepwisePlanner
+                var planner = new FunctionCallingStepwisePlanner();
+                var result = await planner.ExecuteAsync(_kernel, prompt);
+                await SendEvent(nameof(EventType.AgentNotification),
+                    (nameof(userId), userId),
+                    ("message", $"The agent '{this.GetType().Name}' executed the plan and completed the task."));
                 await SendEvent(nameof(EventType.CustomerInfoRetrieved),
                     (nameof(userId), userId),
                     ("message", result.FinalAnswer));
