@@ -27,6 +27,7 @@ on:
       - 'main'
     paths:
       - samples/marketing/*
+      - .github/workflows/marketing-builddeploy.yaml
   
 permissions:
   id-token: write
