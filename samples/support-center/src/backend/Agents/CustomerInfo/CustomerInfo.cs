@@ -67,6 +67,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                     .Replace("{{$userId}}", userId)
                     .Replace("{{$userMessage}}", userMessage)
                     .Replace("{{$history}}", AppendChatHistory(userMessage));
+
 #pragma warning disable SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
                 // HandlebarsPlanner
                 // var planner = new HandlebarsPlanner();
@@ -79,12 +80,14 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 // FunctionCallingStepwisePlanner
                 var planner = new FunctionCallingStepwisePlanner();
                 var result = await planner.ExecuteAsync(_kernel, prompt);
+
                 await SendEvent(nameof(EventType.AgentNotification),
                     (nameof(userId), userId),
                     ("message", $"The agent '{this.GetType().Name}' executed the plan and completed the task."));
                 await SendEvent(nameof(EventType.CustomerInfoRetrieved),
                     (nameof(userId), userId),
                     ("message", result.FinalAnswer));
+                
                 AddToHistory(result.FinalAnswer, ChatUserType.Agent);
 #pragma warning restore SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
                 break;

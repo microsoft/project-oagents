@@ -82,7 +82,6 @@ public class Dispatcher : AiAgent<DispatcherState>
         }
     }
 
-
     private async Task<string> ExtractIntentAsync(string message)
     {
         var input = AppendChatHistory(message);
