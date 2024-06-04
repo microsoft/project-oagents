@@ -5,7 +5,6 @@ using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Planning;
 using Microsoft.SemanticKernel.Planning.Handlebars;
-using Octokit;
 using Orleans.Runtime;
 using SupportCenter.Data.CosmosDb;
 using SupportCenter.Events;
@@ -66,11 +65,12 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 // Get the customer info via the planners.
                 var prompt = CustomerInfoPrompts.GetCustomerInfo
                     .Replace("{{$userId}}", userId)
-                    .Replace("{{$userMessage}}", userMessage);
+                    .Replace("{{$userMessage}}", userMessage)
+                    .Replace("{{$history}}", AppendChatHistory(userMessage));
 #pragma warning disable SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
                 // HandlebarsPlanner
-                //var planner = new HandlebarsPlanner();
-                //var plan = await planner.CreatePlanAsync(_kernel, prompt);
+                // var planner = new HandlebarsPlanner();
+                // var plan = await planner.CreatePlanAsync(_kernel, prompt);
                 // var planResult = await plan.InvokeAsync(_kernel);
                 await SendEvent(nameof(EventType.AgentNotification),
                     (nameof(userId), userId),
@@ -85,6 +85,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 await SendEvent(nameof(EventType.CustomerInfoRetrieved),
                     (nameof(userId), userId),
                     ("message", result.FinalAnswer));
+                AddToHistory(result.FinalAnswer, ChatUserType.Agent);
 #pragma warning restore SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
                 break;
             default:
