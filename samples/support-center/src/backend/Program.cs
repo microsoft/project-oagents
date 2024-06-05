@@ -6,6 +6,7 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Connectors.Qdrant;
 using Microsoft.SemanticKernel.Memory;
+using Microsoft.SemanticKernel.Connectors.AzureAISearch;
 using Orleans.Serialization;
 using SupportCenter.Core;
 using SupportCenter.Extensions;
@@ -16,6 +17,7 @@ using System.Text.Json;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient(CreateKernel);
 builder.Services.AddTransient(CreateMemory);
+builder.Services.AddTransient(CreateAISearchMemory);
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddApplicationInsightsTelemetry();
@@ -96,6 +98,27 @@ static ISemanticTextMemory CreateMemory(IServiceProvider provider)
                  .WithQdrantMemoryStore(qdrantConfig.Endpoint, qdrantConfig.VectorSize)
                  .WithAzureOpenAITextEmbeddingGeneration(openAiConfig.EmbeddingsDeploymentOrModelId, openAiConfig.EmbeddingsEndpoint, openAiConfig.EmbeddingsApiKey)
                  .Build();
+}
+
+static ISemanticTextMemory CreateAISearchMemory(IServiceProvider provider)
+{
+    AISearchOptions aiSearchConfig = provider.GetService<IOptions<AISearchOptions>>()?.Value ?? new AISearchOptions();
+
+    aiSearchConfig.ValidateRequiredProperties();
+
+    var loggerFactory = LoggerFactory.Create(builder =>
+    {
+        builder
+            .SetMinimumLevel(LogLevel.Debug)
+            .AddConsole()
+            .AddDebug();
+    });
+
+    var memoryBuilder = new MemoryBuilder();
+    return memoryBuilder.WithLoggerFactory(loggerFactory)
+                    .WithMemoryStore(new AzureAISearchMemoryStore(aiSearchConfig.SearchEndpoint, aiSearchConfig.SearchKey))
+                    .WithAzureOpenAITextEmbeddingGeneration(aiSearchConfig.SearchEmbeddingDeploymentOrModelId, aiSearchConfig.SearchEmbeddingEndpoint, aiSearchConfig.SearchEmbeddingApiKey)
+                    .Build();
 }
 
 static Kernel CreateKernel(IServiceProvider provider)

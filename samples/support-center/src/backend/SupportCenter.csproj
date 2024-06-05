@@ -22,7 +22,7 @@
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.10.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.Qdrant" Version="1.10.0-alpha" />
     <PackageReference Include="Microsoft.SemanticKernel.Plugins.Memory" Version="1.10.0-alpha" />
-
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureAISearch" Version="1.13.0-alpha" />
     <PackageReference Include="Microsoft.Orleans.Server" Version="8.1.0" />
     <PackageReference Include="Microsoft.Orleans.Sdk" Version="8.1.0" />
     <PackageReference Include="Microsoft.Orleans.Runtime" Version="8.1.0" />

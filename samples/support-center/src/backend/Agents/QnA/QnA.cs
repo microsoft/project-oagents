@@ -56,7 +56,7 @@ public class QnA : AiAgent<QnAState>
         }
     }
 
-    private async Task SendAnswerEvent(string id, string userId, string answer)
+    private async Task SendAnswerEvent(string id, string userId, string message)
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
@@ -64,7 +64,7 @@ public class QnA : AiAgent<QnAState>
             Data = new Dictionary<string, string> {
                 { nameof(id), id },
                 { nameof(userId), userId },
-                { nameof(answer), answer }
+                { nameof(message), message }
             }
         });
     }
