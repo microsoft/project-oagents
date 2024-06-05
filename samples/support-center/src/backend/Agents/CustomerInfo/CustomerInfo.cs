@@ -50,6 +50,8 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
         string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
         string id = $"{userId}/{conversationId}";
 
+        _logger.LogInformation("[{CustomerInfo}] Event {EventType}. Data: {EventData}", nameof(CustomerInfo), item.Type, item.Data);
+
         switch (item.Type)
         {
             case nameof(EventType.UserConnected):
@@ -59,6 +61,10 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 {
                     return;
                 }
+                break;
+            case nameof(EventType.UserNewConversation):
+                // The user started a new conversation.
+                ClearHistory();
                 break;
             case nameof(EventType.CustomerInfoRequested):
                 await SendEvent(id, nameof(EventType.AgentNotification),

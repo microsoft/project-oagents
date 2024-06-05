@@ -25,4 +25,20 @@ public class Connection(string connectionId, string conversationId)
 {
     public string? Id { get; set; } = connectionId;
     public string? ConversationId { get; set; } = conversationId;
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null || GetType() != obj.GetType())
+        {
+            return false;
+        }
+        var other = (Connection)obj;
+        return Id == other.Id && ConversationId == other.ConversationId;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, ConversationId);
+    }
+
 }

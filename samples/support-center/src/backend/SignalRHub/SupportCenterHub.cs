@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Orleans.Runtime;
 using SupportCenter.Options;
 using SupportCenter.Events;
+using Orleans;
 
 public class SupportCenterHub : Hub<ISupportCenterHub>
 {
@@ -38,6 +39,28 @@ public class SupportCenterHub : Hub<ISupportCenterHub>
         {
             Type = nameof(EventType.UserConnected),
             Data = data
+        });
+    }
+
+    public async Task RestartConversation(string userId, string conversationId, IClusterClient clusterClient)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(userId, nameof(userId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(conversationId, nameof(conversationId));
+
+        string? oldConversationId = SignalRConnectionsDB.GetConversationId(userId);
+
+        SignalRConnectionsDB.ConnectionByUser.AddOrUpdate(
+            userId,
+            key => new Connection(Context.ConnectionId, conversationId),
+            (key, oldValue) => new Connection(oldValue.Id, conversationId));
+
+        var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
+        var streamId = StreamId.Create(Consts.OrleansNamespace, $"{userId}/{oldConversationId}");
+        var stream = streamProvider.GetStream<Event>(streamId);
+        await stream.OnNextAsync(new Event
+        {
+            Type = nameof(EventType.UserNewConversation),
+            Data = new Dictionary<string, string> { { "userId", userId }, { "userMessage", "Conversation restarted." } }
         });
     }
 

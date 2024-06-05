@@ -60,7 +60,10 @@ public class Dispatcher : AiAgent<DispatcherState>
                 intent = await ExtractIntentAsync(lastMessage);
                 await SendDispatcherEvent(id, userId, intent, lastMessage);
                 break;
-
+            case nameof(EventType.UserNewConversation):
+                // The user started a new conversation.
+                ClearHistory();
+                break;
             case nameof(EventType.UserChatInput):
                 await SendEvent(id, nameof(EventType.AgentNotification),
                     (nameof(userId), userId),

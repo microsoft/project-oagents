@@ -4,6 +4,7 @@ public enum EventType
 {
     UserChatInput,
     UserConnected,
+    UserNewConversation,
     AgentNotification,
     Unknown,
     // Domain specific events
