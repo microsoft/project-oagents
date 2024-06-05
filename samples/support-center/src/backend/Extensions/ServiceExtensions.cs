@@ -32,6 +32,15 @@ namespace SupportCenter.Extensions
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
+            services.AddOptions<AISearchOptions>()
+                .Configure<IConfiguration>((settings, configuration) =>
+                {
+                    configuration.GetSection(nameof(AISearchOptions)).Bind(settings);
+                })
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+
             return services;
         }
 
