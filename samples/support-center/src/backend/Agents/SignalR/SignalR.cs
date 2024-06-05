@@ -59,6 +59,6 @@ public class SignalR : Agent
         }
 
         if (userId != null && message != null)
-            await _signalRClient.SendMessageToSpecificClient(id: Guid.NewGuid().ToString(), userId, message, type);
+            await _signalRClient.SendMessageToClient(messageId: Guid.NewGuid().ToString(), userId, message, type);
     }
 }

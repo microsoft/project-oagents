@@ -113,6 +113,7 @@ export function ChatPage() {
       const sendMessage = async () => {
         const userMessage: Message = {
           id: uuid().toString(),
+          conversationId: context.conversation.id,
           userId: context.conversation.metadata.userId,
           sender: SenderType.User,
           text: messageText,

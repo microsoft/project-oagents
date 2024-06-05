@@ -7,6 +7,7 @@ using SupportCenter.Attributes;
 using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
+using SupportCenter.SignalRHub;
 using System.Reflection;
 
 namespace SupportCenter.Agents;
@@ -37,6 +38,8 @@ public class Dispatcher : AiAgent<DispatcherState>
 
         string? userId = item.Data.GetValueOrDefault<string>("userId");
         string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
+        string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
+        string id = $"{userId}/{conversationId}";
         string? intent;
 
         switch (item.Type)
@@ -55,18 +58,18 @@ public class Dispatcher : AiAgent<DispatcherState>
                     return;
                 }
                 intent = await ExtractIntentAsync(lastMessage);
-                await SendDispatcherEvent(userId, intent, lastMessage);
+                await SendDispatcherEvent(id, userId, intent, lastMessage);
                 break;
 
             case nameof(EventType.UserChatInput):
-                await SendEvent(nameof(EventType.AgentNotification),
+                await SendEvent(id, nameof(EventType.AgentNotification),
                     (nameof(userId), userId),
                     ("message", $"The agent '{this.GetType().Name}' is extracting the user intent..."));
                 intent = await ExtractIntentAsync(userMessage);
-                await SendEvent(nameof(EventType.AgentNotification),
+                await SendEvent(id, nameof(EventType.AgentNotification),
                     (nameof(userId), userId),
                     ("message", $"Calling the '{intent}' agent..."));
-                await SendDispatcherEvent(userId, intent, userMessage);
+                await SendDispatcherEvent(id, userId, intent, userMessage);
                 break;
 
             case nameof(EventType.QnARetrieved):
@@ -100,7 +103,7 @@ public class Dispatcher : AiAgent<DispatcherState>
         return string.Join("\n", choices.Select(c => $"- {c.Name}: {c.Description}")); ;
     }
 
-    private async Task SendDispatcherEvent(string userId, string intent, string userMessage)
+    private async Task SendDispatcherEvent(string id, string userId, string intent, string userMessage)
     {
         var action = intent.Trim(' ', '\"', '.');
         var type = this.GetType()
@@ -108,7 +111,7 @@ public class Dispatcher : AiAgent<DispatcherState>
             .FirstOrDefault(attr => attr.Name == action)?
             .DispatchToEvent.ToString() ?? EventType.Unknown.ToString();
 
-        await SendEvent(type,
+        await SendEvent(id, type,
             (nameof(userId), userId),
             (nameof(userMessage), userMessage)
         );

@@ -71,7 +71,7 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
         return arguments;
     }
 
-    public virtual async Task SendEvent(string type, params (string? name, string? value)[] @params)
+    public virtual async Task SendEvent(string id, string type, params (string? name, string? value)[] @params)
     {
         var data = new Dictionary<string, string>();
         foreach (var (name, value) in @params)
@@ -81,7 +81,7 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
             data.Add(name, value);
         }
         
-        await PublishEvent(Namespace, this.GetPrimaryKeyString(), new Event
+        await PublishEvent(Namespace, id, new Event
         {
             Type = type,
             Data = data

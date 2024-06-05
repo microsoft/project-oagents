@@ -11,6 +11,7 @@ using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
 using SupportCenter.Plugins.CustomerPlugin;
+using SupportCenter.SignalRHub;
 
 namespace SupportCenter.Agents;
 
@@ -46,6 +47,8 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
     {
         string? userId = item.Data.GetValueOrDefault<string>("userId");
         string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
+        string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
+        string id = $"{userId}/{conversationId}";
 
         switch (item.Type)
         {
@@ -58,7 +61,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 }
                 break;
             case nameof(EventType.CustomerInfoRequested):
-                await SendEvent(nameof(EventType.AgentNotification),
+                await SendEvent(id, nameof(EventType.AgentNotification),
                     (nameof(userId), userId),
                     ("message", $"The agent '{this.GetType().Name}' is working on this task..."));
 
@@ -73,18 +76,21 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 // var planner = new HandlebarsPlanner();
                 // var plan = await planner.CreatePlanAsync(_kernel, prompt);
                 // var planResult = await plan.InvokeAsync(_kernel);
-                await SendEvent(nameof(EventType.AgentNotification),
+                await SendEvent(id, nameof(EventType.AgentNotification),
                     (nameof(userId), userId),
                     ("message", $"The agent '{this.GetType().Name}' created a plan..."));
 
                 // FunctionCallingStepwisePlanner
-                var planner = new FunctionCallingStepwisePlanner();
+                var planner = new FunctionCallingStepwisePlanner(new FunctionCallingStepwisePlannerOptions()
+                {
+                    MaxIterations = 10,
+                });
                 var result = await planner.ExecuteAsync(_kernel, prompt);
 
-                await SendEvent(nameof(EventType.AgentNotification),
+                await SendEvent(id, nameof(EventType.AgentNotification),
                     (nameof(userId), userId),
                     ("message", $"The agent '{this.GetType().Name}' executed the plan and completed the task."));
-                await SendEvent(nameof(EventType.CustomerInfoRetrieved),
+                await SendEvent(id, nameof(EventType.CustomerInfoRetrieved),
                     (nameof(userId), userId),
                     ("message", result.FinalAnswer));
                 

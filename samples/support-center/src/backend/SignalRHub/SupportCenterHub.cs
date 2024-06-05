@@ -10,36 +10,29 @@ public class SupportCenterHub : Hub<ISupportCenterHub>
 {
     public override async Task OnConnectedAsync()
     {
-        await base.OnConnectedAsync();        
+        await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        SignalRConnectionsDB.ConnectionIdByUser.TryRemove(Context.ConnectionId, out _);
+        SignalRConnectionsDB.ConnectionByUser.TryRemove(Context.ConnectionId, out _);
         await base.OnDisconnectedAsync(exception);
     }
 
     public async Task ConnectToAgent(string userId, string conversationId, IClusterClient clusterClient)
     {
-        var chatMessage = new ChatMessage()
-        {
-            UserId = userId,
-            Text = "Connected to Agents",
-            Sender = AgentType.Chat.ToString()
-        };
-
-        SignalRConnectionsDB.ConnectionIdByUser.AddOrUpdate(
-            userId, new Connection(Context.ConnectionId, conversationId), 
+        SignalRConnectionsDB.ConnectionByUser.AddOrUpdate(
+            userId, new Connection(Context.ConnectionId, conversationId),
             (key, oldValue) => new Connection(Context.ConnectionId, conversationId));
 
         // Notify the agents that a new user got connected.
         var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
-        var streamId = StreamId.Create(Consts.OrleansNamespace, chatMessage.UserId);
+        var streamId = StreamId.Create(Consts.OrleansNamespace, $"{userId}/{conversationId}");
         var stream = streamProvider.GetStream<Event>(streamId);
         var data = new Dictionary<string, string>
         {
-            { "userId", chatMessage.UserId },
-            { "userMessage", chatMessage.Text},
+            { nameof(userId), userId },
+            { "userMessage", "Connected to Agents"},
         };
         await stream.OnNextAsync(new Event
         {
@@ -56,14 +49,21 @@ public class SupportCenterHub : Hub<ISupportCenterHub>
     /// <returns></returns>
     public async Task ProcessMessage(ChatMessage chatMessage, IClusterClient clusterClient)
     {
+        ArgumentNullException.ThrowIfNull(chatMessage, nameof(chatMessage));
+        ArgumentException.ThrowIfNullOrWhiteSpace(chatMessage.UserId, nameof(chatMessage.UserId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(chatMessage.ConversationId, nameof(chatMessage.ConversationId));
+
+        var userId = chatMessage.UserId;
+        var conversationId = chatMessage.ConversationId;
+
         var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
-        var streamId = StreamId.Create(Consts.OrleansNamespace, chatMessage.UserId);
+        var streamId = StreamId.Create(Consts.OrleansNamespace, $"{userId}/{conversationId}");
         var stream = streamProvider.GetStream<Event>(streamId);
 
         var data = new Dictionary<string, string>
         {
             { "userId", chatMessage.UserId },
-            { "userMessage", chatMessage.Text},
+            { "userMessage", chatMessage.Text ?? string.Empty },
         };
 
         await stream.OnNextAsync(new Event

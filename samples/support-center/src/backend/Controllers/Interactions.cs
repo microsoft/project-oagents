@@ -24,7 +24,7 @@ namespace SupportCenter.Controllers
         public async Task<string> Post(string userId, [FromBody] string userMessage)
         {
             var streamProvider = _client.GetStreamProvider("StreamProvider");
-            var streamId = StreamId.Create(Consts.OrleansNamespace, userId);
+            var streamId = StreamId.Create(Consts.OrleansNamespace, userId); // to change
             var stream = streamProvider.GetStream<Event>(streamId);
 
             var data = new Dictionary<string, string>

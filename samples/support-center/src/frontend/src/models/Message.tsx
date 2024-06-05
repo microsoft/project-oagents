@@ -2,6 +2,7 @@ import { Citation } from './Citation'
 
 export interface Message {
   id: string
+  conversationId: string
   userId: string
   sender: SenderType
   text: string
