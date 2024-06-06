@@ -75,27 +75,27 @@ export function ChatPage() {
     // Register the ReceiveMessage event
     connection.on("ReceiveMessage", (message: Message) => {
       console.log("Received message:", message);
-      if (message.sender === SenderType.Notification) {
-        const progressMessage = message.text;
-        setContext((c) => ({
-          ...c,
-          isTakingTooLong: true,
-          waitingMessage: progressMessage,
-        }));
-      } else {
-        setContext((c) => ({
-          ...c,
-          isLoading: false,
-          isTakingTooLong: false,
-          conversation: {
-            ...c.conversation,
-            messages: [
-              ...c.conversation.messages,
-              { ...message, sender: SenderType.Agent },
-            ],
-          },
-        }));
-      }
+      // if (message.sender === SenderType.Notification) {
+      //   const progressMessage = message.text;
+      //   setContext((c) => ({
+      //     ...c,
+      //     isTakingTooLong: true,
+      //     waitingMessage: progressMessage,
+      //   }));
+      // } else {
+      setContext((c) => ({
+        ...c,
+        isLoading: false,
+        isTakingTooLong: false,
+        conversation: {
+          ...c.conversation,
+          messages: [
+            ...c.conversation.messages,
+            { ...message, sender: message.sender},
+          ],
+        },
+      }));
+      // }
     });
 
     setContext((c) => ({

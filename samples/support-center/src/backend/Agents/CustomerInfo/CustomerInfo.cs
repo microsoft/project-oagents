@@ -54,22 +54,14 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
 
         switch (item.Type)
         {
-            case nameof(EventType.UserConnected):
-                // The user reconnected, let's send the last message if we have one
-                string? lastMessage = _state.State.History.LastOrDefault()?.Message;
-                if (lastMessage == null)
-                {
-                    return;
-                }
-                break;
             case nameof(EventType.UserNewConversation):
                 // The user started a new conversation.
                 ClearHistory();
                 break;
             case nameof(EventType.CustomerInfoRequested):
-                await SendEvent(id, nameof(EventType.AgentNotification),
+                await SendEvent(id, nameof(EventType.CustomerInfoNotification),
                     (nameof(userId), userId),
-                    ("message", $"The agent '{this.GetType().Name}' is working on this task..."));
+                    ("message", $"I'm working on the user's request..."));
 
                 // Get the customer info via the planners.
                 var prompt = CustomerInfoPrompts.GetCustomerInfo
@@ -82,24 +74,16 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 // var planner = new HandlebarsPlanner();
                 // var plan = await planner.CreatePlanAsync(_kernel, prompt);
                 // var planResult = await plan.InvokeAsync(_kernel);
-                await SendEvent(id, nameof(EventType.AgentNotification),
-                    (nameof(userId), userId),
-                    ("message", $"The agent '{this.GetType().Name}' created a plan..."));
-
                 // FunctionCallingStepwisePlanner
                 var planner = new FunctionCallingStepwisePlanner(new FunctionCallingStepwisePlannerOptions()
                 {
                     MaxIterations = 10,
                 });
                 var result = await planner.ExecuteAsync(_kernel, prompt);
-
-                await SendEvent(id, nameof(EventType.AgentNotification),
-                    (nameof(userId), userId),
-                    ("message", $"The agent '{this.GetType().Name}' executed the plan and completed the task."));
                 await SendEvent(id, nameof(EventType.CustomerInfoRetrieved),
                     (nameof(userId), userId),
                     ("message", result.FinalAnswer));
-                
+
                 AddToHistory(result.FinalAnswer, ChatUserType.Agent);
 #pragma warning restore SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
                 break;

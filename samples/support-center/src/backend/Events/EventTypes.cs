@@ -15,5 +15,11 @@ public enum EventType
     DiscountRequested,
     DiscountRetrieved,
     InvoiceRequested,
-    InvoiceRetrieved
+    InvoiceRetrieved,
+    // Notification events
+    DispatcherNotification,
+    CustomerInfoNotification,
+    QnANotification,
+    DiscountNotification,
+    InvoiceNotification
 }
