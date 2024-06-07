@@ -17,7 +17,7 @@ In the Support Center scenario, several types of agents can be identified based 
 
 ## Sub Agent
 
-#### User Authentication Agent
+#### User Authentication Agent - out of scope
 
 - **Role**: Handles customer authentication and authorization.
 - **Responsibilities**:
@@ -26,7 +26,7 @@ In the Support Center scenario, several types of agents can be identified based 
 
 #### QnA Agent
 
-- **Role**: Responds to generic customer queries using an LLM.
+- **Role**: Responds to generic customer queries using an LLM grounded with data.
 - **Responsibilities**:
   - Understand customer queries.
   - Provide accurate and context-aware responses.
@@ -58,7 +58,7 @@ The Support Center application is designed to handle customer inquiries and dele
 
 **1. Initial Inquiry**
 
-- Customer initiates a session with the Dispatcher Agent.
+- Customer initiates a session with the Support Center team. Their first interaction is with a Dispatcher Agent
 - Dispatcher Agent identifies the type of inquiry and dispatches to the appropriate sub-agent.
 
 **2. Authentication**
@@ -80,7 +80,7 @@ The Support Center application is designed to handle customer inquiries and dele
 
 **5. Human Agent Involvement**
 
-- For complex issues or escalations, the Dispatcher Agent delegate to humana gents.
+- For complex issues or escalations, the Dispatcher Agent delegate to human agents.
 - Human agents receive comprehensive interaction summaries for context.
 
 **6. Post-Interaction**
@@ -93,31 +93,28 @@ graph TD
     classDef default fill:#f9f9f9,stroke:#333,stroke-width:2px,color:#333,font-weight:bold;  
     classDef highlight fill:#e0f7fa,stroke:#333,stroke-width:2px,color:#000,font-weight:bold; 
     
-    User[Customer] --> FE
-    FE -->|request| APIs
+    User[Customer] --> Chat
+    Chat -->|request| APIs
     APIs -->|request| Dispatcher
     Dispatcher -->|notif| SignalR
 
     Dispatcher --> QnA
-    QnA --> Dispatcher
+    QnA --> SignalR
 
     Dispatcher --> Invoice
-    Invoice --> Dispatcher
+    Invoice --> SignalR
 
     Dispatcher --> Discount
-    Discount --> Dispatcher
+    Discount --> SignalR
 
     Dispatcher --> CustomerInfo
-    CustomerInfo --> Dispatcher
+    CustomerInfo --> SignalR
 
-    QnA --> SupportCenterAgent
-    Invoice --> SupportCenterAgent
-    Discount --> SupportCenterAgent
-    CustomerInfo --> SupportCenterAgent
-    SupportCenterAgent -->|human agent gets a summary| Dispatcher  
-    SignalR -->|notif| FE
+    Dispatcher -->|human agent gets a summary of Customer's request| SupportCenterAgent
+    SupportCenterAgent --> SignalR
+    SignalR -->|notif| Chat
 
-    class User,FE,APIs,Dispatcher,SignalR,QnA,Invoice,Discount,CustomerInfo,SupportCenterAgent highlight;
+    class User,Chat,APIs,Dispatcher,SignalR,QnA,Invoice,Discount,CustomerInfo,SupportCenterAgent highlight;
 ```
 ## Example Flow Description
 
