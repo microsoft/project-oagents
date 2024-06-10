@@ -38,6 +38,12 @@ public class Dispatcher : AiAgent<DispatcherState>
 
         string? userId = item.Data.GetValueOrDefault<string>("userId");
         string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
+        if (userId == null || userMessage == null)
+        {
+            _logger.LogWarning("[{Dispatcher}] Event {EventType}. Data: {EventData}. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
+            return;
+        }
+
         string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
         string id = $"{userId}/{conversationId}";
         string? intent;
@@ -52,32 +58,31 @@ public class Dispatcher : AiAgent<DispatcherState>
                     _logger.LogInformation("[{Dispatcher}] Event {EventType}. Data: {EventData}. Last message is missing.", nameof(Dispatcher), item.Type, item.Data);
                     return;
                 }
-                if (userId == null)
-                {
-                    _logger.LogError("[{Dispatcher}] Event {EventType}. Data: {EventData}. User ID is missing.", nameof(Dispatcher), item.Type, item.Data);
-                    return;
-                }
-                intent = await ExtractIntentAsync(lastMessage);
+                intent = (await ExtractIntentAsync(lastMessage))?.Trim(' ', '\"', '.') ?? string.Empty;
                 await SendDispatcherEvent(id, userId, intent, lastMessage);
                 break;
-
+            case nameof(EventType.UserNewConversation):
+                // The user started a new conversation.
+                ClearHistory();
+                break;
             case nameof(EventType.UserChatInput):
-                await SendEvent(id, nameof(EventType.AgentNotification),
+                intent = (await ExtractIntentAsync(userMessage))?.Trim(' ', '\"', '.') ?? string.Empty;
+                await SendEvent(id, nameof(EventType.DispatcherNotification),
                     (nameof(userId), userId),
-                    ("message", $"The agent '{this.GetType().Name}' is extracting the user intent..."));
-                intent = await ExtractIntentAsync(userMessage);
-                await SendEvent(id, nameof(EventType.AgentNotification),
-                    (nameof(userId), userId),
-                    ("message", $"Calling the '{intent}' agent..."));
+                    ("message", $"The user request has been dispatched to the '{intent}' agent."));
                 await SendDispatcherEvent(id, userId, intent, userMessage);
                 break;
-
             case nameof(EventType.QnARetrieved):
             case nameof(EventType.DiscountRetrieved):
             case nameof(EventType.InvoiceRetrieved):
             case nameof(EventType.CustomerInfoRetrieved):
                 var message = item.Data.GetValueOrDefault<string>("message");
-                _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(item.Type)}. Answer: {message}");
+                if (message == null)
+                {
+                    _logger.LogWarning("[{Dispatcher}] Event {EventType}. Data: {EventData}. Message is missing.", nameof(Dispatcher), item.Type, item.Data);
+                    return;
+                }
+                _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(EventType.QnARetrieved)}. Answer: {item.Data["message"]}");
                 AddToHistory(message, ChatUserType.Agent);
                 break;
             default:
@@ -105,10 +110,9 @@ public class Dispatcher : AiAgent<DispatcherState>
 
     private async Task SendDispatcherEvent(string id, string userId, string intent, string userMessage)
     {
-        var action = intent.Trim(' ', '\"', '.');
         var type = this.GetType()
             .GetCustomAttributes<DispatcherChoice>()
-            .FirstOrDefault(attr => attr.Name == action)?
+            .FirstOrDefault(attr => attr.Name == intent)?
             .DispatchToEvent.ToString() ?? EventType.Unknown.ToString();
 
         await SendEvent(id, type,

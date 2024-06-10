@@ -14,6 +14,14 @@ export interface Message {
 
 export enum SenderType {
   User = 'User',
+  // Generic agent type
   Agent = 'Agent',
-  Notification = 'Notification'
+  Dispatcher = 'Dispatcher',
+  CustomerInfo = 'CustomerInfo',
+  Notification = 'Notification',
+  ErrorNotification = 'ErrorNotification',
+  // Agent-specific notification types
+  DispatcherNotification = 'DispatcherNotification',
+  CustomerInfoNotification = 'CustomerInfoNotification',
+  AgentInfoNotification = 'AgentInfoNotification'
 }

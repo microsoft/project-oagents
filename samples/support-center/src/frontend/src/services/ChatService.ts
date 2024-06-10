@@ -10,7 +10,6 @@ const isMockEnabled = import.meta.env.VITE_IS_MOCK_ENABLED
 export async function getConfigurationAsync(): Promise<Configuration> {
   return {
     chatConfiguration: {
-      enableStreaming: true,
       welcomeTitle: "Let's start chatting...",
       welcomeSubtitle: "",
       welcomeHints: [

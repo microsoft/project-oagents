@@ -4,6 +4,7 @@ using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
 using SupportCenter.SignalRHub;
+using System.Collections.Concurrent;
 
 namespace Marketing.Agents;
 
@@ -11,6 +12,20 @@ namespace Marketing.Agents;
 public class SignalR : Agent
 {
     protected override string Namespace => Consts.OrleansNamespace;
+    private readonly ConcurrentDictionary<string, AgentType> _eventTypeToSenderTypeMapping = new()
+    {
+        [nameof(EventType.QnARetrieved)] = AgentType.QnA,
+        [nameof(EventType.QnANotification)] = AgentType.QnA,
+        [nameof(EventType.InvoiceRetrieved)] = AgentType.Invoice,
+        [nameof(EventType.InvoiceNotification)] = AgentType.Invoice,
+        [nameof(EventType.DispatcherNotification)] = AgentType.Dispatcher,
+        [nameof(EventType.CustomerInfoRetrieved)] = AgentType.CustomerInfo,
+        [nameof(EventType.CustomerInfoNotification)] = AgentType.CustomerInfo,
+        [nameof(EventType.DiscountRetrieved)] = AgentType.Discount,
+        [nameof(EventType.DiscountNotification)] = AgentType.Discount,
+        [nameof(EventType.AgentNotification)] = AgentType.Notification,
+        [nameof(EventType.Unknown)] = AgentType.Unknown
+    };
 
     private readonly ILogger<SignalR> _logger;
     private readonly ISignalRService _signalRClient;
@@ -26,39 +41,20 @@ public class SignalR : Agent
         string? userId = item.Data.GetValueOrDefault<string>("userId");
         string? message = item.Data.GetValueOrDefault<string>("message");
 
-        var type = AgentType.Unknown;
-
-        switch (item.Type)
+        if (userId == null)
         {
-            case nameof(EventType.QnARetrieved):
-                type = AgentType.QnA;
-                break;
-            case nameof(EventType.InvoiceRetrieved):
-                type = AgentType.Invoice;
-                break;
-            case nameof(EventType.CustomerInfoRetrieved):
-                type = AgentType.CustomerInfo;
-                break;
-            case nameof(EventType.DiscountRetrieved):
-                type = AgentType.Discount;
-                break;
-            case nameof(EventType.AgentNotification):
-                type = AgentType.Notification;
-                break;
-            case nameof(EventType.Unknown):
-                type = AgentType.Unknown;
-                break;
-            default:
-                return;
+            return;
         }
 
-        if (type == AgentType.Unknown)
+        if (!_eventTypeToSenderTypeMapping.TryGetValue(item.Type, out AgentType agentType))
+            return;
+
+        if (agentType == AgentType.Unknown)
         {
             _logger.LogWarning($"[{nameof(SignalR)}] Event {item.Type} is not supported.");
             message = "Sorry, I don't know how to handle this request. Try to rephrase it.";
         }
 
-        if (userId != null && message != null)
-            await _signalRClient.SendMessageToClient(messageId: Guid.NewGuid().ToString(), userId, message, type);
+        await _signalRClient.SendMessageToClient(messageId: Guid.NewGuid().ToString(), userId, message, agentType);
     }
 }

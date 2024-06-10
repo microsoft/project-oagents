@@ -36,6 +36,8 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
         UserType = userType
     });
 
+    public void ClearHistory() => _state.State.History.Clear();
+
     public string AppendChatHistory(string ask)
     {
         AddToHistory(ask, ChatUserType.User);

@@ -4,6 +4,7 @@ public enum EventType
 {
     UserChatInput,
     UserConnected,
+    UserNewConversation,
     AgentNotification,
     Unknown,
     // Domain specific events
@@ -14,5 +15,11 @@ public enum EventType
     DiscountRequested,
     DiscountRetrieved,
     InvoiceRequested,
-    InvoiceRetrieved
+    InvoiceRetrieved,
+    // Notification events
+    DispatcherNotification,
+    CustomerInfoNotification,
+    QnANotification,
+    DiscountNotification,
+    InvoiceNotification
 }

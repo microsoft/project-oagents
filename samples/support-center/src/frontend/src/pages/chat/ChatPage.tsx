@@ -75,29 +75,27 @@ export function ChatPage() {
     // Register the ReceiveMessage event
     connection.on("ReceiveMessage", (message: Message) => {
       console.log("Received message:", message);
-      if (
-        message.sender === SenderType.Notification
-      ) {
-        const progressMessage = message.text;
-        setContext((c) => ({
-          ...c,
-          isTakingTooLong: true,
-          waitingMessage: progressMessage,
-        }));
-      } else {
-        setContext((c) => ({
-          ...c,
-          isLoading: false,
-          isTakingTooLong: false,
-          conversation: {
-            ...c.conversation,
-            messages: [
-              ...c.conversation.messages,
-              { ...message, sender: SenderType.Agent },
-            ],
-          },
-        }));
-      }
+      // if (message.sender === SenderType.Notification) {
+      //   const progressMessage = message.text;
+      //   setContext((c) => ({
+      //     ...c,
+      //     isTakingTooLong: true,
+      //     waitingMessage: progressMessage,
+      //   }));
+      // } else {
+      setContext((c) => ({
+        ...c,
+        isLoading: false,
+        isTakingTooLong: false,
+        conversation: {
+          ...c.conversation,
+          messages: [
+            ...c.conversation.messages,
+            { ...message, sender: message.sender},
+          ],
+        },
+      }));
+      // }
     });
 
     setContext((c) => ({
@@ -179,11 +177,30 @@ export function ChatPage() {
     setContext((c) => ({ ...c, conversation: updatedConversation }));
   }
 
-  const onRestartConversation = useCallback(() => {
+  const onRestartConversation = useCallback(async () => {
     console.log("onRestartConversation");
 
-    initConversation();
-  }, [appContext]);
+    if (streamingConnection) {
+      try {
+        const newConversationId = uuid();
+        await streamingConnection.invoke(
+          "RestartConversation",
+          context.conversation.metadata.userId,
+          newConversationId
+        );
+        setContext((c) => ({
+          ...c,
+          conversation: {
+            id: newConversationId,
+            metadata: c.conversation.metadata,
+            messages: [],
+          },
+        }));
+      } catch (error) {
+        console.error("Error restarting conversation: ", error);
+      }
+    }
+  }, [streamingConnection, context]);
 
   return (
     <>

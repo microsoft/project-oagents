@@ -14,7 +14,7 @@ export function ChatHistoryList() {
   return (
     <div className='messages-container'>
       {context.conversation.messages.map((message) => (
-        <div key={message.id} className={message.sender === SenderType.Agent ? 'copilot-message-container' : 'user-message-container'}>
+        <div key={message.id} className={message.sender === SenderType.User ? 'user-message-container' : 'copilot-message-container'}>
           <ChatMessage message={message} />
         </div>
       ))}
