@@ -6,6 +6,7 @@ using Orleans.Runtime;
 using SupportCenter.Agents;
 using SupportCenter.Events;
 using SupportCenter.Options;
+using static Microsoft.AI.Agents.Orleans.Resolvers;
 
 namespace Marketing.Agents;
 
@@ -13,14 +14,15 @@ namespace Marketing.Agents;
 public class Discount : AiAgent<DiscountState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
+    protected override string Name => nameof(Discount);
 
     private readonly ILogger<Discount> _logger;
 
     public Discount([PersistentState("state", "messages")] IPersistentState<AgentState<DiscountState>> state,
-        Kernel kernel,
-        ISemanticTextMemory memory,
-        ILogger<Discount> logger)
-    : base(state, memory, kernel)
+        ILogger<Discount> logger,
+        KernelResolver kernelResolver,
+        SemanticTextMemoryResolver memoryResolver)
+    : base(state, kernelResolver, memoryResolver)
     {
         _logger = logger;
     }

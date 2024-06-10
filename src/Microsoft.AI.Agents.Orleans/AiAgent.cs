@@ -1,9 +1,10 @@
-using System.Text;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
+using System.Text;
+using static Microsoft.AI.Agents.Orleans.Resolvers;
 
 namespace Microsoft.AI.Agents.Orleans;
 
@@ -12,12 +13,16 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
     protected IPersistentState<AgentState<T>> _state;
     protected Kernel _kernel;
     private readonly ISemanticTextMemory _memory;
+    protected abstract string Name { get; }
 
-    public AiAgent([PersistentState("state", "messages")] IPersistentState<AgentState<T>> state, ISemanticTextMemory memory, Kernel kernel) 
+    public AiAgent(
+        [PersistentState("state", "messages")] IPersistentState<AgentState<T>> state, 
+        KernelResolver kernelResolver, 
+        SemanticTextMemoryResolver memoryResolver)
     {
          _state = state;
-        _memory = memory;
-        _kernel = kernel;
+        _memory = memoryResolver(Name);
+        _kernel = kernelResolver(Name);
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)

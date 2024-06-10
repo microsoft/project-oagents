@@ -2,16 +2,15 @@ using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Planning;
-using Microsoft.SemanticKernel.Planning.Handlebars;
 using Orleans.Runtime;
 using SupportCenter.Data.CosmosDb;
 using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
-using SupportCenter.Plugins.CustomerPlugin;
+using SupportCenter.SemanticKernel.Plugins.CustomerPlugin;
 using SupportCenter.SignalRHub;
+using static Microsoft.AI.Agents.Orleans.Resolvers;
 
 namespace SupportCenter.Agents;
 
@@ -19,7 +18,7 @@ namespace SupportCenter.Agents;
 public class CustomerInfo : AiAgent<CustomerInfoState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
-
+    protected override string Name => nameof(CustomerInfo);
     private readonly ILogger<CustomerInfo> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly ICustomerRepository _customerRepository;
@@ -27,17 +26,16 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
 
     public CustomerInfo(
         [PersistentState("state", "messages")] IPersistentState<AgentState<CustomerInfoState>> state,
-        Kernel kernel,
-        ISemanticTextMemory memory,
         ILogger<CustomerInfo> logger,
         IServiceProvider serviceProvider,
-        ICustomerRepository customerRepository)
-    : base(state, memory, kernel)
+        ICustomerRepository customerRepository,
+        KernelResolver kernelResolver,
+        SemanticTextMemoryResolver memoryResolver)
+    : base(state, kernelResolver, memoryResolver)
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
         _customerRepository = customerRepository;
-        _kernel = kernel;
 
         _kernel.ImportPluginFromObject(serviceProvider.GetRequiredService<CustomerData>(), "CustomerPlugin");
         _chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();

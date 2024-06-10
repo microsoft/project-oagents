@@ -7,6 +7,7 @@ using Orleans.Runtime;
 using SupportCenter.Events;
 using SupportCenter.Options;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using static Microsoft.AI.Agents.Orleans.Resolvers;
 
 namespace SupportCenter.Agents;
 
@@ -14,21 +15,22 @@ namespace SupportCenter.Agents;
 public class Invoice : AiAgent<InvoiceState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
+    protected override string Name => nameof(Invoice);
 
     private readonly ILogger<Invoice> _logger;
 
     public Invoice([PersistentState("state", "messages")] IPersistentState<AgentState<InvoiceState>> state,
-        Kernel kernel, ISemanticTextMemory memory, ILogger<Invoice> logger)
-    : base(state, new MemoryBuilder().WithMemoryStore(new AzureAISearchMemoryStore( "<SearchEndpoint>", "<SearchKey>"))
-                        .WithAzureOpenAITextEmbeddingGeneration("<SearchEmbeddingDeploymentOrModelId>", "<SearchEmbeddingEndpoint>", "<SearchEmbeddingApiKey>")
-                        .Build(), kernel)
+        KernelResolver kernelResolver,
+        SemanticTextMemoryResolver memoryResolver,
+        ILogger<Invoice> logger)
+    : base(state, kernelResolver, memoryResolver)
     {
         _logger = logger;
     }
 
     public async override Task HandleEvent(Event item)
     {
-        
+
         switch (item.Type)
         {
             case nameof(EventType.InvoiceRequested):
