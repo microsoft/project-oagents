@@ -4,10 +4,8 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Connectors.AzureAISearch;
 using Orleans.Runtime;
-using SupportCenter.Agents;
 using SupportCenter.Events;
 using SupportCenter.Options;
-using SupportCenter.Events;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace SupportCenter.Agents;
@@ -18,11 +16,12 @@ public class Invoice : AiAgent<InvoiceState>
     protected override string Namespace => Consts.OrleansNamespace;
 
     private readonly ILogger<Invoice> _logger;
-    
 
     public Invoice([PersistentState("state", "messages")] IPersistentState<AgentState<InvoiceState>> state,
         Kernel kernel, ISemanticTextMemory memory, ILogger<Invoice> logger)
-    : base(state, memory, kernel)
+    : base(state, new MemoryBuilder().WithMemoryStore(new AzureAISearchMemoryStore( "<SearchEndpoint>", "<SearchKey>"))
+                        .WithAzureOpenAITextEmbeddingGeneration("<SearchEmbeddingDeploymentOrModelId>", "<SearchEmbeddingEndpoint>", "<SearchEmbeddingApiKey>")
+                        .Build(), kernel)
     {
         _logger = logger;
     }
@@ -36,29 +35,21 @@ public class Invoice : AiAgent<InvoiceState>
                 {
                     var userId = item.Data["userId"];
                     var userMessage = item.Data["userMessage"];
-                    //Persisting invoice id, but how can I know if this is the invoice the user is asking for? How should this be done, let's discuss!
-                    string persistedInvoiceId = _state.State.Data.invoiceId;
-                    if( persistedInvoiceId == null)
+                    //Try and find the invoice id in the user message
+                    var context = new KernelArguments { ["input"] = userMessage };
+                    var invoiceId = await CallFunction(InvoicePrompts.ExtractInvoiceId, context);
+                    if (invoiceId == "Unknown")
                     {
-                        //Try and find the invoice id in the user message
-                        var context = new KernelArguments { ["input"] = userMessage };
-                        var invoiceId = await CallFunction(InvoicePrompts.ExtractInvoiceId, context);
-                        if (invoiceId == "Unknown")
-                        {
-                            string requestForId = "Can you please provide the invoice id?";
-                            AppendChatHistory(requestForId);
-                            await SendAnswerEvent(requestForId, userId);
-                            return;
-                        }
-                        else{
-                            _state.State.Data.invoiceId = invoiceId;
-                            persistedInvoiceId = invoiceId;
-                        }                        
+                        AppendChatHistory(userMessage);
+                        string requestForId = "Can you please provide the invoice id?";
+                        AppendChatHistory(requestForId);
+                        await SendAnswerEvent(requestForId, userId);
+                        return;
                     }
-
-                    var prompt = InvoicePrompts.InvoiceRequest
-                        .Replace("{{$invoiceId}}", persistedInvoiceId)
-                        .Replace("{{$userMessage}}", userMessage);
+                    await SendAnswerEvent($"Please wait while I look up the details for invoice {invoiceId} ...", userId);
+                    /*var prompt = InvoicePrompts.InvoiceRequest
+                        .Replace("{{$invoiceId}}", invoiceId)
+                        .Replace("{{$userMessage}}", userMessage);*/
                     //TODO: We need to make sure an invoice belongs to the user before we can provide the information. Do we add metatdata, do we separate storage etc?
                     _logger.LogInformation($"[{nameof(Invoice)}] Event {nameof(EventType.InvoiceRequested)}. UserQuestion: {userMessage}");
 

@@ -17,7 +17,7 @@ using System.Text.Json;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient(CreateKernel);
 builder.Services.AddTransient(CreateMemory);
-builder.Services.AddTransient(CreateAISearchMemory);
+//builder.Services.AddTransient(CreateAISearchMemory);
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddApplicationInsightsTelemetry();
@@ -100,6 +100,7 @@ static ISemanticTextMemory CreateMemory(IServiceProvider provider)
                  .Build();
 }
 
+/*
 static ISemanticTextMemory CreateAISearchMemory(IServiceProvider provider)
 {
     AISearchOptions aiSearchConfig = provider.GetService<IOptions<AISearchOptions>>()?.Value ?? new AISearchOptions();
@@ -120,7 +121,7 @@ static ISemanticTextMemory CreateAISearchMemory(IServiceProvider provider)
                     .WithAzureOpenAITextEmbeddingGeneration(aiSearchConfig.SearchEmbeddingDeploymentOrModelId, aiSearchConfig.SearchEmbeddingEndpoint, aiSearchConfig.SearchEmbeddingApiKey)
                     .Build();
 }
-
+*/
 static Kernel CreateKernel(IServiceProvider provider)
 {
     OpenAIOptions openAiConfig = provider.GetService<IOptions<OpenAIOptions>>()?.Value ?? new OpenAIOptions();

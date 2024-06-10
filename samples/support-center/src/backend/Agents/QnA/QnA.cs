@@ -42,6 +42,7 @@ public class QnA : AiAgent<QnAState>
                 break;
             case nameof(EventType.QnARequested):
                 _logger.LogInformation($"[{nameof(QnA)}] Event {nameof(EventType.QnARequested)}. UserQuestion: {userMessage}");
+                await SendAnswerEvent(messageId, userId, $"Please wait while I look up the details to answer your question ...");
 
                 var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
                 var instruction = "Consider the following knowledge:!vfcon106047!";

@@ -77,7 +77,7 @@ public class Dispatcher : AiAgent<DispatcherState>
             case nameof(EventType.InvoiceRetrieved):
             case nameof(EventType.CustomerInfoRetrieved):
                 var message = item.Data.GetValueOrDefault<string>("message");
-                _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(EventType.QnARetrieved)}. Answer: {item.Data["message"]}");
+                _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(item.Type)}. Answer: {message}");
                 AddToHistory(message, ChatUserType.Agent);
                 break;
             default:
