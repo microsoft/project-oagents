@@ -62,7 +62,7 @@ The Support Center application is designed to handle customer inquiries and dele
 
 **2. Conversation**
 
-- If customer is having a generic conversation, the Dispatcher Agent dispatches to the User Authentication Agent.
+- If customer is having a generic conversation, the Dispatcher Agent dispatches to the Conversation Agent.
 
 **3. QnA**
 
@@ -241,7 +241,7 @@ Ensure you have an **appsettings.json** file in the src/backend directory with t
   }
 } 
 ```
-Note! SignalR required an https endpoint.
+Note! SignalR requires a https endpoint.
 
 ## Seed memory for Invoice agent
 For now one single invoice is configured in the Program.cs.
@@ -251,6 +251,6 @@ Run seed-invoice-memory project with dotnet run to extract the invoice fields wi
 
 ## Seed memory for QnA agent
 For now the knowledge is based on the example files located in the seed-memory folder.
-Download and run Qdrant locally ( ocker run -p 6333:6333 qdrant/qdrant).
+Download and run Qdrant locally ( docker run -p 6333:6333 qdrant/qdrant).
 Make sure you have the correct values set in config/appsetting.json.
 Run seed-memory project with dotnet run to load the collection vfcon106047 with the data.
