@@ -6,19 +6,23 @@ using Orleans.Runtime;
 using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
+using static Microsoft.AI.Agents.Orleans.Resolvers;
 
 namespace SupportCenter.Agents;
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
 public class Conversation : AiAgent<ConversationState>
 {
-    protected override string Namespace => Consts.OrleansNamespace;
+   protected override string Namespace => Consts.OrleansNamespace;
+    protected override string Name => nameof(Conversation);
+
     private readonly ILogger<Conversation> _logger;
 
+
     public Conversation([PersistentState("state", "messages")] IPersistentState<AgentState<ConversationState>> state,
-        Kernel kernel,
-        ISemanticTextMemory memory,
+        KernelResolver kernelResolver,
+        SemanticTextMemoryResolver memoryResolver,
         ILogger<Conversation> logger)
-    : base(state, memory, kernel)
+    : base(state, kernelResolver, memoryResolver)
     {
         _logger = logger;
     }

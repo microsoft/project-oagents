@@ -14,11 +14,11 @@ using static Microsoft.AI.Agents.Orleans.Resolvers;
 namespace SupportCenter.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-[DispatcherChoice("QnA", "The customer is asking a question. When the request is generic or can't be classified differently, use this choice.", EventType.QnARequested)]
+[DispatcherChoice("QnA", "The customer is asking a question.", EventType.QnARequested)]
 [DispatcherChoice("Discount", "The customer is asking for a discount about a product or service.", EventType.DiscountRequested)]
 [DispatcherChoice("Invoice", "The customer is asking for an invoice.", EventType.InvoiceRequested)]
 [DispatcherChoice("CustomerInfo", "The customer is asking for reading or updating his or her personal data.", EventType.CustomerInfoRequested)]
-[DispatcherChoice("Conversation", "The customer is having a generic conversation.", EventType.ConversationRequested)]
+[DispatcherChoice("Conversation", "The customer is having a generic conversation. When the request is generic or can't be classified differently, use this choice.", EventType.ConversationRequested)]
 public class Dispatcher : AiAgent<DispatcherState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
