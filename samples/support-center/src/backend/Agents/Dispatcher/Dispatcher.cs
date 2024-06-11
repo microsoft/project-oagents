@@ -29,14 +29,12 @@ public class Dispatcher : AiAgent<DispatcherState>
     public Dispatcher(
         ILogger<Dispatcher> logger,
         [PersistentState("state", "messages")] IPersistentState<AgentState<DispatcherState>> state,
-        [FromKeyedServices("DispatcherKernel")] Kernel kernel,
-        [FromKeyedServices("DispatcherMemory")] ISemanticTextMemory memory
+        [FromKeyedServices("DispatcherKernel")] Kernel kernel
        )
     : base(state)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-        Memory = memory ?? throw new ArgumentNullException(nameof(memory));
     }
 
     public async override Task HandleEvent(Event item)

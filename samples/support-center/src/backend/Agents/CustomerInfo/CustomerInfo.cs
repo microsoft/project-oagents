@@ -31,15 +31,13 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
         ILogger<CustomerInfo> logger,
         IServiceProvider serviceProvider,
         ICustomerRepository customerRepository,
-        [FromKeyedServices("CustomerInfoKernel")] Kernel kernel,
-        [FromKeyedServices("CustomerInfoMemory")] ISemanticTextMemory memory)
+        [FromKeyedServices("CustomerInfoKernel")] Kernel kernel)
     : base(state)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
         Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-        Memory = memory ?? throw new ArgumentNullException(nameof(memory));
 
         if (Kernel.Plugins.TryGetPlugin("CustomerPlugin", out var plugin) == false)
             Kernel.ImportPluginFromObject(serviceProvider.GetRequiredService<CustomerData>(), "CustomerPlugin");

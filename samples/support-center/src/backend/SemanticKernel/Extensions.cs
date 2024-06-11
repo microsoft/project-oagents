@@ -27,7 +27,7 @@ namespace SupportCenter.SemanticKernel
                     .AddDebug();
             });
 
-            if (agent == "Discount")
+            if (agent == "Invoice")
             {
                 AISearchOptions aiSearchConfig = provider.GetService<IOptions<AISearchOptions>>()?.Value ?? new AISearchOptions();
                 aiSearchConfig.ValidateRequiredProperties();
