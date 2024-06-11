@@ -49,9 +49,6 @@ public class Invoice : AiAgent<InvoiceState>
                         return;
                     }
                     await SendAnswerEvent($"Please wait while I look up the details for invoice {invoiceId} ...", userId);
-                    /*var prompt = InvoicePrompts.InvoiceRequest
-                        .Replace("{{$invoiceId}}", invoiceId)
-                        .Replace("{{$userMessage}}", userMessage);*/
                     //TODO: We need to make sure an invoice belongs to the user before we can provide the information. Do we add metatdata, do we separate storage etc?
                     _logger.LogInformation($"[{nameof(Invoice)}] Event {nameof(EventType.InvoiceRequested)}. UserQuestion: {userMessage}");
 

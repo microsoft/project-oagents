@@ -68,19 +68,6 @@ namespace SupportCenter.SemanticKernel
             {
                 builder.Services.AddOpenAIChatCompletion(openAiConfig.ChatDeploymentOrModelId, openAIClient);
             }
-
-            // Text to Image
-            /*openAIClient = new OpenAIClient(new Uri(openAiConfig.ImageEndpoint), new AzureKeyCredential(openAiConfig.ImageApiKey), clientOptions);
-            if (openAiConfig.ImageEndpoint.Contains(".azure", StringComparison.OrdinalIgnoreCase))
-            {
-                ArgumentException.ThrowIfNullOrEmpty(openAiConfig.ImageDeploymentOrModelId, nameof(openAiConfig.ImageDeploymentOrModelId));
-                builder.Services.AddAzureOpenAITextToImage(openAiConfig.ImageDeploymentOrModelId, openAIClient);
-            }
-            else
-            {
-                builder.Services.AddOpenAITextToImage(openAiConfig.ImageApiKey);
-            }*/
-
             // Embeddings
             openAIClient = new OpenAIClient(new Uri(openAiConfig.EmbeddingsEndpoint), new AzureKeyCredential(openAiConfig.EmbeddingsApiKey), clientOptions);
             if (openAiConfig.EmbeddingsEndpoint.Contains(".azure", StringComparison.OrdinalIgnoreCase))

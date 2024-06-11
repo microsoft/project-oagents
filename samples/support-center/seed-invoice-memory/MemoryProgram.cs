@@ -10,7 +10,7 @@ namespace SupportCenter.Invoice.Memory;
 
 internal class MemoryProgram
 {    
-    static string[] files = { "https://github.com/Azure-Samples/cognitive-services-REST-api-samples/raw/master/curl/form-recognizer/rest-api/invoice.pdf" };//, "invoice2.pdf", "invoice2.pdf", "invoice4.pdf", "invoice5.pdf" };
+    static string[] files = { "https://github.com/Azure-Samples/cognitive-services-REST-api-samples/raw/master/curl/form-recognizer/rest-api/invoice.pdf" };
     static async Task Main(string[] args)
     {
         var kernelSettings = KernelSettings.LoadSettings();        
@@ -47,13 +47,6 @@ internal class MemoryProgram
     {
         Console.WriteLine($"text: {text}");
         Console.WriteLine($"collection: {collection}");
-        /*string invoiceIdString = "";
-        if (document.Fields.TryGetValue("InvoiceId", out DocumentField invoiceId)
-                && InvoiceId.Type == DocumentFieldType.String)
-        {
-            invoiceIdString = InvoiceId.ValueString;
-            Console.WriteLine($"InvoiceId: '{invoiceIdString}', with confidence {InvoiceId.Confidence}");
-        }*/
         try
         {  
             var descr = text.Take(100);
@@ -66,32 +59,6 @@ internal class MemoryProgram
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
-        }
-        /*foreach (var field in document.Fields)
-        {
-            try
-            {                
-                var descr = field.Key.ToString();
-                //string value = field.Value.ToString();
-                string value;
-                
-                if (document.Fields.TryGetValue(field.Key, out DocumentField keyField)
-                && keyField.Type == DocumentFieldType.String)
-                {
-                    value = keyField.ValueString;
-                    Console.WriteLine($"field: '{descr}', with value {value}");
-                    await memory.SaveInformationAsync(
-                        collection: collection,
-                        text: value,
-                        id: $"{Guid.NewGuid()}",
-                        description: $"Document: {descr}");
-                }                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }*/
     }
 
     static async Task<AnalyzeResult> AnalyzeDoc(DocumentIntelligenceClient client, string invoice, string modelName = "prebuilt-invoice")

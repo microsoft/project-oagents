@@ -10,8 +10,7 @@ using System.Threading;
 
 class Program
 {
-    static string[] files = { "Benefit_Options.pdf", "employee_handbook.pdf", "Northwind_Health_Plus_Benefits_Details.pdf", "Northwind_Standard_Benefits_Details.pdf", "role_library.pdf" };
-    //= "vfcon106047.pdf";
+    static string[] files = { "Benefit_Options.pdf", "employee_handbook.pdf", "Northwind_Health_Plus_Benefits_Details.pdf", "Northwind_Standard_Benefits_Details.pdf", "role_library.pdf" };    
     static async Task Main(string[] args)
     {
        var kernelSettings = KernelSettings.LoadSettings();
@@ -30,7 +29,7 @@ class Program
                     .WithAzureOpenAITextEmbeddingGeneration(kernelSettings.EmbeddingDeploymentOrModelId,kernelSettings.Endpoint, kernelSettings.ApiKey)
                     .Build();
 
-        //await ImportDocumentAsync(memory, WafFileName);
+        
         foreach (var file in files)
         {
             await ImportDocumentAsync(memory, file);

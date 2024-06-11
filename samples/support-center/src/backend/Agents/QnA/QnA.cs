@@ -42,12 +42,11 @@ public class QnA : AiAgent<QnAState>
                 if (lastMessage == null)
                 {
                     return;
-                }
-                //await SendDispatcherEvent(userId, lastMessage, item.Data["userId"]);
+                }                
                 break;
             case nameof(EventType.QnARequested):
                 _logger.LogInformation($"[{nameof(QnA)}] Event {nameof(EventType.QnARequested)}. UserQuestion: {userMessage}");
-                await SendAnswerEvent(messageId, userId, $"Please wait while I look up the details to answer your question ...");
+                await SendAnswerEvent(messageId, userId, $"Please wait while I look in the documents for answers to your question ...");
 
                 var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
                 var instruction = "Consider the following knowledge:!vfcon106047!";
