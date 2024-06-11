@@ -58,12 +58,14 @@ namespace SupportCenter.Extensions
 
         private static void AddSemanticKernelServices(IServiceCollection services)
         {
+            services.AddKeyedSingleton("ConversationKernel", (sp, _) => CreateKernel(sp, "Conversation"));
             services.AddKeyedSingleton("CustomerInfoKernel", (sp, _) => CreateKernel(sp, "CustomerInfo"));
             services.AddKeyedSingleton("DispatcherKernel", (sp, _) => CreateKernel(sp, "Dispatcher"));
             services.AddKeyedSingleton("InvoiceKernel", (sp, _) => CreateKernel(sp, "Invoice"));
             services.AddKeyedSingleton("DiscountKernel", (sp, _) => CreateKernel(sp, "Discount"));
             services.AddKeyedSingleton("QnAKernel", (sp, _) => CreateKernel(sp, "QnA"));
 
+            services.AddKeyedSingleton("ConversationMemory", (sp, _) => CreateMemory(sp, "Conversation"));
             services.AddKeyedSingleton("CustomerInfoMemory", (sp, _) => CreateMemory(sp, "CustomerInfo"));
             services.AddKeyedSingleton("DispatcherMemory", (sp, _) => CreateMemory(sp, "Dispatcher"));
             services.AddKeyedSingleton("InvoiceMemory", (sp, _) => CreateMemory(sp, "Invoice"));
