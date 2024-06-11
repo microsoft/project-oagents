@@ -9,5 +9,6 @@ public enum AgentType
     Discount,
     Invoice,
     Notification,
+    Conversation,
     Unknown
 }

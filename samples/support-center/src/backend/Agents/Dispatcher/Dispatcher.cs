@@ -16,7 +16,8 @@ namespace SupportCenter.Agents;
 [DispatcherChoice("QnA", "The customer is asking a question. When the request is generic or can't be classified differently, use this choice.", EventType.QnARequested)]
 [DispatcherChoice("Discount", "The customer is asking for a discount about a product or service.", EventType.DiscountRequested)]
 [DispatcherChoice("Invoice", "The customer is asking for an invoice.", EventType.InvoiceRequested)]
-[DispatcherChoice("CustomerInfo", "The customer is asking for reading or updating his or her information or profile.", EventType.CustomerInfoRequested)]
+[DispatcherChoice("CustomerInfo", "The customer is asking for reading or updating his or her personal data.", EventType.CustomerInfoRequested)]
+[DispatcherChoice("Conversation", "The customer is having a generic conversation.", EventType.ConversationRequested)]
 public class Dispatcher : AiAgent<DispatcherState>
 {
     protected override string Namespace => Consts.OrleansNamespace;

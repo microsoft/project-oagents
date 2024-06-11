@@ -45,12 +45,11 @@ In the Support Center scenario, several types of agents can be identified based 
   - Analyze customer invoices for discrepancies.
   - Provide explanations or escalate to human agents if necessary.
 
-#### Discount Agent
+#### Conversation Agent
 
-- **Role**: Handles customer discount requests.
+- **Role**: Handles customer generic conversations.
 - **Responsibilities**:
-  - Apply discounts based on eligibility and company policies.
-  - Communicate discount approval or rejection.
+  - Be polite and guide the conversation.
 
 ## Event Flow and Agent Interactions
 
@@ -61,27 +60,29 @@ The Support Center application is designed to handle customer inquiries and dele
 - Customer initiates a session with the Support Center team. Their first interaction is with a Dispatcher Agent
 - Dispatcher Agent identifies the type of inquiry and dispatches to the appropriate sub-agent.
 
-**2. Authentication**
+**2. Conversation**
 
-- If customer authentication is required, the Dispatcher Agent dispatches to the User Authentication Agent.
-- The User Authentication Agent verifies the customer and reports back.
+- If customer is having a generic conversation, the Dispatcher Agent dispatches to the User Authentication Agent.
 
 **3. QnA**
 
-- For generic queries, the Dispatcher Agent delegates to the QnA Agent.
-- The QnA Agent responds to the customer based on the inquiry.
+- For generic internal queries, the Dispatcher Agent delegates to the QnA Agent.
+- The QnA Agent has the knowledge based on different documents that has been seeded (and vectorised) into a Qdrant database.
+- The QnA Agent responds to the customer based on the inquiry following the RAG pattern.
 
-**4. Specific Task Handling**
+**4. Invoice**
+
+- For questions about invoices, the Dispatcher Agent delegates to the Invoice Agent.
+- The Invoice Agent has the knowledge based on different invoices that has been processed by Azure Document Intelligence to extract fields in the invoices and seeded (and vectorised) into Azure AI Search.
+- The Invoice Agent responds to the customer based on the inquiry following the RAG pattern.
+
+**5. Specific Task Handling**
 
 - For specific tasks, the Dispatcher Agent delegates to the relevant sub agent:
   - Customer Info Agent: Reads and Updates customer information.
   - Invoice Agent: Investigates invoice issues.
-  - Discount Agent: Handles discount requests.
-
-**5. Human Agent Involvement**
-
-- For complex issues or escalations, the Dispatcher Agent delegate to human agents.
-- Human agents receive comprehensive interaction summaries for context.
+  - QnA Agent: Handles internal knowledge requests.
+  - Conversation Agent: Handles generic conversations.
 
 **6. Post-Interaction**
 
@@ -104,8 +105,8 @@ graph TD
     Dispatcher --> Invoice
     Invoice --> SignalR
 
-    Dispatcher --> Discount
-    Discount --> SignalR
+    Dispatcher --> Conversation
+    Conversation --> SignalR
 
     Dispatcher --> CustomerInfo
     CustomerInfo --> SignalR
@@ -114,7 +115,7 @@ graph TD
     SupportCenterAgent --> SignalR
     SignalR -->|notif| Chat
 
-    class User,Chat,APIs,Dispatcher,SignalR,QnA,Invoice,Discount,CustomerInfo,SupportCenterAgent highlight;
+    class User,Chat,APIs,Dispatcher,SignalR,QnA,Invoice,Conversation,CustomerInfo,SupportCenterAgent highlight;
 ```
 ## Example Flow Description
 
@@ -229,6 +230,27 @@ Ensure you have an **appsettings.json** file in the src/backend directory with t
   },  
   "ApplicationInsights": {  
     "ConnectionString": "<Your-Application-Insights-Connection-String>"  
+    },   
+  "AISearchOptions": {
+    "SearchEndpoint": "<mandatory>",
+    "SearchKey": "<mandatory>",
+    "SearchIndex": "<mandatory>",
+    "SearchEmbeddingDeploymentOrModelId": "text-embedding-ada-002",
+    "SearchEmbeddingEndpoint": "https://<mandatory>.openai.azure.com/",
+    "SearchEmbeddingApiKey": "<mandatory>"
   }
-}  
+} 
 ```
+Note! SignalR required an https endpoint.
+
+## Seed memory for Invoice agent
+For now one single invoice is configured in the Program.cs.
+Provision Azure Document Intelligence and Azure AI Search instances.
+Make sure you have the correct values set in config/appsetting.json.
+Run seed-invoice-memory project with dotnet run to extract the invoice fields with Document intelligence pre-built invoice model and store the information in AI Search.
+
+## Seed memory for QnA agent
+For now the knowledge is based on the example files located in the seed-memory folder.
+Download and run Qdrant locally ( ocker run -p 6333:6333 qdrant/qdrant).
+Make sure you have the correct values set in config/appsetting.json.
+Run seed-memory project with dotnet run to load the collection vfcon106047 with the data.

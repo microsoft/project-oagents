@@ -3,7 +3,8 @@
 public class InvoicePrompts
 {
     public static string InvoiceRequest = """
-        You are a helpful customer support/service agent that has the knowledge to answer questions about user invoices based on your knowledge. Be polite and professional and answer briefly based on your knowledge ONLY.
+        You are a helpful customer support/service agent that has the knowledge to answer questions about user invoices based on your knowledge. 
+        Be polite and professional and answer briefly based on your knowledge ONLY.
         Invoice Id: {{$invoiceId}}
         Input: {{$input}}
         {{$invoices}}

@@ -24,6 +24,7 @@ public class SignalR : Agent
         [nameof(EventType.DiscountRetrieved)] = AgentType.Discount,
         [nameof(EventType.DiscountNotification)] = AgentType.Discount,
         [nameof(EventType.AgentNotification)] = AgentType.Notification,
+        [nameof(EventType.ConversationRetrieved)] = AgentType.Conversation,
         [nameof(EventType.Unknown)] = AgentType.Unknown
     };
 
