@@ -6,19 +6,19 @@ public class OpenAIOptions
 {
     // Embeddings
     [Required]
-    public string? EmbeddingsEndpoint { get; set; }
+    public string EmbeddingsEndpoint { get; set; } = string.Empty;
     [Required]
-    public string? EmbeddingsApiKey { get; set; }
+    public string EmbeddingsApiKey { get; set; } = string.Empty;
     [Required]
-    public string? EmbeddingsDeploymentOrModelId { get; set; }
+    public string EmbeddingsDeploymentOrModelId { get; set; } = string.Empty;
 
     // Chat
     [Required]
-    public string? ChatEndpoint { get; set; }
+    public string ChatEndpoint { get; set; } = string.Empty;
     [Required]
-    public string? ChatApiKey { get; set; }
+    public string ChatApiKey { get; set; } = string.Empty;
     [Required]
-    public string? ChatDeploymentOrModelId { get; set; }
+    public string ChatDeploymentOrModelId { get; set; } = string.Empty;
 
     // TextToImage
     /*[Required]

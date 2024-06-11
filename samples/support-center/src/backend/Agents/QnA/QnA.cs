@@ -1,24 +1,26 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
+using static Microsoft.AI.Agents.Orleans.Resolvers;
 
 namespace SupportCenter.Agents;
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
 public class QnA : AiAgent<QnAState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
+    protected override string Name => nameof(QnA);
+
     private readonly ILogger<QnA> _logger;
 
     public QnA([PersistentState("state", "messages")] IPersistentState<AgentState<QnAState>> state,
-        Kernel kernel,
-        ISemanticTextMemory memory,
+        KernelResolver kernelResolver,
+        SemanticTextMemoryResolver memoryResolver,
         ILogger<QnA> logger)
-    : base(state, memory, kernel)
+    : base(state, kernelResolver, memoryResolver)
     {
         _logger = logger;
     }

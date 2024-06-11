@@ -9,6 +9,7 @@ using SupportCenter.Extensions;
 using SupportCenter.Options;
 using SupportCenter.SignalRHub;
 using System.Reflection;
+using static Microsoft.AI.Agents.Orleans.Resolvers;
 
 namespace SupportCenter.Agents;
 
@@ -21,14 +22,15 @@ namespace SupportCenter.Agents;
 public class Dispatcher : AiAgent<DispatcherState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
+    protected override string Name => nameof(Dispatcher);
     private readonly ILogger<Dispatcher> _logger;
 
     public Dispatcher(
         [PersistentState("state", "messages")] IPersistentState<AgentState<DispatcherState>> state,
-        Kernel kernel,
-        ISemanticTextMemory memory,
+        KernelResolver kernelResolver,
+        SemanticTextMemoryResolver memoryResolver,
         ILogger<Dispatcher> logger)
-    : base(state, memory, kernel)
+    : base(state, kernelResolver, memoryResolver)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }

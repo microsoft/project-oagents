@@ -48,7 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Plugins\DiscountPlugin\" />
+    <Folder Include="SemanticKernel\Plugins\DiscountPlugin\" />
   </ItemGroup>
 
 </Project>

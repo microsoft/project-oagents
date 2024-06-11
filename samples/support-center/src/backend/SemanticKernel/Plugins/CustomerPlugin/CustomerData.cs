@@ -4,7 +4,7 @@ using System.ComponentModel;
 using SupportCenter.Data.CosmosDb.Entities;
 using SupportCenter.Extensions;
 
-namespace SupportCenter.Plugins.CustomerPlugin
+namespace SupportCenter.SemanticKernel.Plugins.CustomerPlugin
 {
     public class CustomerData
     {
