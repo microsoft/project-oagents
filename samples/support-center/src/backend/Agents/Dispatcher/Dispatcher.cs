@@ -9,7 +9,6 @@ using SupportCenter.Extensions;
 using SupportCenter.Options;
 using SupportCenter.SignalRHub;
 using System.Reflection;
-using static Microsoft.AI.Agents.Orleans.Resolvers;
 
 namespace SupportCenter.Agents;
 
@@ -20,18 +19,23 @@ namespace SupportCenter.Agents;
 [DispatcherChoice("CustomerInfo", "The customer is asking for reading or updating his or her information or profile.", EventType.CustomerInfoRequested)]
 public class Dispatcher : AiAgent<DispatcherState>
 {
-    protected override string Namespace => Consts.OrleansNamespace;
-    protected override string Name => nameof(Dispatcher);
     private readonly ILogger<Dispatcher> _logger;
 
+    protected override string Namespace => Consts.OrleansNamespace;
+    protected override Kernel Kernel { get; }
+    protected override ISemanticTextMemory Memory { get; }
+
     public Dispatcher(
+        ILogger<Dispatcher> logger,
         [PersistentState("state", "messages")] IPersistentState<AgentState<DispatcherState>> state,
-        KernelResolver kernelResolver,
-        SemanticTextMemoryResolver memoryResolver,
-        ILogger<Dispatcher> logger)
-    : base(state, kernelResolver, memoryResolver)
+        [FromKeyedServices("DispatcherKernel")] Kernel kernel,
+        [FromKeyedServices("DispatcherMemory")] ISemanticTextMemory memory
+       )
+    : base(state)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
+        Memory = memory ?? throw new ArgumentNullException(nameof(memory));
     }
 
     public async override Task HandleEvent(Event item)

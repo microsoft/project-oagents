@@ -3,28 +3,29 @@ using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
-using SupportCenter.Agents;
 using SupportCenter.Events;
 using SupportCenter.Options;
-using static Microsoft.AI.Agents.Orleans.Resolvers;
 
-namespace Marketing.Agents;
+namespace SupportCenter.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
 public class Discount : AiAgent<DiscountState>
 {
-    protected override string Namespace => Consts.OrleansNamespace;
-    protected override string Name => nameof(Discount);
-
     private readonly ILogger<Discount> _logger;
+
+    protected override string Namespace => Consts.OrleansNamespace;
+    protected override Kernel Kernel { get; }
+    protected override ISemanticTextMemory Memory { get; }
 
     public Discount([PersistentState("state", "messages")] IPersistentState<AgentState<DiscountState>> state,
         ILogger<Discount> logger,
-        KernelResolver kernelResolver,
-        SemanticTextMemoryResolver memoryResolver)
-    : base(state, kernelResolver, memoryResolver)
+        [FromKeyedServices("DiscountKernel")] Kernel kernel,
+        [FromKeyedServices("DiscountMemory")] ISemanticTextMemory memory)
+    : base(state)
     {
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
+        Memory = memory ?? throw new ArgumentNullException(nameof(memory));
     }
 
     public async override Task HandleEvent(Event item)

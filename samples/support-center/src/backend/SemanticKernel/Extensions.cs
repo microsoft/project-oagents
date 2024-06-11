@@ -38,7 +38,7 @@ namespace SupportCenter.SemanticKernel
                                 .WithAzureOpenAITextEmbeddingGeneration(aiSearchConfig.SearchEmbeddingDeploymentOrModelId, aiSearchConfig.SearchEmbeddingEndpoint, aiSearchConfig.SearchEmbeddingApiKey)
                                 .Build();
             }
-            else if(agent == "QnA")
+            else
             {
                 QdrantOptions qdrantConfig = provider.GetService<IOptions<QdrantOptions>>()?.Value ?? new QdrantOptions();
                 qdrantConfig.ValidateRequiredProperties();
@@ -48,7 +48,6 @@ namespace SupportCenter.SemanticKernel
                              .WithAzureOpenAITextEmbeddingGeneration(openAiConfig.EmbeddingsDeploymentOrModelId, openAiConfig.EmbeddingsEndpoint, openAiConfig.EmbeddingsApiKey)
                              .Build();
             }
-            return null;
         }
 
         public static Kernel CreateKernel(IServiceProvider provider, string agent)

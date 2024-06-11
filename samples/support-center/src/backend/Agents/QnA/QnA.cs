@@ -1,28 +1,31 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
-using static Microsoft.AI.Agents.Orleans.Resolvers;
 
 namespace SupportCenter.Agents;
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
 public class QnA : AiAgent<QnAState>
 {
-    protected override string Namespace => Consts.OrleansNamespace;
-    protected override string Name => nameof(QnA);
-
     private readonly ILogger<QnA> _logger;
 
+    protected override string Namespace => Consts.OrleansNamespace;
+    protected override Kernel Kernel { get; }
+    protected override ISemanticTextMemory Memory { get; }
+
     public QnA([PersistentState("state", "messages")] IPersistentState<AgentState<QnAState>> state,
-        KernelResolver kernelResolver,
-        SemanticTextMemoryResolver memoryResolver,
-        ILogger<QnA> logger)
-    : base(state, kernelResolver, memoryResolver)
+        ILogger<QnA> logger,
+        [FromKeyedServices("QnAKernel")] Kernel kernel,
+        [FromKeyedServices("QnAMemory")] ISemanticTextMemory memory)
+    : base(state)
     {
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
+        Memory = memory ?? throw new ArgumentNullException(nameof(memory));
     }
 
     public async override Task HandleEvent(Event item)

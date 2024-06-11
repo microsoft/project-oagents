@@ -2,30 +2,30 @@ using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
-using Microsoft.SemanticKernel.Connectors.AzureAISearch;
 using Orleans.Runtime;
 using SupportCenter.Events;
 using SupportCenter.Options;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
-using static Microsoft.AI.Agents.Orleans.Resolvers;
 
 namespace SupportCenter.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
 public class Invoice : AiAgent<InvoiceState>
 {
-    protected override string Namespace => Consts.OrleansNamespace;
-    protected override string Name => nameof(Invoice);
-
     private readonly ILogger<Invoice> _logger;
 
+    protected override string Namespace => Consts.OrleansNamespace;
+    protected override Kernel Kernel { get; }
+    protected override ISemanticTextMemory Memory { get; }
+
     public Invoice([PersistentState("state", "messages")] IPersistentState<AgentState<InvoiceState>> state,
-        KernelResolver kernelResolver,
-        SemanticTextMemoryResolver memoryResolver,
-        ILogger<Invoice> logger)
-    : base(state, kernelResolver, memoryResolver)
+        ILogger<Invoice> logger,
+        [FromKeyedServices("InvoiceKernel")] Kernel kernel,
+        [FromKeyedServices("InvoiceMemory")] ISemanticTextMemory memory)
+    : base(state)
     {
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
+        Memory = memory ?? throw new ArgumentNullException(nameof(memory));
     }
 
     public async override Task HandleEvent(Event item)
@@ -38,7 +38,7 @@ public class Invoice : AiAgent<InvoiceState>
                     var userId = item.Data["userId"];
                     var userMessage = item.Data["userMessage"];
                     //Try and find the invoice id in the user message
-                    var context = new KernelArguments { ["input"] = userMessage };
+                    var context = new KernelArguments { ["input"] = userMessage ?? throw new ArgumentNullException(nameof(userMessage)) };
                     var invoiceId = await CallFunction(InvoicePrompts.ExtractInvoiceId, context);
                     if (invoiceId == "Unknown")
                     {

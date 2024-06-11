@@ -1,4 +1,5 @@
-﻿using Microsoft.SemanticKernel.Memory;
+﻿using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Memory;
 using SupportCenter.Data.CosmosDb;
 using SupportCenter.Options;
 using SupportCenter.SemanticKernel.Plugins.CustomerPlugin;
@@ -50,8 +51,24 @@ namespace SupportCenter.Extensions
         {
             RegisterRepositories(services);
             AddSemanticKernelResolvers(services);
+            AddSemanticKernelServices(services);
 
             return services;
+        }
+
+        private static void AddSemanticKernelServices(IServiceCollection services)
+        {
+            services.AddKeyedSingleton("CustomerInfoKernel", (sp, _) => CreateKernel(sp, "CustomerInfo"));
+            services.AddKeyedSingleton("DispatcherKernel", (sp, _) => CreateKernel(sp, "Dispatcher"));
+            services.AddKeyedSingleton("InvoiceKernel", (sp, _) => CreateKernel(sp, "Invoice"));
+            services.AddKeyedSingleton("DiscountKernel", (sp, _) => CreateKernel(sp, "Discount"));
+            services.AddKeyedSingleton("QnAKernel", (sp, _) => CreateKernel(sp, "QnA"));
+
+            services.AddKeyedSingleton("CustomerInfoMemory", (sp, _) => CreateMemory(sp, "CustomerInfo"));
+            services.AddKeyedSingleton("DispatcherMemory", (sp, _) => CreateMemory(sp, "Dispatcher"));
+            services.AddKeyedSingleton("InvoiceMemory", (sp, _) => CreateMemory(sp, "Invoice"));
+            services.AddKeyedSingleton("DiscountMemory", (sp, _) => CreateMemory(sp, "Discount"));
+            services.AddKeyedSingleton("QnAMemory", (sp, _) => CreateMemory(sp, "QnA"));
         }
 
         private static void RegisterRepositories(IServiceCollection services)
@@ -61,7 +78,8 @@ namespace SupportCenter.Extensions
 
         private static void AddSemanticKernelResolvers(IServiceCollection services)
         {
-            /* Register the resolvers for the Semantic Kernel
+            /* 
+             * Register the resolvers for the Semantic Kernel
              * This is used to resolve the kernel and memory for the agent
              * The kernel is used to execute the functions and the memory is used to store the state
              */

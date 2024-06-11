@@ -2,6 +2,7 @@ using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Planning;
 using Orleans.Runtime;
 using SupportCenter.Data.CosmosDb;
@@ -10,35 +11,39 @@ using SupportCenter.Extensions;
 using SupportCenter.Options;
 using SupportCenter.SemanticKernel.Plugins.CustomerPlugin;
 using SupportCenter.SignalRHub;
-using static Microsoft.AI.Agents.Orleans.Resolvers;
 
 namespace SupportCenter.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
 public class CustomerInfo : AiAgent<CustomerInfoState>
 {
-    protected override string Namespace => Consts.OrleansNamespace;
-    protected override string Name => nameof(CustomerInfo);
     private readonly ILogger<CustomerInfo> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly ICustomerRepository _customerRepository;
     private readonly IChatCompletionService _chatCompletionService;
+
+    protected override string Namespace => Consts.OrleansNamespace;
+    protected override Kernel Kernel { get; }
+    protected override ISemanticTextMemory Memory { get; }
 
     public CustomerInfo(
         [PersistentState("state", "messages")] IPersistentState<AgentState<CustomerInfoState>> state,
         ILogger<CustomerInfo> logger,
         IServiceProvider serviceProvider,
         ICustomerRepository customerRepository,
-        KernelResolver kernelResolver,
-        SemanticTextMemoryResolver memoryResolver)
-    : base(state, kernelResolver, memoryResolver)
+        [FromKeyedServices("CustomerInfoKernel")] Kernel kernel,
+        [FromKeyedServices("CustomerInfoMemory")] ISemanticTextMemory memory)
+    : base(state)
     {
-        _logger = logger;
-        _serviceProvider = serviceProvider;
-        _customerRepository = customerRepository;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
+        Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
+        Memory = memory ?? throw new ArgumentNullException(nameof(memory));
 
-        _kernel.ImportPluginFromObject(serviceProvider.GetRequiredService<CustomerData>(), "CustomerPlugin");
-        _chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
+        if (Kernel.Plugins.TryGetPlugin("CustomerPlugin", out var plugin) == false)
+            Kernel.ImportPluginFromObject(serviceProvider.GetRequiredService<CustomerData>(), "CustomerPlugin");
+        _chatCompletionService = Kernel.GetRequiredService<IChatCompletionService>();
     }
 
     public async override Task HandleEvent(Event item)
@@ -77,7 +82,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 {
                     MaxIterations = 10,
                 });
-                var result = await planner.ExecuteAsync(_kernel, prompt);
+                var result = await planner.ExecuteAsync(Kernel, prompt);
                 await SendEvent(id, nameof(EventType.CustomerInfoRetrieved),
                     (nameof(userId), userId),
                     ("message", result.FinalAnswer));

@@ -4,25 +4,19 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 using System.Text;
-using static Microsoft.AI.Agents.Orleans.Resolvers;
 
 namespace Microsoft.AI.Agents.Orleans;
 
 public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
 {
     protected IPersistentState<AgentState<T>> _state;
-    protected Kernel _kernel;
-    private readonly ISemanticTextMemory _memory;
-    protected abstract string Name { get; }
+    protected abstract Kernel Kernel { get; }
+    protected abstract ISemanticTextMemory Memory { get; }
 
     public AiAgent(
-        [PersistentState("state", "messages")] IPersistentState<AgentState<T>> state, 
-        KernelResolver kernelResolver, 
-        SemanticTextMemoryResolver memoryResolver)
+        [PersistentState("state", "messages")] IPersistentState<AgentState<T>> state)
     {
-         _state = state;
-        _memory = memoryResolver(Name);
-        _kernel = kernelResolver(Name);
+        _state = state;
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
@@ -52,8 +46,8 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
     public virtual async Task<string> CallFunction(string template, KernelArguments arguments, OpenAIPromptExecutionSettings? settings = null)
     {
         var propmptSettings = settings ?? new OpenAIPromptExecutionSettings { MaxTokens = 4096, Temperature = 0.8, TopP = 1 };
-        var function = _kernel.CreateFunctionFromPrompt(template, propmptSettings);
-        var result = (await _kernel.InvokeAsync(function, arguments)).ToString();
+        var function = Kernel.CreateFunctionFromPrompt(template, propmptSettings);
+        var result = (await Kernel.InvokeAsync(function, arguments)).ToString();
         AddToHistory(result, ChatUserType.Agent);
         await _state.WriteStateAsync();
         return result;
@@ -68,7 +62,7 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
     /// <returns></returns>
     public async Task<KernelArguments> AddKnowledge(string instruction, string index, KernelArguments arguments)
     {
-        var documents = _memory.SearchAsync(index, arguments["input"].ToString(), 5);
+        var documents = Memory.SearchAsync(index, arguments["input"].ToString(), 5);
         var kbStringBuilder = new StringBuilder();
         await foreach (var doc in documents)
         {
@@ -87,7 +81,7 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
             ArgumentException.ThrowIfNullOrEmpty(value, nameof(value));
             data.Add(name, value);
         }
-        
+
         await PublishEvent(Namespace, id, new Event
         {
             Type = type,
