@@ -4,22 +4,22 @@
 #For more information, please see https://aka.ms/containercompat
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-nanoserver-1809 AS base
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
+EXPOSE 5274
+EXPOSE 11111
+EXPOSE 30000
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0-nanoserver-1809 AS build
+ENV ASPNETCORE_URLS=http://+:5274
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["SupportCenter.csproj", "."]
-RUN dotnet restore "./SupportCenter.csproj"
 COPY . .
-WORKDIR "/src/."
-RUN dotnet build "./SupportCenter.csproj" -c %BUILD_CONFIGURATION% -o /app/build
+RUN dotnet restore "samples/support-center/src/backend/SupportCenter.csproj"
+WORKDIR "/samples/support-center/src/backend"
+RUN dotnet build "SupportCenter.csproj" -c $configuration -o /app/build
 
 FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./SupportCenter.csproj" -c %BUILD_CONFIGURATION% -o /app/publish /p:UseAppHost=false
+ARG configuration=Release
+RUN dotnet publish "SupportCenter.csproj" -c $configuration -o /app/publish
 
 FROM base AS final
 WORKDIR /app
