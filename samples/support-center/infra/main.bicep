@@ -176,7 +176,7 @@ module documentIntelligence './core/documentintelligence/document-intelligence.b
   name: 'documentIntelligence'
   scope: rg
   params: {
-    documentIntelligenceName: !empty(documentIntelligenceName) ? documentIntelligenceName : '${abbrs.cognitiveServicesFormRecognizer}${resourceToken}'
+    documentIntelligenceName: !empty(documentIntelligenceName) ? documentIntelligenceName : '${abbrs.cognitiveServicesFormRecognizer}-${resourceToken}'
     location: location
     tags: tags
   }

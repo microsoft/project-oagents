@@ -1,5 +1,5 @@
-//@description('Location for all resources.')
-//param location string = resourceGroup().location
+@description('Location for all resources.')
+param location string = resourceGroup().location
 param tags object = {}
 
 @allowed([
