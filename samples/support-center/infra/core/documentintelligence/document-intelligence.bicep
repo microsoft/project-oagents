@@ -1,5 +1,5 @@
-@description('Location for all resources.')
-param location string = resourceGroup().location
+//@description('Location for all resources.')
+//param location string = resourceGroup().location
 param tags object = {}
 
 @allowed([
@@ -15,16 +15,23 @@ var actualname = !empty(documentIntelligenceName) ? documentIntelligenceName : d
 
 resource cognitiveService 'Microsoft.CognitiveServices/accounts@2021-10-01' = {
   name: actualname
-  location: location
+  location: 'westeurope' //invoice model is only available in eastus, west us2 and west europe for now
   tags: tags
   sku: {
     name: sku
   }
   kind: 'FormRecognizer'
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
-    apiProperties: {
-      statisticsEnabled: false
+    customSubDomainName: actualname
+    networkAcls: {
+      defaultAction: 'Allow'
+      virtualNetworkRules: []
+      ipRules: []
     }
+    publicNetworkAccess: 'Enabled'
   }
 }
 

@@ -245,12 +245,17 @@ Note! SignalR requires a https endpoint.
 
 ## Seed memory for Invoice agent
 For now one single invoice is configured in the Program.cs.
-Provision Azure Document Intelligence and Azure AI Search instances.
-Make sure you have the correct values set in config/appsetting.json.
+Provision Azure Document Intelligence and Azure AI Search instances. If you provisioned all servies through azd up earlier, these services do already exist. You have the appsetting.template.json to quickstart. Save a copy of appsetting.template.json to a file called appsetting.json and fill in the correct values found in the Azure portal.
 Run seed-invoice-memory project with dotnet run to extract the invoice fields with Document intelligence pre-built invoice model and store the information in AI Search.
 
 ## Seed memory for QnA agent
 For now the knowledge is based on the example files located in the seed-memory folder.
+
+Run locally:
 Download and run Qdrant locally ( docker run -p 6333:6333 qdrant/qdrant).
 Make sure you have the correct values set in config/appsetting.json.
+
+OR run in Azure:
+Provision Qdrant. If you provisioned all servies through azd up earlier, the service does already exist and has been deployed to Azure Container Apps. You have the appsetting.template.json to quickstart. Save a copy of appsetting.template.json to a file called appsetting.json and fill in the correct values found in the Azure portal.
+
 Run seed-memory project with dotnet run to load the collection vfcon106047 with the data.

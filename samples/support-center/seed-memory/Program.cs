@@ -33,7 +33,7 @@ class Program
         foreach (var file in files)
         {
             await ImportDocumentAsync(memory, file);
-            //Thread.Sleep(60000); //throttled to 1 request per minute
+            Thread.Sleep(60000); //throttled to 1 request per minute
         }
     }
 

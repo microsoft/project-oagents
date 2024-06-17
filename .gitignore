@@ -500,3 +500,6 @@ temp
 **/values.xml
 /samples/support-center/src/backend/appsettings.Development.json
 /samples/support-center/src/frontend/package-lock.json
+samples/support-center/seed-invoice-memory/config/appsettings.orig.json
+samples/support-center/seed-memory/config/appsettings copy.json
+samples/support-center/seed-invoice-memory/config/appsettings.new.json
