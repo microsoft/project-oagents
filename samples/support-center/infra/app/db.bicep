@@ -14,7 +14,7 @@ param databaseName string = ''
 param principalIds array = []
 
 // Because databaseName is optional in main.bicep, we make sure the database name is set here.
-var defaultDatabaseName = 'customer-support-db'
+var defaultDatabaseName = 'customer-support'
 var actualDatabaseName = !empty(databaseName) ? databaseName : defaultDatabaseName
 
 module cosmos '../core/database/cosmos/sql/cosmos-sql-db.bicep' = {
