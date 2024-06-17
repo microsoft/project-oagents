@@ -17,6 +17,8 @@ param cosmosAccountName string = ''
 @secure()
 param frontendDefinition object
 param storageAccountName string = ''
+param documentIntelligenceName string = ''
+param searchName string = ''
 
 @description('Id of the user or app to assign application roles')
 param principalId string
@@ -170,17 +172,25 @@ module frontend './app/frontend.bicep' = {
   }
   scope: rg
 }
-
-/* Create document intelligence service
-module documentIntelligence './core/documentintelligence/document-intelligence-service.bicep' = {
+module documentIntelligence './core/documentintelligence/document-intelligence.bicep' = {
   name: 'documentIntelligence'
   scope: rg
   params: {
-    documentIntelligenceName: !empty(documentIntelligenceName) ? documentIntelligenceName : '${abbrs.documentIntelligence}${resourceToken}'
+    documentIntelligenceName: !empty(documentIntelligenceName) ? documentIntelligenceName : '${abbrs.cognitiveServicesFormRecognizer}${resourceToken}'
     location: location
     tags: tags
   }
-}*/
+}
+
+module search './core/search/search.bicep' = {
+  name: 'search'
+  scope: rg
+  params: {
+    name: !empty(searchName) ? searchName : '${abbrs.searchSearchServices}${resourceToken}'
+    location: location
+    tags: tags
+  }
+}
 
 
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = registry.outputs.loginServer
@@ -190,3 +200,5 @@ output QDRANT_ENDPOINT string = 'https://${qdrant.outputs.fqdn}'
 output AZURE_COSMOS_ENDPOINT string = cosmos.outputs.endpoint
 output AZURE_COSMOS_CONNECTION_STRING_KEY string = cosmos.outputs.connectionStringKey
 output AZURE_COSMOS_DATABASE_NAME string = cosmos.outputs.databaseName
+output AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT string = documentIntelligence.outputs.endpoint
+output AZURE_SEARCH_ENDPOINT string = search.outputs.endpoint
