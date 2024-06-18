@@ -19,6 +19,16 @@ const data = [
   { icon: <Public />, label: 'Bank vs Governnent - Public Case - chf 3.7M - 10 years' },
 ];
 
+const senderColors = {
+  'user': '#d1e7dd',
+  'CommunityManager': '#d4e2d4',
+  'GraphicDesigner': '#f0e8e8',
+  'Writer': '#add8e6',
+  'Auditor': '#ff7f7f',
+  // add more senders and their colors here
+};
+
+
 const FireNav = styled(List)<{ component?: React.ElementType }>({
   '& .MuiListItemButton-root': {
     paddingLeft: 24,
@@ -104,7 +114,7 @@ export default function Chat({ messages, setMessages, sendMessage }: ChatProps) 
                 margin: '10px',
                 padding: '10px',
                 borderRadius: '10px',
-                backgroundColor: message.sender === 'user' ? '#d1e7dd' : '#d4e2d4',
+                backgroundColor: senderColors[message.sender] || '#d4e2d4',
                 alignSelf: message.sender === 'user' ? 'flex-end' : 'flex-start',
                 maxWidth: '80%',
                 wordWrap: 'break-word'

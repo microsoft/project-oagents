@@ -1,9 +1,8 @@
 ﻿namespace Marketing.Agents;
 
 [GenerateSerializer]
-public class CommunityManagerState
+public class AuditorState
 {
     [Id(0)]
-    public string WrittenSocialMediaPost { get; set; }
     public string Article { get; set; }
 }

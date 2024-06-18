@@ -40,6 +40,10 @@ public class SignalR : Agent
                 var post = item.Data["socialMediaPost"]; 
                 await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], post, AgentTypes.CommunityManager);
                 break;
+            case nameof(EventTypes.AuditorAlert):
+                var auditorAlertMessage = item.Data["auditorAlertMessage"]; 
+                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], auditorAlertMessage, AgentTypes.Auditor);
+                break;
 
             default:
                 break;

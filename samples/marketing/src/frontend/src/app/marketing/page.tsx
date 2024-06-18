@@ -65,14 +65,22 @@ export default function Marketing() {
       connection.on('ReceiveMessage', (message: SignalRMessage) => {
         console.log(`[MainPage][${message.userId}] Received message from ${message.agent}: ${message.message}`);
         if (message.agent === 'Chat') {
-          const newMessage = { sender: 'agent', text: message.message };
+          const newMessage = { sender: 'Writer', text: message.message };
+          setMessages(prevMessages => [...prevMessages, newMessage]);
+        }
+        if (message.agent === 'Auditor') {
+          const newMessage = { sender: 'Auditor', text: message.message };
           setMessages(prevMessages => [...prevMessages, newMessage]);
         }
         if (message.agent === 'CommunityManager') {
           setArticle(message.message);
+          const newMessage = { sender: message.agent, text: 'Community Manager: ' + message.message };
+          setMessages(prevMessages => [...prevMessages, newMessage]);
         }
         if (message.agent === 'GraphicDesigner') {
           setImgUrl(message.message);
+          const newMessage = { sender: message.agent, text: 'Graphic Designer: Check the image I created!'};
+          setMessages(prevMessages => [...prevMessages, newMessage]);
         }
       });
 
