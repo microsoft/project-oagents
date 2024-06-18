@@ -19,13 +19,14 @@ const data = [
   { icon: <Public />, label: 'Bank vs Governnent - Public Case - chf 3.7M - 10 years' },
 ];
 
-const senderColors = {
+type Sender = 'user' | 'CommunityManager' | 'GraphicDesigner' | 'Writer' | 'Auditor';
+
+const senderColors: Record<Sender, string> = {
   'user': '#d1e7dd',
   'CommunityManager': '#d4e2d4',
   'GraphicDesigner': '#f0e8e8',
   'Writer': '#add8e6',
   'Auditor': '#ff7f7f',
-  // add more senders and their colors here
 };
 
 
