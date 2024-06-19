@@ -1,10 +1,10 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-EXPOSE 5274
+EXPOSE 5244
 EXPOSE 11111
 EXPOSE 30000
 
-ENV ASPNETCORE_URLS=http://+:5274
+ENV ASPNETCORE_URLS=http://+:5244
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG configuration=Release
