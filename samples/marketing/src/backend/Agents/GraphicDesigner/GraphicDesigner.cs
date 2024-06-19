@@ -43,6 +43,12 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
                 break;
             case nameof(EventTypes.ArticleCreated):
                 //TODO
+
+                if (!String.IsNullOrEmpty(_state.State.Data.imageUrl))
+                {
+                    return;
+                }
+
                 _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}.");
                 var article = item.Data["article"];
                 var dallEService = _kernel.GetRequiredService<ITextToImageService>();
