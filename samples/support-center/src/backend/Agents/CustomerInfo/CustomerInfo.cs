@@ -49,9 +49,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
         string? userId = item.Data.GetValueOrDefault<string>("userId");
         string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
         string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
-        string id = $"{userId}/{conversationId}";
-
-        _logger.LogInformation("[{CustomerInfo}] Event {EventType}. Data: {EventData}", nameof(CustomerInfo), item.Type, item.Data);
+        string id = $"{userId}/{conversationId}";        
 
         switch (item.Type)
         {
@@ -60,6 +58,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 ClearHistory();
                 break;
             case nameof(EventType.CustomerInfoRequested):
+                _logger.LogInformation("[{CustomerInfo}] Event {EventType}. Data: {EventData}", nameof(CustomerInfo), item.Type, item.Data);
                 await SendEvent(id, nameof(EventType.CustomerInfoNotification),
                     (nameof(userId), userId),
                     ("message", $"I'm working on the user's request..."));
