@@ -122,7 +122,6 @@ static Kernel CreateKernel(IServiceProvider provider)
     }
     else
     {
-
         builder.Services.AddOpenAIChatCompletion(openAiConfig.ChatDeploymentOrModelId, openAIClient);
     }
 
