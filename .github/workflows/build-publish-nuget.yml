@@ -31,4 +31,4 @@ jobs:
       run: |
         cd src/Microsoft.AI.Agents
         dotnet pack -o packages
-        dotnet nuget push packages/ProjectOagents.$VERSION.nupkg --api-key ${{ secrets.NUGET_API_KEY }}  --source https://api.nuget.org/v3/index.json
+        dotnet nuget push packages/ProjectOagents.Core.$VERSION.nupkg --api-key ${{ secrets.NUGET_API_KEY }}  --source https://api.nuget.org/v3/index.json
