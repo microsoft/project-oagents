@@ -115,6 +115,7 @@ graph TD
 
     class User,Chat,APIs,Dispatcher,SignalR,QnA,Invoice,Conversation,CustomerInfo highlight;
 ```
+![Support Center](docs/media/arch.png)
 ## Example Flow Description
 
 ![Support Center](docs/media/screenshot.png)
