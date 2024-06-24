@@ -1,5 +1,7 @@
 # Support Center application
 
+![Support Center](docs/media/supportcenter.png)
+
 This is a demo application for a Customer Support Center use case, that showcases the different features of the AI Agent framework.
 Acting as the initial point of contact for customers, this agent will autonomously handle generic inquiries and, based on user intent, delegate actions to the appropriate human personnel. The agent will also provide comprehensive summaries and manage all customer interactions.
 
@@ -111,11 +113,7 @@ graph TD
     Dispatcher --> CustomerInfo
     CustomerInfo --> SignalR
 
-    Dispatcher -->|human agent gets a summary of Customer's request| SupportCenterAgent
-    SupportCenterAgent --> SignalR
-    SignalR -->|notif| Chat
-
-    class User,Chat,APIs,Dispatcher,SignalR,QnA,Invoice,Conversation,CustomerInfo,SupportCenterAgent highlight;
+    class User,Chat,APIs,Dispatcher,SignalR,QnA,Invoice,Conversation,CustomerInfo highlight;
 ```
 ## Example Flow Description
 
