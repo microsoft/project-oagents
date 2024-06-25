@@ -19,7 +19,8 @@ if (builder.Environment.IsDevelopment())
         options.AddPolicy(AllowDebugOriginPolicy, builder =>
         {
             builder
-            .WithOrigins("http://localhost:3000", "http://localhost:3001") // client url
+            //.WithOrigins("http://localhost:3000", "http://localhost:3001") // client url
+            .AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();

@@ -1,43 +1,22 @@
-FROM refinedev/node:18 AS base
+FROM node:18-alpine
 
-FROM base AS deps
+ARG VITE_OAGENT_BASE_URL
+ENV VITE_OAGENT_BASE_URL=$VITE_OAGENT_BASE_URL
 
-RUN apk add --no-cache libc6-compat
+RUN echo "VITE_OAGENT_BASE_URL:" $VITE_OAGENT_BASE_URL
 
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
+WORKDIR /app
 
-RUN \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+COPY package.json package-lock.json* .npmrc* ./
 
-FROM base AS builder
+RUN npm install
 
-COPY --from=deps /app/refine/node_modules ./node_modules
+RUN npm i -g serve
 
 COPY . .
 
-RUN npm run build
-
-FROM base AS runner
-
-ENV NODE_ENV production
-
-COPY --from=builder /app/refine/public ./public
-
-RUN mkdir .next
-RUN chown refine:nodejs .next
-
-COPY --from=builder --chown=refine:nodejs /app/refine/.next/standalone ./
-COPY --from=builder --chown=refine:nodejs /app/refine/.next/static ./.next/static
-
-USER refine
+RUN npm run azure
 
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
-CMD ["node", "server.js"]
+CMD [ "serve", "-s", "dist" ]

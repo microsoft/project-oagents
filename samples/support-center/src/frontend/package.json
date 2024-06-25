@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "azure": "vite --mode azureConfig",
+    "azure": "vite build --mode azureConfig",
     "local": "vite --mode localConfig",
     "dev": "vite",
     "build": "tsc && vite build --mode demo",
