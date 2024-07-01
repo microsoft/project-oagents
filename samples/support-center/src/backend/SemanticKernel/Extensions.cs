@@ -53,6 +53,15 @@ namespace SupportCenter.SemanticKernel
         public static Kernel CreateKernel(IServiceProvider provider, string agent)
         {
             OpenAIOptions openAiConfig = provider.GetService<IOptions<OpenAIOptions>>()?.Value ?? new OpenAIOptions();
+            //TODO: What is the best pattern for configuring models to agents?
+            if (agent == "Invoice")
+            {
+                openAiConfig.ChatDeploymentOrModelId = "gpt-4-32k";
+            }
+            else if (agent == "Conversation")
+            {
+                openAiConfig.ChatDeploymentOrModelId = "gpt-4o";
+            }
             var clientOptions = new OpenAIClientOptions();
             clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
             var builder = Kernel.CreateBuilder();
