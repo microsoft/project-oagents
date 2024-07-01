@@ -60,6 +60,7 @@ export async function SendMessageAsync(conversationId: string, userId: string, m
   }
 
   try {
+    console.log('Sending message to url:', `${supportCenterBaseUrl}/api/Interactions/${userId}`)
     const response = await axios.post<Message>(`${supportCenterBaseUrl}/api/Interactions/${userId}`, {
       message: messageText,
     })
