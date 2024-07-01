@@ -37,22 +37,11 @@ public class Invoice : AiAgent<InvoiceState>
                 {
                     var userId = item.Data["userId"];
                     var userMessage = item.Data["userMessage"];
-                    //Try and find the invoice id in the user message
                     var context = new KernelArguments { ["input"] = userMessage ?? throw new ArgumentNullException(nameof(userMessage)) };
-                    var invoiceId = await CallFunction(InvoicePrompts.ExtractInvoiceId, context);
-                    if (invoiceId == "Unknown")
-                    {
-                        AppendChatHistory(userMessage);
-                        string requestForId = "Can you please provide the invoice id?";
-                        AppendChatHistory(requestForId);
-                        await SendAnswerEvent(requestForId, userId);
-                        return;
-                    }
-                    await SendAnswerEvent($"Please wait while I look up the details for invoice {invoiceId} ...", userId);
-                    //TODO: We need to make sure an invoice belongs to the user before we can provide the information. Do we add metatdata, do we separate storage etc?
-                    _logger.LogInformation($"[{nameof(Invoice)}] Event {nameof(EventType.InvoiceRequested)}. UserQuestion: {userMessage}");
 
-                    var querycontext = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
+                    await SendAnswerEvent($"Please wait while I look up the details for invoice...", userId);
+                    _logger.LogInformation($"[{nameof(Invoice)}] Event {nameof(EventType.InvoiceRequested)}. UserQuestion: {userMessage}");
+                    var querycontext = new KernelArguments { ["input"] = AppendChatHistory(userMessage)};
                     var instruction = "Consider the following knowledge:!invoices!";
                     var enhancedContext = await AddKnowledge(instruction, "invoices", querycontext);
                     string answer = await CallFunction(InvoicePrompts.InvoiceRequest, enhancedContext);
