@@ -56,11 +56,11 @@ namespace SupportCenter.SemanticKernel
             //TODO: What is the best pattern for configuring models to agents?
             if (agent == "Invoice")
             {
-                openAiConfig.ChatDeploymentOrModelId = "gpt-4-32k";
+                openAiConfig.ChatDeploymentOrModelId = openAiConfig.InvoiceDeploymentOrModelId ?? openAiConfig.ChatDeploymentOrModelId;
             }
             else if (agent == "Conversation")
             {
-                openAiConfig.ChatDeploymentOrModelId = "gpt-4o";
+                openAiConfig.ChatDeploymentOrModelId = openAiConfig.ConversationDeploymentOrModelId ?? openAiConfig.ChatDeploymentOrModelId;
             }
             var clientOptions = new OpenAIClientOptions();
             clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);

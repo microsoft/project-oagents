@@ -206,7 +206,9 @@ Ensure you have an **appsettings.json** file in the src/backend directory with t
   "OpenAIOptions": {  
     "ChatEndpoint": "https://<Your-OpenAI-Endpoint>",  
     "ChatApiKey": "<Your-OpenAI-API-Key>",  
-    "ChatDeploymentOrModelId": "<Your-OpenAI-Model-ID>",  
+    "ChatDeploymentOrModelId": "<Your-OpenAI-Model-ID>",
+    "InvoiceDeploymentOrModelId": "<Optional>Your-OpenAI-Model-ID to use for the Invoice agent>",
+    "ConversationDeploymentOrModelId": "<Your-OpenAI-Model-ID to use for the Conversation agent>",  
     "EmbeddingsEndpoint": "https://<Your-Embeddings-Endpoint>",  
     "EmbeddingsApiKey": "<Your-Embeddings-API-Key>",  
     "EmbeddingsDeploymentOrModelId": "<Your-Embeddings-Model-ID>"  

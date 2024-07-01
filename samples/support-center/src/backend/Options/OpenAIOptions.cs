@@ -20,6 +20,9 @@ public class OpenAIOptions
     [Required]
     public string ChatDeploymentOrModelId { get; set; } = string.Empty;
 
+    public string? InvoiceDeploymentOrModelId { get; set; }
+    public string? ConversationDeploymentOrModelId { get; set; }
+
     // TextToImage
     /*[Required]
     public string? ImageEndpoint { get; set; }
