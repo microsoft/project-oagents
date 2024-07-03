@@ -4,12 +4,17 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageId>ProjectOagents.Core</PackageId>
-    <Version>0.0.1-alpha</Version>
-    <Authors>kostapetan-ms</Authors>
+    <PackageId>Oagents.Core</PackageId>
+    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionSuffix>$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</VersionSuffix>
+    <Authors>kostapetan</Authors>
     <Description>Project Oagents Core Library</Description>
     <Tags>ai-agents;event-driven-agents</Tags>
   </PropertyGroup>
+
+  <PropertyGroup>
+  
+</PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.10.0" />

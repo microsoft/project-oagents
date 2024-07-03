@@ -13,10 +13,10 @@ jobs:
     publish-core:
       uses: ./.github/workflows/publish-nuget.yml
       with:
-        package-name: core
+        package-name: Oagents.Core
       secrets: inherit
     publish-orleans:
       uses: ./.github/workflows/publish-nuget.yml
       with:
-        package-name: orleans
+        package-name: Oagents.Orleans
       secrets: inherit

@@ -20,12 +20,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Get short SHA
+      id: short-sha
+      run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
     - name: Publish package
       run: |
-        cd src/Microsoft.AI.Agents
-        dotnet pack -o packages
-        dotnet nuget push packages/ProjectOagents.${{ inputs.package-name }}.$VERSION.nupkg --api-key ${{ secrets.NUGET_API_KEY }}  --source https://api.nuget.org/v3/index.json
+        cd src/${{ inputs.package-name }}
+        dotnet pack -o packages --version-suffix $SHORT_SHA
+        dotnet nuget push packages/${{ inputs.package-name }}.$SHORT_SHA.nupkg --api-key ${{ secrets.NUGET_API_KEY }}  --source https://api.nuget.org/v3/index.json

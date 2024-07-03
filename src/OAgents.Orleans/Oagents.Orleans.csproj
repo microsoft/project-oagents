@@ -4,9 +4,10 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageId>ProjectOagents.Orleans</PackageId>
-    <Version>0.0.1-alpha</Version>
-    <Authors>kostapetan-ms</Authors>
+    <PackageId>Oagents.Orleans</PackageId>
+    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionSuffix>$([System.DateTime]::UtcNow.ToString(yyyyMMdd))</VersionSuffix>
+    <Authors>kostapetan</Authors>
     <Description>Project Oagents - Orleans implementation</Description>
     <Tags>ai-agents;event-driven-agents</Tags>
   </PropertyGroup>
@@ -14,7 +15,10 @@
    <ItemGroup>
     <PackageReference Include="Microsoft.Orleans.Sdk" Version="8.1.0" />
     <PackageReference Include="Microsoft.Orleans.Streaming" Version="8.1.0" />
-    <ProjectReference Include="..\Microsoft.AI.Agents\Microsoft.AI.Agents.csproj" />
   </ItemGroup>
+
+   <ItemGroup>
+     <ProjectReference Include="..\Oagents.Core\Oagents.Core.csproj" />
+   </ItemGroup>
 
 </Project>
