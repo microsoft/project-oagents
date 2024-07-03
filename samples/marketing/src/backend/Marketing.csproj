@@ -53,7 +53,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\src\OAgents.Orleans\Oagents.Orleans.csproj" />
+    <ProjectReference Include="..\..\..\..\src\Oagents.Orleans\Oagents.Orleans.csproj" />
   </ItemGroup>
   
 
