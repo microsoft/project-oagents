@@ -8,7 +8,7 @@
     <PackageProjectUrl>https://github.com/microsoft/project-oagents</PackageProjectUrl>
     <VersionPrefix>0.0.2</VersionPrefix>
     <Authors>kostapetan</Authors>
-    <Description>Project Oagents - Orleans implementation</Description>
+    <Description>Oagents - Orleans implementation</Description>
     <Tags>ai-agents;event-driven-agents</Tags>
   </PropertyGroup>
 

@@ -8,7 +8,7 @@
     <PackageProjectUrl>https://github.com/microsoft/project-oagents</PackageProjectUrl>
     <VersionPrefix>0.0.2</VersionPrefix>
     <Authors>kostapetan</Authors>
-    <Description>Project Oagents - Dapr implementation</Description>
+    <Description>Oagents - Dapr implementation</Description>
     <Tags>ai-agents;event-driven-agents</Tags>
   </PropertyGroup>
 
