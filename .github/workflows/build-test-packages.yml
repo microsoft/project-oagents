@@ -1,4 +1,4 @@
-name: Build and test the packages
+name: Build and test the nuget packages
 
 on:
   workflow_call:

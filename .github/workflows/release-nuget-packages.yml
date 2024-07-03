@@ -1,3 +1,5 @@
+name: Release all nuget packages
+
 on:
    push:
      paths:

@@ -1,4 +1,4 @@
-name: Build and publish the packages
+name: Publish the nuget packages
 
 on:
   workflow_call:
