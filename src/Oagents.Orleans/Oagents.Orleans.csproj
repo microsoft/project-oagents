@@ -9,7 +9,7 @@
     <VersionPrefix>0.0.2</VersionPrefix>
     <Authors>kostapetan</Authors>
     <Description>Oagents - Orleans implementation</Description>
-    <Tags>ai-agents;event-driven-agents</Tags>
+    <Tags>ai-agents;event-driven-agents; Orleans</Tags>
   </PropertyGroup>
 
    <ItemGroup>
