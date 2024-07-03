@@ -7,6 +7,7 @@
     <PackageId>Oagents.Core</PackageId>
     <PackageProjectUrl>https://github.com/microsoft/project-oagents</PackageProjectUrl>
     <VersionPrefix>0.0.2</VersionPrefix>
+    <VersionSuffix>$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</VersionSuffix>
     <Authors>kostapetan</Authors>
     <Description>Oagents Core Library</Description>
     <Tags>ai-agents;event-driven-agents</Tags>
