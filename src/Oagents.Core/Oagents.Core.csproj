@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <PackageId>Oagents.Core</PackageId>
     <VersionPrefix>0.0.1</VersionPrefix>
-    <VersionSuffix>$([System.DateTime]::UtcNow.ToString(yyyyMMddHHmm))</VersionSuffix>
     <Authors>kostapetan</Authors>
     <Description>Project Oagents Core Library</Description>
     <Tags>ai-agents;event-driven-agents</Tags>

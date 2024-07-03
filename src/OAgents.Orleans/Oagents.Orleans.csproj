@@ -6,7 +6,6 @@
     <Nullable>enable</Nullable>
     <PackageId>Oagents.Orleans</PackageId>
     <VersionPrefix>0.0.1</VersionPrefix>
-    <VersionSuffix>$([System.DateTime]::UtcNow.ToString(yyyyMMdd))</VersionSuffix>
     <Authors>kostapetan</Authors>
     <Description>Project Oagents - Orleans implementation</Description>
     <Tags>ai-agents;event-driven-agents</Tags>

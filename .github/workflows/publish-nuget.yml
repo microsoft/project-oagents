@@ -10,8 +10,6 @@ on:
       NUGET_API_KEY:
         required: true
 
-env:
-  VERSION: "0.0.1-alpha"
   # 
 jobs:
   build:
