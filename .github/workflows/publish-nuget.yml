@@ -1,0 +1,31 @@
+name: Build and publish the packages
+
+on:
+  workflow_call:
+    inputs:
+      package-name:
+        required: true
+        type: string
+    secrets:
+      NUGET_API_KEY:
+        required: true
+
+env:
+  VERSION: "0.0.1-alpha"
+  # 
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Publish package
+      run: |
+        cd src/Microsoft.AI.Agents
+        dotnet pack -o packages
+        dotnet nuget push packages/ProjectOagents.${{ inputs.package-name }}.$VERSION.nupkg --api-key ${{ secrets.NUGET_API_KEY }}  --source https://api.nuget.org/v3/index.json
