@@ -29,4 +29,4 @@ jobs:
       run: |
         cd src/${{ inputs.package-name }}
         dotnet pack -o packages --version-suffix $SHORT_SHA
-        dotnet nuget push ./packages/${{ inputs.package-name }}.$SHORT_SHA.nupkg --api-key ${{ secrets.NUGET_API_KEY }}  --source https://api.nuget.org/v3/index.json
+        dotnet nuget push $GITHUB_WORKSPACE/packages/${{ inputs.package-name }}.$SHORT_SHA.nupkg --api-key ${{ secrets.NUGET_API_KEY }}  --source https://api.nuget.org/v3/index.json

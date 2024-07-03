@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <PackageId>Oagents.Core</PackageId>
     <PackageProjectUrl>https://github.com/microsoft/project-oagents</PackageProjectUrl>
-    <VersionPrefix>0.0.1</VersionPrefix>
+    <VersionPrefix>0.0.2</VersionPrefix>
     <Authors>kostapetan</Authors>
     <Description>Project Oagents Core Library</Description>
     <Tags>ai-agents;event-driven-agents</Tags>
