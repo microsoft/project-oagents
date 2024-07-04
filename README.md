@@ -13,6 +13,8 @@ We have created a few examples to help you get started with the framework and to
 - [GitHub Dev Team Sample](samples/gh-flow/README.md): Build an AI Developer Team using event-driven agents, that help you automate the requirements engineering, planning, and coding process on GitHub.
 - [Marketing Team Sample](samples/marketing/README.md): Create a marketing campaign using a content writer, graphic designer and social media manager.
 
+- [Support center sample](samples/support-center/README.md): Model a call center team, each member is an expert in it's own domain and one is orchestrating the asks of the user based on the intent.
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a

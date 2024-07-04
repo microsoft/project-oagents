@@ -5,9 +5,9 @@ VisualStudioVersion = 17.9.34902.65
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SupportCenter", "SupportCenter.csproj", "{41A852BD-5A4D-4618-AF8B-B83051B021DC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.AI.Agents", "..\..\..\..\src\Microsoft.AI.Agents\Microsoft.AI.Agents.csproj", "{0F34F525-D83D-4FBD-83C3-92159519A5F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.AI.Agents", "..\..\..\..\src\Oagents.Core\Oagents.Core.csproj", "{0F34F525-D83D-4FBD-83C3-92159519A5F7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.AI.Agents.Orleans", "..\..\..\..\src\Microsoft.AI.Agents.Orleans\Microsoft.AI.Agents.Orleans.csproj", "{4CB5296A-0430-4FFE-99DB-ABE6861826EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.AI.Agents.Orleans", "..\..\..\..\src\Oagents.Orleans\Oagents.Orleans.csproj", "{4CB5296A-0430-4FFE-99DB-ABE6861826EB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
