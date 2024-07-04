@@ -5,6 +5,7 @@ import { Configuration } from '../models/Configuration'
 import { Message, SenderType } from '../models/Message'
 
 const supportCenterBaseUrl = import.meta.env.VITE_OAGENT_BASE_URL
+console.log(`Backend service URL: ${supportCenterBaseUrl}`)
 const isMockEnabled = import.meta.env.VITE_IS_MOCK_ENABLED
 
 export async function getConfigurationAsync(): Promise<Configuration> {
@@ -60,8 +61,9 @@ export async function SendMessageAsync(conversationId: string, userId: string, m
   }
 
   try {
-    console.log('Sending message to url:', `${supportCenterBaseUrl}/api/Interactions/${userId}`)
-    const response = await axios.post<Message>(`${supportCenterBaseUrl}/api/Interactions/${userId}`, {
+    const url = new URL(`'/api/Interactions/${userId}`, supportCenterBaseUrl).href;
+    console.log('Sending message to url: ', url);
+    const response = await axios.post<Message>(url, {
       message: messageText,
     })
 
@@ -105,13 +107,14 @@ export async function SendFeedbackAsync(
     return
   }
 
-  await axios.post(`${supportCenterBaseUrl}api/chat/feedback`, request)
+  const url = new URL('api/chat/feedback', supportCenterBaseUrl).href;
+  await axios.post(url, request)
 }
 
-
 export function GetStreamingConnection(): HubConnection {
+  const url = new URL('supportcenterhub', supportCenterBaseUrl).href;
   return new HubConnectionBuilder()
-    .withUrl(`${supportCenterBaseUrl}supportcenterhub`)
+    .withUrl(url)
     .withAutomaticReconnect()
     .build();
 }
