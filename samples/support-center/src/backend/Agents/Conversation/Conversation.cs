@@ -14,18 +14,14 @@ public class Conversation : AiAgent<ConversationState>
     private readonly ILogger<Conversation> _logger;
 
     protected override string Namespace => Consts.OrleansNamespace;
-    protected override Kernel Kernel { get; }
-    protected override ISemanticTextMemory Memory { get; }
 
     public Conversation([PersistentState("state", "messages")] IPersistentState<AgentState<ConversationState>> state,
         ILogger<Conversation> logger,
         [FromKeyedServices("ConversationKernel")] Kernel kernel,
         [FromKeyedServices("ConversationMemory")] ISemanticTextMemory memory)
-    : base(state)
+    : base(state, memory, kernel)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-        Memory = memory ?? throw new ArgumentNullException(nameof(memory));
     }
 
     public async override Task HandleEvent(Event item)

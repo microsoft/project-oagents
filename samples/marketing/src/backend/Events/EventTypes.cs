@@ -7,4 +7,6 @@ public enum EventTypes
     UserConnected,
     GraphicDesignCreated,
     SocialMediaPostCreated,
+    AuditText,
+    AuditorAlert
 }

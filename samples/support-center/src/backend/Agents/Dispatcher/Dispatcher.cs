@@ -23,18 +23,15 @@ public class Dispatcher : AiAgent<DispatcherState>
     private readonly ILogger<Dispatcher> _logger;
 
     protected override string Namespace => Consts.OrleansNamespace;
-    protected override Kernel Kernel { get; }
-    protected override ISemanticTextMemory Memory { get; }
 
     public Dispatcher(
         ILogger<Dispatcher> logger,
         [PersistentState("state", "messages")] IPersistentState<AgentState<DispatcherState>> state,
         [FromKeyedServices("DispatcherKernel")] Kernel kernel
        )
-    : base(state)
+    : base(state, default, kernel)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
     }
 
     public async override Task HandleEvent(Event item)
@@ -68,13 +65,20 @@ public class Dispatcher : AiAgent<DispatcherState>
                 break;
             case nameof(EventType.UserNewConversation):
                 // The user started a new conversation.
-                ClearHistory();
+                _state.State.History.Clear();
                 break;
             case nameof(EventType.UserChatInput):
                 intent = (await ExtractIntentAsync(userMessage))?.Trim(' ', '\"', '.') ?? string.Empty;
-                await SendEvent(id, nameof(EventType.DispatcherNotification),
-                    (nameof(userId), userId),
-                    ("message", $"The user request has been dispatched to the '{intent}' agent."));
+                await PublishEvent(Namespace, id, new Event
+                {
+                    Type = nameof(EventType.DispatcherNotification),
+                    Data = new Dictionary<string, string>
+                    {
+                        { nameof(userId), userId },
+                        { "message",  $"The user request has been dispatched to the '{intent}' agent." }
+                    }
+                });
+
                 await SendDispatcherEvent(id, userId, intent, userMessage);
                 break;
             case nameof(EventType.QnARetrieved):
@@ -120,9 +124,14 @@ public class Dispatcher : AiAgent<DispatcherState>
             .FirstOrDefault(attr => attr.Name == intent)?
             .DispatchToEvent.ToString() ?? EventType.Unknown.ToString();
 
-        await SendEvent(id, type,
-            (nameof(userId), userId),
-            (nameof(userMessage), userMessage)
-        );
+        await PublishEvent(Namespace, id, new Event
+                {
+                    Type = type,
+                    Data = new Dictionary<string, string>
+                    {
+                        { nameof(userId), userId },
+                        { nameof(userMessage),  userMessage }
+                    }
+                });
     }
 }

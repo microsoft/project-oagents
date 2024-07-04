@@ -1,3 +1,4 @@
+using Marketing.Controller;
 using Marketing.Events;
 using Marketing.Options;
 using Microsoft.AI.Agents.Abstractions;
@@ -13,9 +14,9 @@ public class CommunityManager : AiAgent<CommunityManagerState>
 {
     protected override string Namespace => Consts.OrleansNamespace;
 
-    private readonly ILogger<GraphicDesigner> _logger;
+    private readonly ILogger<CommunityManager> _logger;
 
-    public CommunityManager([PersistentState("state", "messages")] IPersistentState<AgentState<CommunityManagerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger) 
+    public CommunityManager([PersistentState("state", "messages")] IPersistentState<AgentState<CommunityManagerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<CommunityManager> logger)
     : base(state, memory, kernel)
     {
         _logger = logger;
@@ -36,18 +37,42 @@ public class CommunityManager : AiAgent<CommunityManagerState>
                 await SendDesignedCreatedEvent(lastMessage, item.Data["UserId"]);
                 break;
 
-            case nameof(EventTypes.ArticleCreated):   
-            {
-                var article = item.Data["article"]; 
+            case nameof(EventTypes.UserChatInput):
+            case nameof(EventTypes.ArticleCreated):
+                {
+                    string article;
+                    if (item.Data.ContainsKey("article"))
+                    {
+                        article = item.Data["article"];
+                        _state.State.Data.Article = article;
+                    }
+                    else if (_state.State.Data.Article != null)
+                    {
+                        article = _state.State.Data.Article;
+                    }
+                    else
+                    { 
+                        // No article yet
+                        return;
+                    }
 
-                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}. Article: {article}");
-                    
-                var context = new KernelArguments { ["input"] = AppendChatHistory(article) };
-                string socialMediaPost = await CallFunction(CommunityManagerPrompts.WritePost, context);
-                _state.State.Data.WrittenSocialMediaPost = socialMediaPost;
-                await SendDesignedCreatedEvent(socialMediaPost, item.Data["UserId"]);
-                break;
-            }     
+                    if (item.Data.ContainsKey("userMessage"))
+                    {
+                        article += "| USER REQUEST: " + item.Data["userMessage"];
+                    }
+                    _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}. Article: {article}");
+
+                    var context = new KernelArguments { ["input"] = AppendChatHistory(article) };
+                    string socialMediaPost = await CallFunction(CommunityManagerPrompts.WritePost, context);
+                    if (socialMediaPost.Contains("NOTFORME"))
+                    {
+                        return;
+                    }
+                    _state.State.Data.WrittenSocialMediaPost = socialMediaPost;
+
+                    await SendDesignedCreatedEvent(socialMediaPost, item.Data["UserId"]);
+                    break;
+                }
             default:
                 break;
         }
@@ -61,6 +86,15 @@ public class CommunityManager : AiAgent<CommunityManagerState>
             Data = new Dictionary<string, string> {
                             { "UserId", userId },
                             { nameof(socialMediaPost), socialMediaPost}
+                        }
+        });
+
+        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
+        {
+            Type = nameof(EventTypes.AuditText),
+            Data = new Dictionary<string, string> {
+                { "UserId", userId },
+                            { "text", "Social Media post writen by the Community Manager: " + socialMediaPost },
                         }
         });
     }

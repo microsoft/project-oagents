@@ -33,7 +33,7 @@ public class Writer : AiAgent<WriterState>, IWriter
                     return;
                 }
 
-                await SendDesignedCreatedEvent(lastMessage, item.Data["UserId"]);
+                await SendArticleCreatedEvent(lastMessage, item.Data["UserId"]);
 
                 break;
 
@@ -45,7 +45,11 @@ public class Writer : AiAgent<WriterState>, IWriter
                     var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
                     string newArticle = await CallFunction(WriterPrompts.Write, context);
 
-                    await SendDesignedCreatedEvent(newArticle, item.Data["UserId"]);
+                    if (newArticle.Contains("NOTFORME"))
+                    {
+                        return;
+                    }
+                    await SendArticleCreatedEvent(newArticle, item.Data["UserId"]);
                     break;   
                 }
                 
@@ -54,7 +58,7 @@ public class Writer : AiAgent<WriterState>, IWriter
         }
     }
 
-    private async Task SendDesignedCreatedEvent(string article, string userId)
+    private async Task SendArticleCreatedEvent(string article, string userId)
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
@@ -64,8 +68,15 @@ public class Writer : AiAgent<WriterState>, IWriter
                             { nameof(article), article },
                         }
         });
+        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
+        {
+            Type = nameof(EventTypes.AuditText),
+            Data = new Dictionary<string, string> {
+                            { "UserId", userId },
+                            { "text", "Article writen by the Writer: " + article },
+                        }
+        });
     }
-
 
     public Task<String> GetArticle()
     {

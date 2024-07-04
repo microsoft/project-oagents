@@ -14,18 +14,14 @@ public class Discount : AiAgent<DiscountState>
     private readonly ILogger<Discount> _logger;
 
     protected override string Namespace => Consts.OrleansNamespace;
-    protected override Kernel Kernel { get; }
-    protected override ISemanticTextMemory Memory { get; }
 
     public Discount([PersistentState("state", "messages")] IPersistentState<AgentState<DiscountState>> state,
         ILogger<Discount> logger,
         [FromKeyedServices("DiscountKernel")] Kernel kernel,
         [FromKeyedServices("DiscountMemory")] ISemanticTextMemory memory)
-    : base(state)
+    : base(state, memory, kernel)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-        Memory = memory ?? throw new ArgumentNullException(nameof(memory));
     }
 
     public async override Task HandleEvent(Event item)

@@ -2,14 +2,12 @@ using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Planning;
 using Orleans.Runtime;
 using SupportCenter.Data.CosmosDb;
 using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
-using SupportCenter.SemanticKernel.Plugins.CustomerPlugin;
 using SupportCenter.SignalRHub;
 
 namespace SupportCenter.Agents;
@@ -23,8 +21,6 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
     private readonly IChatCompletionService _chatCompletionService;
 
     protected override string Namespace => Consts.OrleansNamespace;
-    protected override Kernel Kernel { get; }
-    protected override ISemanticTextMemory Memory { get; }
 
     public CustomerInfo(
         [PersistentState("state", "messages")] IPersistentState<AgentState<CustomerInfoState>> state,
@@ -32,16 +28,15 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
         IServiceProvider serviceProvider,
         ICustomerRepository customerRepository,
         [FromKeyedServices("CustomerInfoKernel")] Kernel kernel)
-    : base(state)
+    : base(state, default, kernel)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
-        Kernel = kernel ?? throw new ArgumentNullException(nameof(kernel));
-
-        if (Kernel.Plugins.TryGetPlugin("CustomerPlugin", out var plugin) == false)
-            Kernel.ImportPluginFromObject(serviceProvider.GetRequiredService<CustomerData>(), "CustomerPlugin");
-        _chatCompletionService = Kernel.GetRequiredService<IChatCompletionService>();
+        // TODO: Extract this to the keyed service config
+        // if (Kernel.Plugins.TryGetPlugin("CustomerPlugin", out var plugin) == false)
+        //     Kernel.ImportPluginFromObject(serviceProvider.GetRequiredService<CustomerData>(), "CustomerPlugin");
+        _chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
     }
 
     public async override Task HandleEvent(Event item)
@@ -55,13 +50,19 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
         {
             case nameof(EventType.UserNewConversation):
                 // The user started a new conversation.
-                ClearHistory();
+                _state.State.History.Clear();
                 break;
             case nameof(EventType.CustomerInfoRequested):
                 _logger.LogInformation("[{CustomerInfo}] Event {EventType}. Data: {EventData}", nameof(CustomerInfo), item.Type, item.Data);
-                await SendEvent(id, nameof(EventType.CustomerInfoNotification),
-                    (nameof(userId), userId),
-                    ("message", $"I'm working on the user's request..."));
+                await PublishEvent(Namespace, id, new Event
+                {
+                    Type = nameof(EventType.CustomerInfoNotification),
+                    Data = new Dictionary<string, string>
+                    {
+                        { nameof(userId), userId },
+                        { "message", "I'm working on the user's request..." }
+                    }
+                });
 
                 // Get the customer info via the planners.
                 var prompt = CustomerInfoPrompts.GetCustomerInfo
@@ -79,10 +80,16 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 {
                     MaxIterations = 10,
                 });
-                var result = await planner.ExecuteAsync(Kernel, prompt);
-                await SendEvent(id, nameof(EventType.CustomerInfoRetrieved),
-                    (nameof(userId), userId),
-                    ("message", result.FinalAnswer));
+                var result = await planner.ExecuteAsync(_kernel, prompt);
+                await PublishEvent(Namespace, id, new Event
+                {
+                    Type = nameof(EventType.CustomerInfoRetrieved),
+                    Data = new Dictionary<string, string>
+                    {
+                        { nameof(userId), userId },
+                        { "message", result.FinalAnswer }
+                    }
+                });
 
                 AddToHistory(result.FinalAnswer, ChatUserType.Agent);
 #pragma warning restore SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.

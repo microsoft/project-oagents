@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\src\Microsoft.AI.Agents.Orleans\Microsoft.AI.Agents.Orleans.csproj" />
-  </ItemGroup>
+
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -44,6 +42,10 @@
    
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.4.1" />
         
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\Oagents.Orleans\Oagents.Orleans.csproj" />
   </ItemGroup>
   
 
