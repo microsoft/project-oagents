@@ -1,0 +1,26 @@
+name: Release all nuget packages
+
+on:
+   push:
+     paths:
+     - 'src/**'
+ 
+permissions:
+    id-token: write
+    contents: read
+jobs:
+    build-test-packages:
+      uses: ./.github/workflows/build-test-packages.yml
+      secrets: inherit
+    publish-core:
+      uses: ./.github/workflows/publish-nuget.yml
+      with:
+        package-name: Oagents.Core
+        version-prefix: 0.0.2
+      secrets: inherit
+    publish-orleans:
+      uses: ./.github/workflows/publish-nuget.yml
+      with:
+        package-name: Oagents.Orleans
+        version-prefix: 0.0.2
+      secrets: inherit

@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\src\Microsoft.AI.Agents.Dapr\Microsoft.AI.Agents.Dapr.csproj" />
-  </ItemGroup>
+ 
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -38,6 +36,10 @@
     <PackageReference Include="Dapr.Actors.AspNetCore" Version="1.13.0" />
     <PackageReference Include="Dapr.AspNetCore" Version="1.13.0" />
     <PackageReference Include="CloudNative.CloudEvents.SystemTextJson" Version="2.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\Oagents.Dapr\Oagents.Dapr.csproj" />
   </ItemGroup>
   
 
