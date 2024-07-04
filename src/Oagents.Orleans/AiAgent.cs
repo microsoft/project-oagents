@@ -16,6 +16,7 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
 
     public AiAgent([PersistentState("state", "messages")] IPersistentState<AgentState<T>> state, ISemanticTextMemory memory, Kernel kernel) 
     {
+          ArgumentNullException.ThrowIfNull(kernel);
          _state = state;
         _memory = memory;
         _kernel = kernel;

@@ -1,4 +1,4 @@
-# [In progress] Marketing Saple application
+# [In progress] Marketing Sample application
 
 This is a demo application that showcase the different features of the AI Agent framework.
 There are five agents in this application that control the different areas of the UI autonomously.

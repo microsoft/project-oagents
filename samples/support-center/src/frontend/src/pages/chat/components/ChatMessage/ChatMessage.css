@@ -1,0 +1,36 @@
+.user-message-card {
+  background-color: '#EDF5FD';
+}
+
+.message-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  margin: 10px 0px;
+}
+
+.message-container-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.feedback-container-target {
+  display: flex;
+  flex-direction: row-reverse;
+  margin: 0px 30px;
+}
+
+.message-disclaimer {
+  color: #707070;
+}
+
+.citation-container {
+  flex-direction: column;
+}
+
+.citation-item {
+  margin: 2px 0px;
+}

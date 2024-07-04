@@ -26,7 +26,7 @@ on:
     branches:
       - 'main'
     paths:
-      - samples/marketing/*
+     - 'samples/marketing/**'
       - .github/workflows/marketing-builddeploy.yaml
   
 permissions:
