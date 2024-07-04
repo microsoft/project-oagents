@@ -26,3 +26,4 @@ services:
         dist: build
         docker:
             path: Dockerfile
+

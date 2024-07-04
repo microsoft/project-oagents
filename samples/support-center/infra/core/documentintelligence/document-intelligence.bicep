@@ -6,7 +6,9 @@ param tags object = {}
   'F0'
   'S0'
 ])
+
 param sku string = 'S0'
+
 
 param documentIntelligenceName string = ''
 // Because name is optional in main.bicep, we make sure the name is set here.

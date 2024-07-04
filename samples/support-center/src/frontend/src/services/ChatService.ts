@@ -5,7 +5,9 @@ import { Configuration } from '../models/Configuration'
 import { Message, SenderType } from '../models/Message'
 
 const supportCenterBaseUrl = import.meta.env.VITE_OAGENT_BASE_URL
+
 console.log(`Backend service URL: ${supportCenterBaseUrl}`)
+
 const isMockEnabled = import.meta.env.VITE_IS_MOCK_ENABLED
 
 export async function getConfigurationAsync(): Promise<Configuration> {
@@ -61,9 +63,11 @@ export async function SendMessageAsync(conversationId: string, userId: string, m
   }
 
   try {
+
     const url = new URL(`'/api/Interactions/${userId}`, supportCenterBaseUrl).href;
     console.log('Sending message to url: ', url);
     const response = await axios.post<Message>(url, {
+
       message: messageText,
     })
 
@@ -115,6 +119,7 @@ export function GetStreamingConnection(): HubConnection {
   const url = new URL('supportcenterhub', supportCenterBaseUrl).href;
   return new HubConnectionBuilder()
     .withUrl(url)
+
     .withAutomaticReconnect()
     .build();
 }

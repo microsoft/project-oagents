@@ -203,3 +203,4 @@ output AZURE_COSMOS_DATABASE_NAME string = cosmos.outputs.databaseName
 output AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT string = documentIntelligence.outputs.endpoint
 output AZURE_SEARCH_ENDPOINT string = search.outputs.endpoint
 output AZURE_BACKEND_ENDPOINT string = backend.outputs.uri
+
