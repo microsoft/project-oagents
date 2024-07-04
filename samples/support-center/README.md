@@ -272,3 +272,25 @@ If you provisioned all servies through azd up earlier, the service does already 
 You have the appsetting.template.json to quickstart. Save a copy of appsetting.template.json to a file called appsetting.json and fill in the correct values found in the Azure portal.
 
 Run seed-memory project with dotnet run to load the collection vfcon106047 with the data.
+
+# Deploy to Azure
+To deploy the application to Azure, you can use the azd cli tool. The azd tool will deploy the application to Azure Container Apps, CosmosDB, Azure Search, Azure Application Insights and Azure Document Intelligence.
+```
+# Login to Azure
+azd auth login
+
+# Provision the infrastructure
+azd provision --environment support-center
+
+# Replace the backend endpoint in the frontend .env file
+pushd src/frontend
+Copy-Item -Path .env.azureConfig -Destination .env
+(Get-Content .env) -replace '<AZURE_BACKEND_ENDPOINT>', $env:AZURE_BACKEND_ENDPOINT | Set-Content .env
+popd
+
+# Build and deploy the application
+azd deploy
+```
+
+
+

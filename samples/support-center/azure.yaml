@@ -26,5 +26,4 @@ services:
         dist: build
         docker:
             path: Dockerfile
-            buildArgs:
-              - VITE_OAGENT_BASE_URL=${BACKEND_BASE_URL}
+

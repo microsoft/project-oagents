@@ -8,7 +8,7 @@
 # $scope = "/subscriptions/<Subscription_ID>
 # az role assignment create --assignee $assignee --role "Owner"  --scope $scope
 
-run-name: '[PR #${{github.event.pull_request.number}}] [Marketing Sample] - Build and Deploy frontend and backend'
+run-name: '[PR #${{github.event.pull_request.number}}] [Support Center Sample] - Build and Deploy frontend and backend'
 
 on:
   workflow_dispatch:
@@ -26,8 +26,8 @@ on:
     branches:
       - 'main'
     paths:
-     - 'samples/marketing/**'
-     - .github/workflows/marketing-builddeploy.yaml
+      - samples/support-center/*
+      - .github/support-center/support-center-builddeploy.yaml
   
 permissions:
   id-token: write
@@ -36,7 +36,7 @@ permissions:
 defaults:
   run:
     shell: pwsh
-    working-directory: ./samples/marketing
+    working-directory: ./samples/support-center
 
 jobs:
   deployment:
@@ -95,9 +95,15 @@ jobs:
       - name: Provision Infrastructure
         run: |
           azd provision `
-          --no-prompt `
-          --environment ${{ env.AZURE_ENV_NAME }} `
-          ${{ steps.no-state.outputs.azd-no-state-flag }}
+            --no-prompt `
+            --environment ${{ env.AZURE_ENV_NAME }}-sc `
+            ${{ steps.no-state.outputs.azd-no-state-flag }}
+
+          # Replace the backend endpoint in the frontend .env file
+          pushd src/frontend
+          Copy-Item -Path .env.azureConfig -Destination .env
+          (Get-Content .env) -replace '<AZURE_BACKEND_ENDPOINT>', $env:AZURE_BACKEND_ENDPOINT | Set-Content .env
+          popd
 
       - name: Deploy Application
-        run: azd deploy --no-prompt --environment ${{ env.AZURE_ENV_NAME }}
+        run: azd deploy --no-prompt --environment ${{ env.AZURE_ENV_NAME }}-sc
