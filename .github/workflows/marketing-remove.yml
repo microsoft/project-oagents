@@ -46,5 +46,6 @@ jobs:
         run: |
           azd down `
             --no-prompt `
+            --force `
             --purge `
-            --environment ${{ env.AZURE_ENV_NAME }}-sc
+            --environment ${{ env.AZURE_ENV_NAME }}
