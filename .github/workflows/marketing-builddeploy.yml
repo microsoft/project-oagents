@@ -99,10 +99,29 @@ jobs:
 
       - name: Provision Infrastructure
         run: |
+          Write-Verbose "Provision infrastructure" -Verbose
           azd provision `
-          --no-prompt `
-          --environment ${{ env.AZURE_ENV_NAME }} `
-          ${{ steps.no-state.outputs.azd-no-state-flag }}
+            --no-prompt `
+            --environment ${{ env.AZURE_ENV_NAME }} `
+            ${{ steps.no-state.outputs.azd-no-state-flag }}
 
-      - name: Deploy Application
-        run: azd deploy --no-prompt --environment ${{ env.AZURE_ENV_NAME }}
+          # Make environment variables out of all outputs from bicep file
+          azd env get-values | % {
+            $name,$value = $_.Split('=')
+
+            #Value is quoted, so remove quotes
+            $value = $value.Replace('"','')
+            
+            [System.Environment]::SetEnvironmentVariable($name,$value)}
+            Write-Verbose "Variable '$name' set to '$value'" -Verbose
+          }
+
+          Write-Verbose "Frontend .env file updated with backend endpoint" -Verbose
+          # Replace the backend endpoint in the frontend .env file
+          pushd src/frontend
+          Copy-Item -Path .env.template -Destination .env
+          (Get-Content .env) -replace '<AZURE_BACKEND_URI>', $env:AZURE_BACKEND_URI | Set-Content .env
+          popd
+
+          Write-Verbose "Building and deploying application" -Verbose
+          azd deploy --no-prompt --environment ${{ env.AZURE_ENV_NAME }}

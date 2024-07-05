@@ -55,9 +55,15 @@ export default function Marketing() {
 
   const createSignalRConnection = async (userId: string) => {
     try {
+      var uri = process.env.REACT_APP_BACKEND_URI
+        ? process.env.REACT_APP_BACKEND_URI
+        : 'http://localhost:5244';
+      
+      uri = new URL('articlehub', uri).href;
+      console.log(`[MainPage] Connecting to [${uri}]`);
       // initi the connection
       const connection = new HubConnectionBuilder()
-        .withUrl(`http://localhost:5244/articlehub`)
+        .withUrl(uri)
         .configureLogging(LogLevel.Information)
         .build();
 
