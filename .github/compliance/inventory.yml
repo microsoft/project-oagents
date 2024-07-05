@@ -2,4 +2,5 @@ inventory:
 - source: DirectOwners
   items:
   - id: kopetan@microsoft.com
+  - id: crgar@microsoft.com
   isProduction: false
