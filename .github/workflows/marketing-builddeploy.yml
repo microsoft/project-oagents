@@ -32,7 +32,7 @@ on:
       - 'main'
     paths:
      - 'samples/marketing/**'
-     - .github/workflows/marketing-builddeploy.yaml
+     - .github/workflows/marketing-builddeploy.yml
   
 permissions:
   id-token: write
