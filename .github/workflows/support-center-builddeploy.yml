@@ -112,7 +112,8 @@ jobs:
 
             #Value is quoted, so remove quotes
             $value = $value.Replace('"','')
-            
+
+            Write-Verbose "Variable '$name' set to '$value'" -Verbose
             [System.Environment]::SetEnvironmentVariable($name,$value)
           }
 
