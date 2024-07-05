@@ -1,0 +1,49 @@
+name: '[Marketing Sample] Remove environment'
+run-name: '[PR #${{github.event.pull_request.number}}] [Marketing Sample] - Remove environment'
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+defaults:
+  run:
+    shell: pwsh
+    working-directory: ./samples/marketing
+
+jobs:
+  deployment:
+    # Environment is going to be used by GitHub to create the subject of the federated identity.
+    environment: dev
+    
+    runs-on: ubuntu-latest
+    env:
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.MARKETING_AZURE_SUBSCRIPTION_ID }}
+      AZURE_ENV_NAME: ${{ secrets.MARKETING_AZURE_ENV_NAME }}
+      AZURE_LOCATION: ${{ secrets.MARKETING_AZURE_LOCATION }}
+      AZURE_TENANT_ID: ${{ secrets.MARKETING_AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.MARKETING_AZURE_CLIENT_ID }}
+      # AZURE_CREDENTIALS: ${{ secrets.MARKETING_AZURE_CREDENTIALS }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install azd
+        uses: Azure/setup-azd@v1.0.0
+
+      # https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Cwindows#use-the-azure-login-action-with-openid-connect
+      - name: Log in with Azure (Federated Credentials)
+        if: ${{ env.AZURE_CLIENT_ID != '' }}
+        run: |
+          azd auth login `
+            --client-id "$Env:AZURE_CLIENT_ID" `
+            --federated-credential-provider "github" `
+            --tenant-id "$Env:AZURE_TENANT_ID"
+
+      - name: Remove Infrastructure
+        run: |
+          azd down `
+            --no-prompt `
+            --environment ${{ env.AZURE_ENV_NAME }}-sc
