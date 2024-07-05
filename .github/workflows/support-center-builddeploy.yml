@@ -8,9 +8,24 @@
 # $scope = "/subscriptions/<Subscription_ID>
 # az role assignment create --assignee $assignee --role "Owner"  --scope $scope
 
-run-name: '[PR #${{github.event.pull_request.number}}] [Support Center Sample] - Build and Deploy frontend and backend'
+run-name: '[PR #${{github.event.pull_request.number}}] [Support Center Sample] Build and Deploy frontend and backend'
+name: '[Support Center Sample] - Build and Deploy frontend and backend'
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - samples/support-center/**
+      - .github/workflows/support-center-builddeploy.yml
+      - src/**
+  pull_request:
+    branches:
+      - '**'
+    paths:
+    - samples/support-center/**
+    - .github/workflows/support-center-builddeploy.yml
+    - src/**
   workflow_dispatch:
     inputs:
       azdnostate:
@@ -19,16 +34,7 @@ on:
         options: 
         - 'false'
         - 'true'
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - 'main'
-    paths:
-      - samples/support-center/*
-      - .github/support-center/support-center-builddeploy.yaml
-  
+
 permissions:
   id-token: write
   contents: read

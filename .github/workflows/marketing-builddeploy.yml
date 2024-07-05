@@ -8,7 +8,8 @@
 # $scope = "/subscriptions/<Subscription_ID>
 # az role assignment create --assignee $assignee --role "Owner"  --scope $scope
 
-run-name: '[PR #${{github.event.pull_request.number}}] [Marketing Sample] - Build and Deploy frontend and backend'
+name: '[Marketing Sample] Build and deploy sample application'
+run-name: '[PR #${{github.event.pull_request.number}}] [Marketing Sample] Build and deploy sample application'
 
 on:
   workflow_dispatch:
@@ -22,12 +23,16 @@ on:
   push:
     branches:
       - main
+    paths:
+      - samples/marketing/**
+      - .github/workflows/marketing-build.yml
+      - src/**
   pull_request:
     branches:
       - 'main'
     paths:
      - 'samples/marketing/**'
-     - .github/workflows/marketing-builddeploy.yaml
+     - .github/workflows/marketing-builddeploy.yml
   
 permissions:
   id-token: write

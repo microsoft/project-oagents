@@ -1,14 +1,22 @@
-run-name: '[PR #${{github.event.pull_request.number}}] [Marketing Sample] Build frontend and backend containers'
-
+name: '[Support Center Sample] Build sample application'
+run-name: '[PR #${{github.event.pull_request.number}}] [Support Center Sample] Build sample application'
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+    paths:
+      - samples/support-center/**
+      - .github/workflows/support-center-build.yml
+      - src/**
   pull_request:
     branches:
       - '**'
+    paths:
+    - samples/support-center/**
+    - .github/workflows/support-center-build.yml
+    - src/**
+  workflow_dispatch:
 
 jobs:
   build:
