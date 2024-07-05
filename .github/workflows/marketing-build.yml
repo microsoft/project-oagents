@@ -1,5 +1,5 @@
 name: '[Marketing Sample] Build sample application'
-run-name: '[PR #${{github.event.pull_request.number}}] [Marketing Sample] - Build sample application'
+run-name: '[PR #${{github.event.pull_request.number}}] [Marketing Sample] Build sample application'
 
 on:
   push:
