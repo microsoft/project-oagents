@@ -112,8 +112,9 @@ jobs:
 
             #Value is quoted, so remove quotes
             $value = $value.Replace('"','')
-            
-            [System.Environment]::SetEnvironmentVariable($name,$value)}
+
+            Write-Verbose "Variable '$name' set to '$value'" -Verbose
+            [System.Environment]::SetEnvironmentVariable($name,$value)
           }
 
           Write-Verbose "Frontend .env file updated with backend endpoint" -Verbose
