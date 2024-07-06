@@ -55,8 +55,9 @@ export default function Marketing() {
 
   const createSignalRConnection = async (userId: string) => {
     try {
-      var uri = process.env.REACT_APP_BACKEND_URI
-        ? process.env.REACT_APP_BACKEND_URI
+      console.log(`[MainPage] Reading environment variables [${process.env.NEXT_PUBLIC_BACKEND_URI}]`);
+      var uri = process.env.NEXT_PUBLIC_BACKEND_URI
+        ? process.env.NEXT_PUBLIC_BACKEND_URI
         : 'http://localhost:5244';
       
       uri = new URL('articlehub', uri).href;
