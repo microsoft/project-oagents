@@ -119,7 +119,7 @@ jobs:
           Write-Verbose "Frontend .env file updated with backend endpoint" -Verbose
           # Replace the backend endpoint in the frontend .env file
           pushd src/frontend
-          Copy-Item -Path .env.template -Destination .env
+          Copy-Item -Path .env.template -Destination .env.production
           (Get-Content .env) -replace '<AZURE_BACKEND_URI>', $env:AZURE_BACKEND_URI | Set-Content .env
           popd
 
