@@ -120,7 +120,7 @@ jobs:
           # Replace the backend endpoint in the frontend .env file
           pushd src/frontend
           Copy-Item -Path .env.template -Destination .env.production
-          (Get-Content .env.production) -replace '<AZURE_BACKEND_URI>', $env:AZURE_BACKEND_URI | Set-Content .env
+          (Get-Content .env.production) -replace '<AZURE_BACKEND_URI>', $env:AZURE_BACKEND_URI | Set-Content .env.production
           popd
 
           Write-Verbose "Building and deploying application" -Verbose
