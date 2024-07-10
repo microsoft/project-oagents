@@ -1,0 +1,17 @@
+name: '[OAgents nuget] Init context'
+
+on:
+  workflow_call:
+    outputs:
+      version_suffix:
+        value: ${{ jobs.init.outputs.version_suffix }}
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    outputs:
+      version_suffix: ${{ steps.set_version_suffix.outputs.VERSION_SUFFIX }}
+    steps:
+      - name: Set version suffix
+        id: set_version_suffix
+        run: echo "VERSION_SUFFIX=$(date +%Y%m%d%H%M%S)" >> "$GITHUB_OUTPUT"

@@ -1,4 +1,4 @@
-name: Publish the nuget packages
+name: '[OAgents nuget] Publish nuget package'
 
 on:
   workflow_call:
@@ -7,6 +7,9 @@ on:
         required: true
         type: string
       version-prefix:
+          required: true
+          type: string
+      version-suffix:
           required: true
           type: string
     secrets:
@@ -28,5 +31,5 @@ jobs:
     - name: Publish package
       run: |
         cd src/${{ inputs.package-name }}
-        dotnet pack -o packages /p:PackageVersion=${{ inputs.version-prefix }}-alpha.$(date +%Y%m%d%H%M%S)
+        dotnet pack -o packages /p:PackageVersion=${{ inputs.version-prefix }}-alpha.${{ inputs.version-suffix }}
         dotnet nuget push $GITHUB_WORKSPACE/src/${{ inputs.package-name }}/packages/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }}  --source https://api.nuget.org/v3/index.json

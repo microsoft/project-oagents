@@ -1,0 +1,37 @@
+name: '[OAgents nuget] Publish all packages'
+
+on:
+   push:
+     paths:
+     - 'src/**'
+   workflow_dispatch:
+ 
+permissions:
+    id-token: write
+    contents: read
+jobs:
+    initialize-context:
+      uses: ./.github/workflows/oagents-initialize-context.yml
+      secrets: inherit
+    build-test-packages:
+      uses: ./.github/workflows/oagents-build-test-packages.yml
+      needs: [initialize-context]
+      secrets: inherit
+    publish-core:
+    # if: github.ref == 'refs/heads/main'  # This job runs only if the push is to the main branch
+      needs: [build-test-packages, initialize-context]
+      uses: ./.github/workflows/oagents-publish-nuget.yml
+      with:
+        package-name: Oagents.Core
+        version-prefix: 0.0.2
+        version-suffix: ${{ needs.initialize-context.outputs.version_suffix }}
+      secrets: inherit
+    publish-orleans:
+    # if: github.ref == 'refs/heads/main'  # This job runs only if the push is to the main branch
+      needs: [build-test-packages, initialize-context]
+      uses: ./.github/workflows/oagents-publish-nuget.yml
+      with:
+        package-name: Oagents.Orleans
+        version-prefix: 0.0.2
+        version-suffix: ${{ needs.initialize-context.outputs.version_suffix }}
+      secrets: inherit
