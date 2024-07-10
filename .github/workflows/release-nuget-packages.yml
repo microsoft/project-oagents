@@ -11,16 +11,16 @@ permissions:
     contents: read
 jobs:
     initialize-context:
-      uses: ./.github/workflows/nuget/initialize-context.yml
+      uses: ./.github/workflows/initialize-context.yml
       secrets: inherit
     build-test-packages:
-      uses: ./.github/workflows/nuget/build-test-packages.yml
+      uses: ./.github/workflows/build-test-packages.yml
       needs: [initialize-context]
       secrets: inherit
     publish-core:
       if: github.ref == 'refs/heads/main'  # This job runs only if the push is to the main branch
       needs: [build-test-packages, initialize-context]
-      uses: ./.github/workflows/nuget/publish-nuget.yml
+      uses: ./.github/workflows/publish-nuget.yml
       with:
         package-name: Oagents.Core
         version-prefix: 0.0.2
