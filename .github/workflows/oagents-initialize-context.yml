@@ -1,4 +1,4 @@
-name: Initialize version
+name: '[OAgents nuget] Init context'
 
 on:
   workflow_call:
