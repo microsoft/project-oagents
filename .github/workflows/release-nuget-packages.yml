@@ -18,7 +18,7 @@ jobs:
       needs: [initialize-context]
       secrets: inherit
     publish-core:
-      if: github.ref == 'refs/heads/main'  # This job runs only if the push is to the main branch
+    # if: github.ref == 'refs/heads/main'  # This job runs only if the push is to the main branch
       needs: [build-test-packages, initialize-context]
       uses: ./.github/workflows/publish-nuget.yml
       with:
@@ -27,7 +27,7 @@ jobs:
         version-suffix: ${{ needs.initialize-context.outputs.version_suffix }}
       secrets: inherit
     publish-orleans:
-      if: github.ref == 'refs/heads/main'  # This job runs only if the push is to the main branch
+    # if: github.ref == 'refs/heads/main'  # This job runs only if the push is to the main branch
       needs: [build-test-packages, initialize-context]
       uses: ./.github/workflows/publish-nuget.yml
       with:
