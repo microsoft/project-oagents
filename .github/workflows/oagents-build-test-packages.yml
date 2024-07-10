@@ -1,4 +1,4 @@
-name: Build and test the nuget packages
+name: '[OAgents nuget] Build and test'
 
 on:
   workflow_call:

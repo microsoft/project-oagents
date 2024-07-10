@@ -1,10 +1,13 @@
-name: Initialize version
+name: '[OAgents nuget] Init context'
 
 on:
   workflow_call:
+    outputs:
+      version_suffix:
+        value: ${{ jobs.init.outputs.version_suffix }}
 
 jobs:
-  build:
+  init:
     runs-on: ubuntu-latest
     outputs:
       version_suffix: ${{ steps.set_version_suffix.outputs.VERSION_SUFFIX }}
