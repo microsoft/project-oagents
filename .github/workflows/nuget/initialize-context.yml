@@ -1,0 +1,14 @@
+name: Initialize version
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version_suffix: ${{ steps.set_version_suffix.outputs.version_suffix }}  # Define output
+    steps:
+      - name: Set version suffix
+        id: set_version_suffix
+        run: echo "::set-output name=version_suffix::$(date +%Y%m%d%H%M%S)"
