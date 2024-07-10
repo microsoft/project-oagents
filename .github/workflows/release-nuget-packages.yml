@@ -29,7 +29,7 @@ jobs:
     publish-orleans:
       if: github.ref == 'refs/heads/main'  # This job runs only if the push is to the main branch
       needs: [build-test-packages, initialize-context]
-      uses: ./.github/workflows/nuget/publish-nuget.yml
+      uses: ./.github/workflows/publish-nuget.yml
       with:
         package-name: Oagents.Orleans
         version-prefix: 0.0.2
