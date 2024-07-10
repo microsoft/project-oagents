@@ -4,6 +4,7 @@ on:
    push:
      paths:
      - 'src/**'
+   workflow_dispatch:
  
 permissions:
     id-token: write
