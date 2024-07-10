@@ -3,16 +3,17 @@
 # Import-Module Az.CosmosDB
 # Import-Module CosmosDB
 
-# Authenticate to Azure (if not already authenticated)  
-Write-Host "Authenticating to Azure..."  
-Connect-AzAccount -Identity
-Set-AzContext -Subscription "636154ff-066d-4e3d-a87c-a6407841b716"
-
+$subcriptionId = "<your-subscription-id>"
 $resourceGroupName = "rg-oagents-support-center"
-$cosmosDbAccountName = "cosmos-gxecy3vbydlss"
+$cosmosDbAccountName = "<your-cosmosdb-account-name>"
 $databaseName = "customer-support"
 $containerName = "items"
 $partitionKey = "/id"
+
+# Authenticate to Azure (if not already authenticated)  
+Write-Host "Authenticating to Azure..."  
+Connect-AzAccount -Identity
+Set-AzContext -Subscription $subcriptionId
 
 Write-Host "Resource Group: $resourceGroupName"  
 Write-Host "Cosmos DB Account: $cosmosDbAccountName"  

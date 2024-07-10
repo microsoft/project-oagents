@@ -9,6 +9,7 @@ using Microsoft.SemanticKernel.Connectors.Qdrant;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Connectors.AzureAISearch;
+using SupportCenter.AgentsConfigurationFactory;
 
 namespace SupportCenter.SemanticKernel
 {
@@ -53,15 +54,10 @@ namespace SupportCenter.SemanticKernel
         public static Kernel CreateKernel(IServiceProvider provider, string agent)
         {
             OpenAIOptions openAiConfig = provider.GetService<IOptions<OpenAIOptions>>()?.Value ?? new OpenAIOptions();
-            //TODO: What is the best pattern for configuring models to agents?
-            if (agent == "Invoice")
-            {
-                openAiConfig.ChatDeploymentOrModelId = openAiConfig.InvoiceDeploymentOrModelId ?? openAiConfig.ChatDeploymentOrModelId;
-            }
-            else if (agent == "Conversation")
-            {
-                openAiConfig.ChatDeploymentOrModelId = openAiConfig.ConversationDeploymentOrModelId ?? openAiConfig.ChatDeploymentOrModelId;
-            }
+            
+            var agentConfiguration = AgentConfiguration.GetAgentConfiguration(agent);
+            agentConfiguration.Configure(openAiConfig);
+            
             var clientOptions = new OpenAIClientOptions();
             clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
             var builder = Kernel.CreateBuilder();
@@ -96,7 +92,11 @@ namespace SupportCenter.SemanticKernel
                     o.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
                 });
             });
-            return builder.Build();
+
+            var kernel = builder.Build();
+            agentConfiguration.ConfigureKernel(kernel, provider);
+            
+            return kernel;
         }
     }
 }

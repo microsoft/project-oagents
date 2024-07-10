@@ -282,14 +282,19 @@ azd auth login
 # Provision the infrastructure
 azd provision --environment support-center
 
-# Replace the backend endpoint in the frontend .env file
-pushd src/frontend
-Copy-Item -Path .env.azureConfig -Destination .env
-(Get-Content .env) -replace '<AZURE_BACKEND_ENDPOINT>', $env:AZURE_BACKEND_ENDPOINT | Set-Content .env
-popd
-
 # Build and deploy the application
 azd deploy
+```
+
+After the CosmosDB provisioning, create a new item in the _customer_ container (_customer-support_ database) from the example below:
+```
+{
+    "Name": "User",
+    "Email": "user@test.com",
+    "Phone": "+1123456789",
+    "Address": "Address, 123, XYZ",
+    "id": "1234"
+}
 ```
 
 
