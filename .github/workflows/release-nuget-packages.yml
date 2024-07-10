@@ -24,7 +24,7 @@ jobs:
       with:
         package-name: Oagents.Core
         version-prefix: 0.0.2
-        version-suffix: ${{ needs.initialize-context.outputs.version_suffix }}"
+        version-suffix: ${{ needs.initialize-context.outputs.version_suffix }}
       secrets: inherit
     publish-orleans:
       if: github.ref == 'refs/heads/main'  # This job runs only if the push is to the main branch

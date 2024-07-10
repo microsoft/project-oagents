@@ -7,8 +7,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      version_suffix: ${{ steps.set_version_suffix.outputs.version_suffix }}  # Define output
+      version_suffix: ${{ steps.set_version_suffix.outputs.VERSION_SUFFIX }}
     steps:
       - name: Set version suffix
         id: set_version_suffix
-        run: echo "::set-output name=version_suffix::$(date +%Y%m%d%H%M%S)"
+        run: echo "VERSION_SUFFIX=$(date +%Y%m%d%H%M%S)" >> "$GITHUB_OUTPUT"
