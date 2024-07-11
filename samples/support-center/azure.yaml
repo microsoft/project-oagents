@@ -5,8 +5,8 @@ metadata:
 hooks:
     postprovision:
         interactive: false
-        shell: pwsh
-        run: infra/azd-hooks/postprovision.ps1
+        shell: sh
+        run: infra/azd-hooks/load-envs.sh
 infra:
     provider: bicep
     path: infra
