@@ -30,10 +30,11 @@
     "@refinedev/react-hook-form": "^4.8.14",
     "@refinedev/simple-rest": "^5.0.1",
     "js-cookie": "^3.0.5",
-    "next": "14.1.0",
+    "next": "^14.2.5",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-flippy": "^1.1.0"
+    "react-flippy": "^1.1.0",
+    "uuidv4": "^6.2.13"
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",

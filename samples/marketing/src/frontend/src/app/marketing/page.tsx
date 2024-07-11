@@ -19,6 +19,8 @@ import CommunityManager from './community-manager/community-manager';
 import { Container, Grid } from '@mui/material';
 import { HubConnectionBuilder, HubConnection, LogLevel } from '@microsoft/signalr';
 
+import { v4 as uuidv4 } from 'uuid';
+
 type SignalRMessage = {
   userId: string;
   message: string;
@@ -41,14 +43,13 @@ export default function Marketing() {
     backgroundSize: 'cover',
     height: '100vh',
   });
-
+  
+  const [userId, setUserId] = React.useState<string>(uuidv4());
   const [connection, setConnection] = React.useState<HubConnection>();
-
-  const userId = 'Carlos';
-  //Chat component state
   const [messages, setMessages] = React.useState<{ sender: string; text: any; }[]>([]);
 
   //Community manager state
+  
   const [ article, setArticle ] = useState<string>('');
   const [ imgUrl, setImgUrl ] = useState<string>('');
   const [ communityManagerOpen, setCommunityManagerOpen ] = useState<boolean>(false);

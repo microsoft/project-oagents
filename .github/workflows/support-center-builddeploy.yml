@@ -74,19 +74,6 @@ jobs:
             --federated-credential-provider "github" `
             --tenant-id "$Env:AZURE_TENANT_ID"
 
-      # - name: Log in with Azure (Client Credentials)
-      #   if: ${{ env.AZURE_CREDENTIALS != '' }}
-      #   run: |
-      #     $info = $Env:AZURE_CREDENTIALS | ConvertFrom-Json -AsHashtable;
-      #     Write-Host "::add-mask::$($info.clientSecret)"
-      #     azd auth login `
-      #       --client-id "$($info.clientId)" `
-      #       --client-secret "$($info.clientSecret)" `
-      #       --tenant-id "$($info.tenantId)"
-      #   shell: pwsh
-      #   env:
-      #     AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-
       - name: Set --no-state flag for azd
         id: no-state
         run: |
@@ -98,31 +85,10 @@ jobs:
             echo "::set-output name=azd-no-state-flag::"
           }
 
-      - name: Provision Infrastructure
+      - name: Provision Infrastructure and deploy application
         run: |
-          Write-Verbose "Provision infrastructure" -Verbose
-          azd provision `
+          Write-Verbose "Provision infrastructure and deploying application" -Verbose
+          azd up `
             --no-prompt `
-            --environment ${{ env.AZURE_ENV_NAME }}-sc `
+            --environment ${{ env.AZURE_ENV_NAME }} `
             ${{ steps.no-state.outputs.azd-no-state-flag }}
-
-          # Make environment variables out of all outputs from bicep file
-          azd env get-values | % {
-            $name,$value = $_.Split('=')
-
-            #Value is quoted, so remove quotes
-            $value = $value.Replace('"','')
-
-            Write-Verbose "Variable '$name' set to '$value'" -Verbose
-            [System.Environment]::SetEnvironmentVariable($name,$value)
-          }
-
-          Write-Verbose "Frontend .env file updated with backend endpoint" -Verbose
-          # Replace the backend endpoint in the frontend .env file
-          pushd src/frontend
-          Copy-Item -Path .env.azureConfig -Destination .env
-          (Get-Content .env) -replace '<AZURE_BACKEND_ENDPOINT>', $env:AZURE_BACKEND_ENDPOINT | Set-Content .env
-          popd
-
-          Write-Verbose "Building and deploying application" -Verbose
-          azd deploy --no-prompt --environment ${{ env.AZURE_ENV_NAME }}-sc

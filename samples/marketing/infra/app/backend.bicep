@@ -58,7 +58,7 @@ module fetchLatestImage '../modules/fetch-container-image.bicep' = {
   }
 }
 
-resource app 'Microsoft.App/containerApps@2023-05-02-preview' = {
+resource app 'Microsoft.App/containerApps@2023-11-02-preview' = {
   name: name
   location: location
   tags: union(tags, {'azd-service-name':  'backend' })
@@ -75,9 +75,7 @@ resource app 'Microsoft.App/containerApps@2023-05-02-preview' = {
         targetPort: 5244
         transport: 'auto'
         corsPolicy: {
-          allowedOrigins: union(allowedOrigins, [
-            // define additional allowed origins here
-          ])
+          allowedOrigins: allowedOrigins
         }
       }
       registries: [

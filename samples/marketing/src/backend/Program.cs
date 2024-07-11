@@ -23,21 +23,18 @@ builder.Services.AddSignalR();
 builder.Services.AddSingleton<ISignalRService, SignalRService>();
 
 
-// Allow any CORS origin if in DEV
-const string AllowDebugOriginPolicy = "AllowDebugOrigin";
-if (builder.Environment.IsDevelopment())
+// CORS is handled at the platform level (ex: Azure Container Apps)
+const string AllowAllCorsOrigin = "AllowAllCorsOrigin";
+builder.Services.AddCors(options =>
 {
-    builder.Services.AddCors(options =>
+    options.AddPolicy(AllowAllCorsOrigin, builder =>
     {
-        options.AddPolicy(AllowDebugOriginPolicy, builder => {
-                builder
-                .WithOrigins("http://localhost:3000") // client url
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-            });
+        builder
+        .WithOrigins("http://localhost:3000", "https://*.azurecontainerapps.io")
+        .AllowAnyHeader()
+        .AllowAnyMethod();
     });
-}
+});
 
 builder.Services.AddOptions<OpenAIOptions>()
     .Configure<IConfiguration>((settings, configuration) =>
@@ -72,8 +69,9 @@ builder.Services.Configure<JsonSerializerOptions>(options =>
 
 var app = builder.Build();
 
+app.UseCors(AllowAllCorsOrigin);
+
 app.UseRouting();
-app.UseCors(AllowDebugOriginPolicy);
 app.MapControllers();
 
 app.UseSwagger();

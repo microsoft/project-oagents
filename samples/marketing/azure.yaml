@@ -3,6 +3,11 @@
 name: marketing
 metadata:
     template: azd-init@1.8.2
+hooks:
+    postprovision:
+        interactive: false
+        shell: pwsh
+        run: infra/azd-hooks/Write-MarketingEnvironmentVariables.ps1
 services:
     backend:
         project: "src/backend"

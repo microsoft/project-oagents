@@ -19,6 +19,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Oagents.Core" Version="0.0.2-alpha.20240710143921" />
+    <PackageReference Include="Oagents.Orleans" Version="0.0.2-alpha.20240710143921" />
     <PackageReference Include="Octokit.Webhooks.AspNetCore" Version="2.1.1" />
     <PackageReference Include="Octokit" Version="11.0.1" />
 
@@ -50,10 +52,6 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.5.1" />
     
     
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\src\Oagents.Orleans\Oagents.Orleans.csproj" />
   </ItemGroup>
   
 
