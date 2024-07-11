@@ -4,11 +4,9 @@ import { v4 as uuid } from 'uuid'
 import { Configuration } from '../models/Configuration'
 import { Message, SenderType } from '../models/Message'
 
-const supportCenterBaseUrl = import.meta.env.VITE_OAGENT_BASE_URL
-
-console.log(`Backend service URL: ${supportCenterBaseUrl}`)
-
 const isMockEnabled = import.meta.env.VITE_IS_MOCK_ENABLED
+const supportCenterBaseUrl = import.meta.env.VITE_OAGENT_BASE_URL
+console.log(`Backend service URL: ${supportCenterBaseUrl}`)
 
 export async function getConfigurationAsync(): Promise<Configuration> {
   return {
@@ -119,7 +117,6 @@ export function GetStreamingConnection(): HubConnection {
   const url = new URL('supportcenterhub', supportCenterBaseUrl).href;
   return new HubConnectionBuilder()
     .withUrl(url)
-
     .withAutomaticReconnect()
     .build();
 }

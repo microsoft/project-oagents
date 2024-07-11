@@ -12,6 +12,7 @@ builder.Services.AddSingleton<ISignalRService, SignalRService>();
 
 // Allow any CORS origin if in DEV
 const string AllowDebugOriginPolicy = "AllowDebugOrigin";
+const string AllowOriginPolicy = "AllowOrigin";
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddCors(options =>
@@ -19,13 +20,28 @@ if (builder.Environment.IsDevelopment())
         options.AddPolicy(AllowDebugOriginPolicy, builder =>
         {
             builder
-            //.WithOrigins("http://localhost:3000", "http://localhost:3001") // client url
-            .AllowAnyOrigin()
+            .WithOrigins("http://localhost:3000", "http://localhost:3001") // client urls
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
         });
     });
+}
+else
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy(AllowOriginPolicy, builder =>
+        {
+            builder
+            .SetIsOriginAllowedToAllowWildcardSubdomains()
+            .WithOrigins("https://*.azurecontainerapps.io") // client url
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+        });
+    });
+
 }
 
 builder.Services.ExtendOptions();
@@ -50,7 +66,15 @@ builder.Services.Configure<JsonSerializerOptions>(options =>
 WebApplication app = builder.Build();
 
 app.UseRouting();
-app.UseCors(AllowDebugOriginPolicy);
+if (builder.Environment.IsDevelopment())
+{
+    app.UseCors(AllowDebugOriginPolicy);
+}
+else
+{
+    app.UseCors(AllowOriginPolicy);
+
+}
 app.MapControllers();
 
 app.UseSwagger();
