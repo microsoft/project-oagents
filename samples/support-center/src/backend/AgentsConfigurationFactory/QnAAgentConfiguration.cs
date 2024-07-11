@@ -5,7 +5,7 @@ namespace SupportCenter.AgentsConfigurationFactory
 {
     internal class QnAAgentConfiguration : IAgentConfiguration
     {
-        public void Configure(OpenAIOptions options)
+        public void ConfigureOpenAI(OpenAIOptions options)
         {
         }
 

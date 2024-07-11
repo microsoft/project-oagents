@@ -19,7 +19,6 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
     private readonly IServiceProvider _serviceProvider;
     private readonly ICustomerRepository _customerRepository;
     private readonly IChatCompletionService _chatCompletionService;
-
     protected override string Namespace => Consts.OrleansNamespace;
 
     public CustomerInfo(
@@ -33,9 +32,6 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
-        // TODO: Extract this to the keyed service config
-        // if (Kernel.Plugins.TryGetPlugin("CustomerPlugin", out var plugin) == false)
-        //     Kernel.ImportPluginFromObject(serviceProvider.GetRequiredService<CustomerData>(), "CustomerPlugin");
         _chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
     }
 
@@ -53,7 +49,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 _state.State.History.Clear();
                 break;
             case nameof(EventType.CustomerInfoRequested):
-                _logger.LogInformation("[{CustomerInfo}] Event {EventType}. Data: {EventData}", nameof(CustomerInfo), item.Type, item.Data);
+                _logger.LogInformation("[{Agent}]:{EventType}:{EventData}", nameof(CustomerInfo), item.Type, item.Data);
                 await PublishEvent(Namespace, id, new Event
                 {
                     Type = nameof(EventType.CustomerInfoNotification),
@@ -71,10 +67,6 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                     .Replace("{{$history}}", AppendChatHistory(userMessage));
 
 #pragma warning disable SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-                // HandlebarsPlanner
-                // var planner = new HandlebarsPlanner();
-                // var plan = await planner.CreatePlanAsync(_kernel, prompt);
-                // var planResult = await plan.InvokeAsync(_kernel);
                 // FunctionCallingStepwisePlanner
                 var planner = new FunctionCallingStepwisePlanner(new FunctionCallingStepwisePlannerOptions()
                 {

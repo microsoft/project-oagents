@@ -5,7 +5,7 @@ namespace SupportCenter.AgentsConfigurationFactory
 {
     internal class SignalRAgentConfiguration : IAgentConfiguration
     {
-        public void Configure(OpenAIOptions options)
+        public void ConfigureOpenAI(OpenAIOptions options)
         {
         }
 

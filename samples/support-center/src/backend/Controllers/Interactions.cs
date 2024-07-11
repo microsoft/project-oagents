@@ -4,8 +4,6 @@ using Orleans.Runtime;
 using SupportCenter.Events;
 using SupportCenter.Options;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace SupportCenter.Controllers
 {
     [Route("api/[controller]")]

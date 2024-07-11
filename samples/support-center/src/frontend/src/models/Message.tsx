@@ -19,6 +19,9 @@ export enum SenderType {
   Dispatcher = 'Dispatcher',
   CustomerInfo = 'CustomerInfo',
   Notification = 'Notification',
+  Discount = 'Discount',
+  Invoice = 'Invoice',
+  QnA = 'QnA',
   ErrorNotification = 'ErrorNotification',
   // Agent-specific notification types
   DispatcherNotification = 'DispatcherNotification',

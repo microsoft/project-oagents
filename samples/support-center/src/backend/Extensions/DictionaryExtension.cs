@@ -5,7 +5,7 @@
 
     public static class DictionaryExtensions
     {
-        public static T? GetValueOrDefault<T>(this IDictionary<string, string> dictionary, string key)
+        public static T GetValueOrDefault<T>(this IDictionary<string, string> dictionary, string key)
         {
             ArgumentNullException.ThrowIfNull(dictionary);
             ArgumentNullException.ThrowIfNull(key);

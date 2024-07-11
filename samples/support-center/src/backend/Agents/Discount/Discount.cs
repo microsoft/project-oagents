@@ -35,7 +35,6 @@ public class Discount : AiAgent<DiscountState>
                 {
                     return;
                 }
-                //await SendDispatcherEvent(userId, lastMessage, item.Data["userId"]);
                 break;
             default:
                 break;

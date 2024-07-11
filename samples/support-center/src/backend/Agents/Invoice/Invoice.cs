@@ -26,18 +26,17 @@ public class Invoice : AiAgent<InvoiceState>
 
     public async override Task HandleEvent(Event item)
     {
-
         switch (item.Type)
         {
             case nameof(EventType.InvoiceRequested):
                 {
                     var userId = item.Data["userId"];
                     var userMessage = item.Data["userMessage"];
-                    var context = new KernelArguments { ["input"] = userMessage ?? throw new ArgumentNullException(nameof(userMessage)) };
 
                     await SendAnswerEvent($"Please wait while I look up the details for invoice...", userId);
-                    _logger.LogInformation($"[{nameof(Invoice)}] Event {nameof(EventType.InvoiceRequested)}. UserQuestion: {userMessage}");
-                    var querycontext = new KernelArguments { ["input"] = AppendChatHistory(userMessage)};
+                    _logger.LogInformation("[{Agent}]:{EventType}:{EventData}", nameof(Invoice), nameof(EventType.InvoiceRequested), userMessage);
+
+                    var querycontext = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
                     var instruction = "Consider the following knowledge:!invoices!";
                     var enhancedContext = await AddKnowledge(instruction, "invoices", querycontext);
                     string answer = await CallFunction(InvoicePrompts.InvoiceRequest, enhancedContext);

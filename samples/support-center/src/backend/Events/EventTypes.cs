@@ -7,6 +7,7 @@ public enum EventType
     UserNewConversation,
     AgentNotification,
     Unknown,
+
     // Domain specific events
     CustomerInfoRequested,
     CustomerInfoRetrieved,
@@ -18,6 +19,7 @@ public enum EventType
     InvoiceRetrieved,
     ConversationRequested,
     ConversationRetrieved,
+
     // Notification events
     DispatcherNotification,
     CustomerInfoNotification,
