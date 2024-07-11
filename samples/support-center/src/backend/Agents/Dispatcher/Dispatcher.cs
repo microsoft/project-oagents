@@ -1,7 +1,6 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 using SupportCenter.Attributes;
 using SupportCenter.Events;
@@ -36,13 +35,13 @@ public class Dispatcher : AiAgent<DispatcherState>
 
     public async override Task HandleEvent(Event item)
     {
-        _logger.LogInformation("[{Dispatcher}] Event {EventType}. Data: {EventData}", nameof(Dispatcher), item.Type, item.Data);
+        _logger.LogInformation("[{Agent}]:{EventType}:{EventData}", nameof(Dispatcher), item.Type, item.Data);
 
         string? userId = item.Data.GetValueOrDefault<string>("userId");
         string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
         if (userId == null || userMessage == null)
         {
-            _logger.LogWarning("[{Dispatcher}] Event {EventType}. Data: {EventData}. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
+            _logger.LogWarning("[{Agent}]:{EventType}:{EventData}. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
             return;
         }
 
@@ -57,7 +56,7 @@ public class Dispatcher : AiAgent<DispatcherState>
                 string? lastMessage = _state.State.History.LastOrDefault()?.Message;
                 if (lastMessage == null)
                 {
-                    _logger.LogInformation("[{Dispatcher}] Event {EventType}. Data: {EventData}. Last message is missing.", nameof(Dispatcher), item.Type, item.Data);
+                    _logger.LogInformation("[{Agent}]:{EventType}:{EventData}. Last message is missing.", nameof(Dispatcher), item.Type, item.Data);
                     return;
                 }
                 intent = (await ExtractIntentAsync(lastMessage))?.Trim(' ', '\"', '.') ?? string.Empty;
@@ -88,10 +87,10 @@ public class Dispatcher : AiAgent<DispatcherState>
                 var message = item.Data.GetValueOrDefault<string>("message");
                 if (message == null)
                 {
-                    _logger.LogWarning("[{Dispatcher}] Event {EventType}. Data: {EventData}. Message is missing.", nameof(Dispatcher), item.Type, item.Data);
+                    _logger.LogWarning("[{Agent}]:{EventType}:{EventData}. Message is missing.", nameof(Dispatcher), item.Type, item.Data);
                     return;
                 }
-                _logger.LogInformation($"[{nameof(Dispatcher)}] Event {nameof(EventType.QnARetrieved)}. Answer: {item.Data["message"]}");
+                _logger.LogInformation("[{Agent}]:{EventType}:{EventData}", nameof(Dispatcher), item.Type, message);
                 AddToHistory(message, ChatUserType.Agent);
                 break;
             default:
@@ -125,13 +124,13 @@ public class Dispatcher : AiAgent<DispatcherState>
             .DispatchToEvent.ToString() ?? EventType.Unknown.ToString();
 
         await PublishEvent(Namespace, id, new Event
-                {
-                    Type = type,
-                    Data = new Dictionary<string, string>
-                    {
-                        { nameof(userId), userId },
-                        { nameof(userMessage),  userMessage }
-                    }
-                });
+        {
+            Type = type,
+            Data = new Dictionary<string, string>
+            {
+                { nameof(userId), userId },
+                { nameof(userMessage),  userMessage }
+            }
+        });
     }
 }

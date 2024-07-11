@@ -53,23 +53,41 @@ const useStyles = makeStyles({
     backgroundColor: "#EDF5FD",
   },
   /* Agent message styles */
-  // CustomerInfo
-  customerInfoMessage: {
-    minWidth: "300px",
-    maxWidth: "600px",
-    backgroundColor: "#D5F5E3",
-  },
   // Dispatcher
   dispatcherMessage: {
     minWidth: "300px",
     maxWidth: "600px",
     backgroundColor: "#FAD7A0",
   },
+  // CustomerInfo
+  customerInfoMessage: {
+    minWidth: "300px",
+    maxWidth: "600px",
+    backgroundColor: "#D5F5E3",
+  },
   // Notification
   notificationMessage: {
     minWidth: "300px",
     maxWidth: "600px",
     backgroundColor: "#FFF3CD",
+  },
+  // Discount
+  discountMessage: {
+    minWidth: "300px",
+    maxWidth: "600px",
+    backgroundColor: "#63F09B",
+  },
+  // Invoice
+  invoiceMessage: {
+    minWidth: "300px",
+    maxWidth: "600px",
+    backgroundColor: "#E12FCF",
+  },
+  // QnA
+  qnaMessage: {
+    minWidth: "300px",
+    maxWidth: "600px",
+    backgroundColor: "#E6AE2A",
   },
   avatar: {
     ...shorthands.margin("0px", "5px"),
@@ -124,6 +142,12 @@ export function ChatMessage({
         return styles.dispatcherMessage;
       case "Notification":
         return styles.notificationMessage;
+      case "Discount":
+        return styles.discountMessage;
+      case "Invoice":
+        return styles.invoiceMessage;
+      case "QnA":
+        return styles.qnaMessage;
       // Add more cases as needed
       default:
         return styles.copilotMessage;
@@ -142,6 +166,12 @@ export function ChatMessage({
         return "D";
       case SenderType.Notification:
         return "N";
+      case SenderType.Discount:
+        return "D I";
+      case SenderType.Invoice:
+        return "I";
+      case SenderType.QnA:
+        return "Q A";
       // Add more cases as needed
       default:
         return "A"; // Default to Agent

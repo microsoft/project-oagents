@@ -56,7 +56,7 @@ namespace SupportCenter.SemanticKernel
             OpenAIOptions openAiConfig = provider.GetService<IOptions<OpenAIOptions>>()?.Value ?? new OpenAIOptions();
             
             var agentConfiguration = AgentConfiguration.GetAgentConfiguration(agent);
-            agentConfiguration.Configure(openAiConfig);
+            agentConfiguration.ConfigureOpenAI(openAiConfig);
             
             var clientOptions = new OpenAIClientOptions();
             clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);

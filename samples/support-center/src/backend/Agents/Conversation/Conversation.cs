@@ -39,10 +39,9 @@ public class Conversation : AiAgent<ConversationState>
                 {
                     return;
                 }
-                //await SendDispatcherEvent(userId, lastMessage, item.Data["userId"]);
                 break;
             case nameof(EventType.ConversationRequested):
-                _logger.LogInformation($"[{nameof(Conversation)}] Event {nameof(EventType.ConversationRequested)}. UserQuestion: {userMessage}");
+                _logger.LogInformation("[{Agent}]:{EventType}:{EventData}", nameof(Conversation), nameof(EventType.ConversationRequested), userMessage);
                 var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
                 string answer = await CallFunction(ConversationPrompts.Answer, context);
 

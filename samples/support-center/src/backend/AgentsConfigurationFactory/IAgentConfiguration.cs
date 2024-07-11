@@ -5,7 +5,7 @@ namespace SupportCenter.AgentsConfigurationFactory
 {
     public interface IAgentConfiguration
     {
-        void Configure(OpenAIOptions options);
+        void ConfigureOpenAI(OpenAIOptions options);
         void ConfigureKernel(Kernel kernel, IServiceProvider serviceProvider);
     }
 }

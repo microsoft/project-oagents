@@ -1,8 +1,4 @@
-﻿using Microsoft.AI.Agents.Abstractions;
-using Microsoft.AI.Agents.Orleans;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
-using SupportCenter.Data.CosmosDb;
+﻿using SupportCenter.Data.CosmosDb;
 using SupportCenter.Options;
 using SupportCenter.SemanticKernel.Plugins.CustomerPlugin;
 using static Microsoft.AI.Agents.Orleans.Resolvers;
@@ -54,7 +50,6 @@ namespace SupportCenter.Extensions
             RegisterRepositories(services);
             AddSemanticKernelResolvers(services);
             AddSemanticKernelServices(services);
-
             return services;
         }
 
