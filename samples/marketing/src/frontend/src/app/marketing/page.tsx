@@ -65,7 +65,7 @@ export default function Marketing() {
       console.log(`[MainPage] Connecting to [${uri}]`);
       // initi the connection
       const connection = new HubConnectionBuilder()
-        .withUrl(uri)
+        .withUrl(uri, {withCredentials: false})
         .configureLogging(LogLevel.Information)
         .build();
 
@@ -139,8 +139,35 @@ export default function Marketing() {
     createSignalRConnection(userId);
   }, []);
 
+  const defaultTheme = createTheme({
+    typography: {
+      fontFamily: 'Helvetica, Arial, sans-serif',
+    },
+  });
+
+  const rightPannelTheme = createTheme({
+    typography: {
+      fontFamily: 'Helvetica, Arial, sans-serif',
+    },
+    components: {
+      MuiListItemButton: {
+        defaultProps: {
+          disableTouchRipple: true,
+        },
+      },
+    },
+    palette: {
+      mode: 'dark',
+      // primary: { main: 'rgb(102, 157, 246)' },
+      // background: { paper: 'rgb(5, 30, 52)' },
+      primary: { main: '#006BD6' },
+      background: { paper: 'grey' },
+    },
+  });
+
   console.log(`[Marketing] Rendering.`);
   return (
+    <ThemeProvider theme={defaultTheme}>
     <Background>
     <Container maxWidth="xl" disableGutters >
       <Grid container spacing={3}>
@@ -151,24 +178,7 @@ export default function Marketing() {
         </Grid>
         <Grid item xs={6}>
           <Stack spacing={0}>
-            <ThemeProvider
-              theme={createTheme({
-                components: {
-                  MuiListItemButton: {
-                    defaultProps: {
-                      disableTouchRipple: true,
-                    },
-                  },
-                },
-                palette: {
-                  mode: 'dark',
-                  // primary: { main: 'rgb(102, 157, 246)' },
-                  // background: { paper: 'rgb(5, 30, 52)' },
-                  primary: { main: '#006BD6' },
-                  background: { paper: 'grey' },
-                },
-              })}
-            >
+            <ThemeProvider theme={rightPannelTheme}>
               <Item>
                 <Paper elevation={0}>
                   <StakeholderList />
@@ -199,5 +209,6 @@ export default function Marketing() {
       </Grid>
     </Container>
     </Background>
+    </ThemeProvider>
   );
 }

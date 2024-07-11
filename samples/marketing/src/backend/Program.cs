@@ -30,7 +30,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(AllowAllCorsOrigin, builder =>
     {
         builder
-        .WithOrigins("http://localhost:3000", "https://*.azurecontainerapps.io")
+        .AllowAnyOrigin()
         .AllowAnyHeader()
         .AllowAnyMethod();
     });
