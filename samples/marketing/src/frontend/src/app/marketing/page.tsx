@@ -65,7 +65,7 @@ export default function Marketing() {
       console.log(`[MainPage] Connecting to [${uri}]`);
       // initi the connection
       const connection = new HubConnectionBuilder()
-        .withUrl(uri)
+        .withUrl(uri, {withCredentials: false})
         .configureLogging(LogLevel.Information)
         .build();
 

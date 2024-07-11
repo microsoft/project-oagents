@@ -88,15 +88,6 @@ public class CommunityManager : AiAgent<CommunityManagerState>
                             { nameof(socialMediaPost), socialMediaPost}
                         }
         });
-
-        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
-        {
-            Type = nameof(EventTypes.AuditText),
-            Data = new Dictionary<string, string> {
-                { "UserId", userId },
-                            { "text", "Social Media post writen by the Community Manager: " + socialMediaPost },
-                        }
-        });
     }
 
     public Task<String> GetArticle()

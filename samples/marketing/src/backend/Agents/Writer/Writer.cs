@@ -12,10 +12,10 @@ namespace Marketing.Agents;
 public class Writer : AiAgent<WriterState>, IWriter
 {
     protected override string Namespace => Consts.OrleansNamespace;
-    
+
     private readonly ILogger<GraphicDesigner> _logger;
 
-    public Writer([PersistentState("state", "messages")] IPersistentState<AgentState<WriterState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger) 
+    public Writer([PersistentState("state", "messages")] IPersistentState<AgentState<WriterState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger)
     : base(state, memory, kernel)
     {
         _logger = logger;
@@ -23,6 +23,9 @@ public class Writer : AiAgent<WriterState>, IWriter
 
     public async override Task HandleEvent(Event item)
     {
+        KernelArguments context;
+        string newArticle;
+
         switch (item.Type)
         {
             case nameof(EventTypes.UserConnected):
@@ -37,22 +40,34 @@ public class Writer : AiAgent<WriterState>, IWriter
 
                 break;
 
-            case nameof(EventTypes.UserChatInput):                
-                {
-                    var userMessage = item.Data["userMessage"]; 
-                    _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.UserChatInput)}. UserMessage: {userMessage}");
-                
-                    var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
-                    string newArticle = await CallFunction(WriterPrompts.Write, context);
+            case nameof(EventTypes.UserChatInput):
+                var userMessage = item.Data["userMessage"];
+                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.UserChatInput)}. UserMessage: {userMessage}");
 
-                    if (newArticle.Contains("NOTFORME"))
-                    {
-                        return;
-                    }
-                    await SendArticleCreatedEvent(newArticle, item.Data["UserId"]);
-                    break;   
+                context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
+                newArticle = await CallFunction(WriterPrompts.Write, context);
+
+                if (newArticle.Contains("NOTFORME"))
+                {
+                    return;
                 }
-                
+                await SendArticleCreatedEvent(newArticle, item.Data["UserId"]);
+                break;
+
+            case nameof(EventTypes.AuditorAlert):
+                var auditorAlertMessage = item.Data["auditorAlertMessage"];
+                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.AuditorAlert)}. auditorAlertMessage: {auditorAlertMessage}");
+
+                context = new KernelArguments { ["input"] = AppendChatHistory(auditorAlertMessage) };
+                newArticle = await CallFunction(WriterPrompts.Adjust, context);
+
+                if (newArticle.Contains("NOTFORME"))
+                {
+                    return;
+                }
+                await SendArticleCreatedEvent(newArticle, item.Data["UserId"]);
+                break;
+
             default:
                 break;
         }
