@@ -5,7 +5,7 @@ if(Test-Path src/backend/appsettings.json) {
     Write-Verbose "appsettings.json created" -Verbose
 }
 
-if((Get-Content .\src\backend\appsettings.local.template.json -Raw | Select-String "<mandatory>") -ne $null) { 
+if((Get-Content .\src\backend\appsettings.json -Raw | Select-String "<mandatory>") -ne $null) { 
     Write-Error "Please update the appsettings.json file with the correct values" -ErrorAction Stop
 }
 
