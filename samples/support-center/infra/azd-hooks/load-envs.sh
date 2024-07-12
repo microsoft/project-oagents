@@ -1,7 +1,6 @@
 #!/bin/bash
 
-pushd src/frontend || exit 1  
-source <(azd env get-values) 
+pushd src/frontend || exit 1
 
 # Check if the variable is set  
 if [ -z "${AZURE_BACKEND_ENDPOINT}" ]; then  
