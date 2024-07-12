@@ -1,7 +1,9 @@
 #!/bin/bash
 
-pushd src/frontend || exit 1  
-source <(azd env get-values) 
+pushd src/frontend || exit 1
+
+# Use awk to prepend 'export ' to each line of the output
+eval $(azd env get-values | awk '{print "export " $0}')
 
 # Check if the variable is set  
 if [ -z "${AZURE_BACKEND_ENDPOINT}" ]; then  
