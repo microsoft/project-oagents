@@ -37,11 +37,6 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
 
     public async override Task HandleEvent(Event item)
     {
-        string? userId = item.Data.GetValueOrDefault<string>("userId");
-        string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
-        string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
-        string id = $"{userId}/{conversationId}";        
-
         switch (item.Type)
         {
             case nameof(EventType.UserNewConversation):
@@ -49,7 +44,12 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 _state.State.History.Clear();
                 break;
             case nameof(EventType.CustomerInfoRequested):
-                _logger.LogInformation("[{Agent}]:{EventType}:{EventData}", nameof(CustomerInfo), item.Type, item.Data);
+                string? userId = item.Data.GetValueOrDefault<string>("userId");
+                string? message = item.Data.GetValueOrDefault<string>("message");
+                string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
+                string id = $"{userId}/{conversationId}";
+
+                _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(CustomerInfo), item.Type, item.Data);
                 await PublishEvent(Namespace, id, new Event
                 {
                     Type = nameof(EventType.CustomerInfoNotification),
@@ -63,8 +63,8 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 // Get the customer info via the planners.
                 var prompt = CustomerInfoPrompts.GetCustomerInfo
                     .Replace("{{$userId}}", userId)
-                    .Replace("{{$userMessage}}", userMessage)
-                    .Replace("{{$history}}", AppendChatHistory(userMessage));
+                    .Replace("{{$userMessage}}", message)
+                    .Replace("{{$history}}", AppendChatHistory(message));
 
 #pragma warning disable SKEXP0060 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
                 // FunctionCallingStepwisePlanner

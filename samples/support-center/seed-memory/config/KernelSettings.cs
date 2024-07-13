@@ -48,6 +48,7 @@ internal class KernelSettings
             }
 
             Console.WriteLine($"Semantic kernel settings '{DefaultConfigFile}' not found, attempting to load configuration from user secrets.");
+            Console.WriteLine("Current process path: " + Directory.GetCurrentDirectory());
 
             return FromUserSecrets();
         }

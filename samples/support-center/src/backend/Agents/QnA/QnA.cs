@@ -6,6 +6,7 @@ using Orleans.Runtime;
 using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
+using SupportCenter.SignalRHub;
 
 namespace SupportCenter.Agents;
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
@@ -26,10 +27,6 @@ public class QnA : AiAgent<QnAState>
 
     public async override Task HandleEvent(Event item)
     {
-        string? messageId = item.Data.GetValueOrDefault<string>("id");
-        string? userId = item.Data.GetValueOrDefault<string>("userId");
-        string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
-
         switch (item.Type)
         {
             case nameof(EventType.UserConnected):
@@ -41,15 +38,21 @@ public class QnA : AiAgent<QnAState>
                 }                
                 break;
             case nameof(EventType.QnARequested):
-                _logger.LogInformation("[{Agent}]:{EventType}:{EventData}", nameof(QnA), nameof(EventType.QnARequested), userMessage);
-                await SendAnswerEvent(messageId, userId, $"Please wait while I look in the documents for answers to your question...");
+                string? userId = item.Data.GetValueOrDefault<string>("userId");
+                string? message = item.Data.GetValueOrDefault<string>("message");
 
-                var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
+                string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
+                string id = $"{userId}/{conversationId}";
+
+                _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(QnA), nameof(EventType.QnARequested), message);
+                await SendAnswerEvent(id, userId, $"Please wait while I look in the documents for answers to your question...");
+
+                var context = new KernelArguments { ["input"] = AppendChatHistory(message) };
                 var instruction = "Consider the following knowledge:!vfcon106047!";
                 var enhancedContext = await AddKnowledge(instruction, "vfcon106047", context);
                 string answer = await CallFunction(QnAPrompts.Answer, enhancedContext);
 
-                await SendAnswerEvent(messageId, userId, answer);
+                await SendAnswerEvent(id, userId, answer);
                 break;
 
             default:
@@ -59,7 +62,7 @@ public class QnA : AiAgent<QnAState>
 
     private async Task SendAnswerEvent(string id, string userId, string message)
     {
-        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
+        await PublishEvent(Consts.OrleansNamespace, id, new Event
         {
             Type = nameof(EventType.QnARetrieved),
             Data = new Dictionary<string, string> {

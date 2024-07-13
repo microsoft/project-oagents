@@ -35,13 +35,14 @@ public class Dispatcher : AiAgent<DispatcherState>
 
     public async override Task HandleEvent(Event item)
     {
-        _logger.LogInformation("[{Agent}]:{EventType}:{EventData}", nameof(Dispatcher), item.Type, item.Data);
+        _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Dispatcher), item.Type, item.Data);
 
         string? userId = item.Data.GetValueOrDefault<string>("userId");
-        string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
+        string? userMessage = item.Data.GetValueOrDefault<string>("userMessage") ?? item.Data.GetValueOrDefault<string>("message");
+        _logger.LogInformation($"userId: {userId}, userMessage: {userMessage}");
         if (userId == null || userMessage == null)
         {
-            _logger.LogWarning("[{Agent}]:{EventType}:{EventData}. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
+            _logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
             return;
         }
 
@@ -56,7 +57,7 @@ public class Dispatcher : AiAgent<DispatcherState>
                 string? lastMessage = _state.State.History.LastOrDefault()?.Message;
                 if (lastMessage == null)
                 {
-                    _logger.LogInformation("[{Agent}]:{EventType}:{EventData}. Last message is missing.", nameof(Dispatcher), item.Type, item.Data);
+                    _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]. Last message is missing.", nameof(Dispatcher), item.Type, item.Data);
                     return;
                 }
                 intent = (await ExtractIntentAsync(lastMessage))?.Trim(' ', '\"', '.') ?? string.Empty;
@@ -84,13 +85,14 @@ public class Dispatcher : AiAgent<DispatcherState>
             case nameof(EventType.DiscountRetrieved):
             case nameof(EventType.InvoiceRetrieved):
             case nameof(EventType.CustomerInfoRetrieved):
+            case nameof(EventType.ConversationRetrieved):
                 var message = item.Data.GetValueOrDefault<string>("message");
                 if (message == null)
                 {
-                    _logger.LogWarning("[{Agent}]:{EventType}:{EventData}. Message is missing.", nameof(Dispatcher), item.Type, item.Data);
+                    _logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Message is missing.", nameof(Dispatcher), item.Type, item.Data);
                     return;
                 }
-                _logger.LogInformation("[{Agent}]:{EventType}:{EventData}", nameof(Dispatcher), item.Type, message);
+                _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Dispatcher), item.Type, message);
                 AddToHistory(message, ChatUserType.Agent);
                 break;
             default:
@@ -116,7 +118,7 @@ public class Dispatcher : AiAgent<DispatcherState>
         return string.Join("\n", choices.Select(c => $"- {c.Name}: {c.Description}")); ;
     }
 
-    private async Task SendDispatcherEvent(string id, string userId, string intent, string userMessage)
+    private async Task SendDispatcherEvent(string id, string userId, string intent, string message)
     {
         var type = this.GetType()
             .GetCustomAttributes<DispatcherChoice>()
@@ -129,7 +131,7 @@ public class Dispatcher : AiAgent<DispatcherState>
             Data = new Dictionary<string, string>
             {
                 { nameof(userId), userId },
-                { nameof(userMessage),  userMessage }
+                { nameof(message),  message }
             }
         });
     }

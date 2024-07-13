@@ -4,7 +4,9 @@ using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
 using SupportCenter.Events;
+using SupportCenter.Extensions;
 using SupportCenter.Options;
+using SupportCenter.SignalRHub;
 
 namespace SupportCenter.Agents;
 
@@ -26,35 +28,40 @@ public class Invoice : AiAgent<InvoiceState>
 
     public async override Task HandleEvent(Event item)
     {
+        string? userId = item.Data.GetValueOrDefault<string>("userId");
+        string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
+
+        string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
+        string id = $"{userId}/{conversationId}";
+
         switch (item.Type)
         {
             case nameof(EventType.InvoiceRequested):
                 {
-                    var userId = item.Data["userId"];
-                    var userMessage = item.Data["userMessage"];
-
-                    await SendAnswerEvent($"Please wait while I look up the details for invoice...", userId);
-                    _logger.LogInformation("[{Agent}]:{EventType}:{EventData}", nameof(Invoice), nameof(EventType.InvoiceRequested), userMessage);
+                    await SendAnswerEvent(id, userId, $"Please wait while I look up the details for invoice...");
+                    _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Invoice), nameof(EventType.InvoiceRequested), userMessage);
 
                     var querycontext = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
                     var instruction = "Consider the following knowledge:!invoices!";
                     var enhancedContext = await AddKnowledge(instruction, "invoices", querycontext);
                     string answer = await CallFunction(InvoicePrompts.InvoiceRequest, enhancedContext);
-                    await SendAnswerEvent(answer, userId);
+                    await SendAnswerEvent(id, userId, answer);
                     break;
                 }
             default:
                 break;
         }
     }
-    private async Task SendAnswerEvent(string message, string userId)
+
+    private async Task SendAnswerEvent(string id, string userId, string message)
     {
-        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
+        await PublishEvent(Namespace, id, new Event
         {
             Type = nameof(EventType.InvoiceRetrieved),
-            Data = new Dictionary<string, string> {
+            Data = new Dictionary<string, string>
+            {
                 { nameof(userId), userId },
-                { nameof(message), message }
+                { nameof(message),  message }
             }
         });
     }
