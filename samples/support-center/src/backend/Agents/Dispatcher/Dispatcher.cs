@@ -6,13 +6,12 @@ using SupportCenter.Attributes;
 using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
-using SupportCenter.SignalRHub;
 using System.Reflection;
 
 namespace SupportCenter.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-[DispatcherChoice("QnA", "The customer is asking a question.", EventType.QnARequested)]
+[DispatcherChoice("QnA", "The customer is asking a question related to internal Contoso knowledge base.", EventType.QnARequested)]
 [DispatcherChoice("Discount", "The customer is asking for a discount about a product or service.", EventType.DiscountRequested)]
 [DispatcherChoice("Invoice", "The customer is asking for an invoice.", EventType.InvoiceRequested)]
 [DispatcherChoice("CustomerInfo", "The customer is asking for reading or updating his or her personal data.", EventType.CustomerInfoRequested)]
@@ -37,19 +36,19 @@ public class Dispatcher : AiAgent<DispatcherState>
     {
         _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Dispatcher), item.Type, item.Data);
 
-        string? userId = item.Data.GetValueOrDefault<string>("userId");
-        string? userMessage = item.Data.GetValueOrDefault<string>("userMessage") ?? item.Data.GetValueOrDefault<string>("message");
-        _logger.LogInformation($"userId: {userId}, userMessage: {userMessage}");
-        if (userId == null || userMessage == null)
+        var ssc = item.GetAgentData();
+        string? userId = ssc.UserId;
+        string? message = ssc.UserMessage;
+        string? id = ssc.Id;
+        string? intent;
+
+        _logger.LogInformation($"userId: {userId}, message: {message}");
+        if (userId == null || message == null)
         {
             _logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
             return;
         }
-
-        string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
-        string id = $"{userId}/{conversationId}";
-        string? intent;
-
+        
         switch (item.Type)
         {
             case nameof(EventType.UserConnected):
@@ -63,37 +62,39 @@ public class Dispatcher : AiAgent<DispatcherState>
                 intent = (await ExtractIntentAsync(lastMessage))?.Trim(' ', '\"', '.') ?? string.Empty;
                 await SendDispatcherEvent(id, userId, intent, lastMessage);
                 break;
+
             case nameof(EventType.UserNewConversation):
                 // The user started a new conversation.
                 _state.State.History.Clear();
                 break;
+
             case nameof(EventType.UserChatInput):
-                intent = (await ExtractIntentAsync(userMessage))?.Trim(' ', '\"', '.') ?? string.Empty;
+                intent = (await ExtractIntentAsync(message))?.Trim(' ', '\"', '.') ?? string.Empty;
                 await PublishEvent(Namespace, id, new Event
                 {
                     Type = nameof(EventType.DispatcherNotification),
                     Data = new Dictionary<string, string>
                     {
                         { nameof(userId), userId },
-                        { "message",  $"The user request has been dispatched to the '{intent}' agent." }
+                        { nameof(message),  $"The user request has been dispatched to the '{intent}' agent." }
                     }
                 });
-
-                await SendDispatcherEvent(id, userId, intent, userMessage);
+                await SendDispatcherEvent(id, userId, intent, message);
                 break;
+
             case nameof(EventType.QnARetrieved):
             case nameof(EventType.DiscountRetrieved):
             case nameof(EventType.InvoiceRetrieved):
             case nameof(EventType.CustomerInfoRetrieved):
             case nameof(EventType.ConversationRetrieved):
-                var message = item.Data.GetValueOrDefault<string>("message");
-                if (message == null)
+                var answer = item.Data.GetValueOrDefault<string>("message");
+                if (answer == null)
                 {
-                    _logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Message is missing.", nameof(Dispatcher), item.Type, item.Data);
+                    _logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Answer from agent is missing.", nameof(Dispatcher), item.Type, item.Data);
                     return;
                 }
-                _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Dispatcher), item.Type, message);
-                AddToHistory(message, ChatUserType.Agent);
+                _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Dispatcher), item.Type, answer);
+                AddToHistory(answer, ChatUserType.Agent);
                 break;
             default:
                 break;

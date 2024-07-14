@@ -55,13 +55,14 @@ public class SupportCenterHub : Hub<ISupportCenterHub>
             (key, oldValue) => new Connection(oldValue.Id, conversationId));
 
         var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
-        var streamId = StreamId.Create(Consts.OrleansNamespace, $"{userId}/{oldConversationId}");
+        var streamId = StreamId.Create(Consts.OrleansNamespace, $"{userId}/{conversationId}");
         var stream = streamProvider.GetStream<Event>(streamId);
-        await stream.OnNextAsync(new Event
-        {
-            Type = nameof(EventType.UserNewConversation),
-            Data = new Dictionary<string, string> { { "userId", userId }, { "userMessage", "Conversation restarted." } }
-        });
+        await stream.OnNextAsync(
+            new Event
+            {
+                Type = nameof(EventType.UserNewConversation),
+                Data = new Dictionary<string, string> { { "userId", userId }, { "userMessage", "Conversation restarted." } }
+            });
     }
 
     /// <summary>

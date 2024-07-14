@@ -6,7 +6,6 @@ using Orleans.Runtime;
 using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
-using SupportCenter.SignalRHub;
 
 namespace SupportCenter.Agents;
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
@@ -38,11 +37,17 @@ public class QnA : AiAgent<QnAState>
                 }                
                 break;
             case nameof(EventType.QnARequested):
-                string? userId = item.Data.GetValueOrDefault<string>("userId");
-                string? message = item.Data.GetValueOrDefault<string>("message");
+                var ssc = item.GetAgentData();
+                string? userId = ssc.UserId;
+                string? message = ssc.UserMessage;
+                string? id = ssc.Id;
 
-                string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
-                string id = $"{userId}/{conversationId}";
+                _logger.LogInformation($"userId: {userId}, message: {message}");
+                if (userId == null || message == null)
+                {
+                    _logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
+                    return;
+                }
 
                 _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(QnA), nameof(EventType.QnARequested), message);
                 await SendAnswerEvent(id, userId, $"Please wait while I look in the documents for answers to your question...");
@@ -66,7 +71,6 @@ public class QnA : AiAgent<QnAState>
         {
             Type = nameof(EventType.QnARetrieved),
             Data = new Dictionary<string, string> {
-                { nameof(id), id },
                 { nameof(userId), userId },
                 { nameof(message), message }
             }

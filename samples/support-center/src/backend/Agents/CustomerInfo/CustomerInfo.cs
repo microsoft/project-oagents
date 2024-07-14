@@ -8,7 +8,6 @@ using SupportCenter.Data.CosmosDb;
 using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
-using SupportCenter.SignalRHub;
 
 namespace SupportCenter.Agents;
 
@@ -44,11 +43,11 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                 _state.State.History.Clear();
                 break;
             case nameof(EventType.CustomerInfoRequested):
-                string? userId = item.Data.GetValueOrDefault<string>("userId");
-                string? message = item.Data.GetValueOrDefault<string>("message");
-                string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
-                string id = $"{userId}/{conversationId}";
-
+                var ssc = item.GetAgentData();
+                string? userId = ssc.UserId;
+                string? message = ssc.UserMessage;
+                string? id = ssc.Id;
+                
                 _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(CustomerInfo), item.Type, item.Data);
                 await PublishEvent(Namespace, id, new Event
                 {
@@ -56,7 +55,7 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                     Data = new Dictionary<string, string>
                     {
                         { nameof(userId), userId },
-                        { "message", "I'm working on the user's request..." }
+                        { nameof(message), "I'm working on the user's request..." }
                     }
                 });
 
@@ -73,13 +72,15 @@ public class CustomerInfo : AiAgent<CustomerInfoState>
                     MaxIterations = 10,
                 });
                 var result = await planner.ExecuteAsync(_kernel, prompt);
+                _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(CustomerInfo), item.Type, result.FinalAnswer);
+
                 await PublishEvent(Namespace, id, new Event
                 {
                     Type = nameof(EventType.CustomerInfoRetrieved),
                     Data = new Dictionary<string, string>
                     {
                         { nameof(userId), userId },
-                        { "message", result.FinalAnswer }
+                        { nameof(message), result.FinalAnswer }
                     }
                 });
 
