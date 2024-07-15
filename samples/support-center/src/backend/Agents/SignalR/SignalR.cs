@@ -52,7 +52,7 @@ public class SignalR : Agent
 
         if (agentType == AgentType.Unknown)
         {
-            _logger.LogWarning("[{Agent}]:{EventType}:{EventData}. This event is not supported.", nameof(SignalR), item.Type, item.Data);
+            _logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. This event is not supported.", nameof(SignalR), item.Type, item.Data);
             message = "Sorry, I don't know how to handle this request. Try to rephrase it.";
         }
 

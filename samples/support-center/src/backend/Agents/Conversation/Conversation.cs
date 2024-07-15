@@ -6,6 +6,7 @@ using Orleans.Runtime;
 using SupportCenter.Events;
 using SupportCenter.Extensions;
 using SupportCenter.Options;
+using SupportCenter.SignalRHub;
 
 namespace SupportCenter.Agents;
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
@@ -26,10 +27,6 @@ public class Conversation : AiAgent<ConversationState>
 
     public async override Task HandleEvent(Event item)
     {
-        string? messageId = item.Data.GetValueOrDefault<string>("id");
-        string? userId = item.Data.GetValueOrDefault<string>("userId");
-        string? userMessage = item.Data.GetValueOrDefault<string>("userMessage");
-
         switch (item.Type)
         {
             case nameof(EventType.UserConnected):
@@ -41,11 +38,16 @@ public class Conversation : AiAgent<ConversationState>
                 }
                 break;
             case nameof(EventType.ConversationRequested):
-                _logger.LogInformation("[{Agent}]:{EventType}:{EventData}", nameof(Conversation), nameof(EventType.ConversationRequested), userMessage);
-                var context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
+                string? userId = item.Data.GetValueOrDefault<string>("userId");
+                string? message = item.Data.GetValueOrDefault<string>("message");
+
+                string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
+                string id = $"{userId}/{conversationId}";
+                _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Conversation), nameof(EventType.ConversationRequested), message);
+                var context = new KernelArguments { ["input"] = AppendChatHistory(message) };
                 string answer = await CallFunction(ConversationPrompts.Answer, context);
 
-                await SendAnswerEvent(messageId, userId, answer);
+                await SendAnswerEvent(id, userId, answer);
                 break;
 
             default:
@@ -55,9 +57,9 @@ public class Conversation : AiAgent<ConversationState>
 
     private async Task SendAnswerEvent(string id, string userId, string message)
     {
-        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
+        await PublishEvent(Consts.OrleansNamespace, id, new Event
         {
-            Type = nameof(EventType.QnARetrieved),
+            Type = nameof(EventType.ConversationRetrieved),
             Data = new Dictionary<string, string> {
                 { nameof(id), id },
                 { nameof(userId), userId },
