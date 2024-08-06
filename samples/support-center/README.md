@@ -11,7 +11,7 @@ In the Support Center scenario, several types of agents can be identified based 
 
 ### Dispatcher Agent
 
-- **Role**: Orchestrates the overall process, delegates tasks to sub-agents,and ensures seamless customer support.
+- **Role**: Orchestrates the overall process, delegates tasks to sub-agents and ensures seamless customer support.
 - **Responsibilities**:
   - Delegate tasks to _sub-agents_ and _human agents_ based on customer intent.
   - Maintain a session state to keep track of customer interactions.
@@ -19,7 +19,7 @@ In the Support Center scenario, several types of agents can be identified based 
 
 ## Sub Agent
 
-#### User Authentication Agent - out of scope
+#### User Authentication Agent [OUT OF SCOPE]
 
 - **Role**: Handles customer authentication and authorization.
 - **Responsibilities**:
@@ -60,7 +60,7 @@ The Support Center application is designed to handle customer inquiries and dele
 **1. Initial Inquiry**
 
 - Customer initiates a session with the Support Center team. Their first interaction is with a Dispatcher Agent
-- Dispatcher Agent identifies the type of inquiry and dispatches to the appropriate sub-agent.
+- Dispatcher Agent identifies the type of inquiry and **dispatches** to the appropriate sub-agent.
 
 **2. Conversation**
 
@@ -118,34 +118,59 @@ graph TD
 ![Support Center](docs/media/arch.png)
 ## Example Flow Description
 
-![Support Center](docs/media/screenshot.png)
+https://github.com/user-attachments/assets/5a118f2f-6026-4420-92f7-c795270427b7
 
-The screenshot depicts a conversation flow between a user (customer) and the AI agent in the Support Center application.
+The recording describes a conversation flow between a user (a fictious customer) and the AI agent system in the Support Center application.
 Here is a step-by-step description of the flow:
 1. **User Initiation**:
-The user initiates the conversation by stating: *"I'm moving to another city, so I need to change my address. Can you help me with that?"*
+The user initiates the conversation by stating: *"I'm moving to another city, so I need to change my address. Can you help me with that?"*.
 This message is sent to the frontend, which then forwards it to the backend API.
-2. **Dispatcher Agent Handling**:
-The backend API receives the user's request and forwards it to the Dispatcher Agent.
+3. **Dispatcher Agent Handling**:
+The backend API receives the user's request and forwards it to the Dispatcher Agent (**D** icon).
 The Dispatcher Agent analyzes the intent of the user's message and determines that the request is related to updating customer information.
-The Dispatcher Agent delegates the task to the Customer Info Agent.
-3. **Customer Info Agent Request**:
-The Customer Info Agent processes the request and responds with: *"Could you please provide your new address? I need this information to update your records."*
+The Dispatcher Agent delegates the task to the Customer Info Agent (**CI** icon).
+4. **Customer Info Agent Request**:
+The Customer Info Agent processes the request and responds with: *"Could you please provide your new address so that we can update your information?"*.
 This response is sent back to the frontend via SignalR, and the frontend displays the message to the user.
-4. **User Response**:
-The user provides their new address by saying: *"Sure here it is: caramba23"*.
+5. **User Response**:
+The user replies with: *"Sure, what is my current address?"*.
 This message is sent to the frontend, which then forwards it to the backend API.
-5. **Dispatcher Agent Clarification**:
+6. **Dispatcher Agent Handling**:
+The Dispatcher Agent keeps track of the history of all messages being exchanged between the user and the agentic system. It then dispatcher the request again to the Customer Info agent.
+7. **Customer Info Agent Request**:
+The Customer Info Agent processes the request and responds with: *"Your current address is: Contoso Address, 123, XYZ. Please provide your new address so that we can update your information."*
+This response is sent back to the frontend via SignalR, and the frontend displays the message to the user.
+8. **User Response**:
+The user replies with: *"Ok, sure, here is my new address: NewAddress, 456, ZZZ."*.
+This message is sent to the frontend, which then forwards it to the backend API.
+9. **Dispatcher Agent Clarification**:
 The backend API receives the user's new address and forwards it to the Dispatcher Agent.
-The Dispatcher Agent determines that further clarification is needed and delegates the task to the Customer Info Agent.
-The Customer Info Agent responds with: *"Could you please clarify what you want to do with the provided information 'caramba23'? Do you want to update any information or retrieve data related to this?"*
+The Dispatcher Agent delegates the task to the Customer Info Agent.
+The Customer Info Agent responds with: *"Your address has been successfully updated to: NewAddress, 456, ZZZ. If you need further assistance, please let us know."*
 This response is sent back to the frontend via SignalR, and the frontend displays the message to the user.
-6. **User Confirmation**:
-The user confirms their intention by saying: *"my new address is caramba23"*.
+7. **User's new request**:
+The user decides to change topic and he asks: *"Thanks, I'd like to know a bit more about the Northwind Health Plus insurance plan"*.
 This message is sent to the frontend, which then forwards it to the backend API.
-7. **Customer Info Agent Update**:
-The backend API receives the user's confirmation and forwards it to the Customer Info Agent.
-The Customer Info Agent processes the update and responds with: *"Your address has been successfully updated to 'caramba23'."*
+8. **Dispatcher Agent Handling**:
+The Dispatcher Agent analyzes the intent of the user's message and determines that the request is related to accessing the existing knowledge base, so the right agent here is the QnA Agent (**QA** icon).
+9. **QnA Agent**:
+The QnA agent processes the request (*"Please wait while I look in the documents for answers to your question..."*), it looks in the knowledge base, then it provides the information about "Northwind Health Plus" insurance plan the user asked for.
+This response is sent back to the frontend via SignalR, and the frontend displays the message to the user.
+10. **User's new request**:
+The user now asks: *"Any other plans?"*.
+This message is sent to the frontend, which then forwards it to the backend API.
+11. **Dispatcher Agent Handling**:
+The Dispatcher Agent analyzes the intent of the user's message and determines that the request is, again, related to accessing the existing knowledge base (it's a comparison between different plans), so the right agent here is again the QnA Agent (**QA** icon).
+12. **QnA Agent**:
+The QnA agent processes the request (*"Please wait while I look in the documents for answers to your question..."*), it looks in the knowledge base, then it provides the information about the plans available (_Northwind Health Plus_ and _Northwind Standard_).
+This response is sent back to the frontend via SignalR, and the frontend displays the message to the user.
+10. **User's new request**:
+The user now closes the conversation with: *"Ok thanks!"*.
+This message is sent to the frontend, which then forwards it to the backend API.
+11. **Dispatcher Agent Handling**:
+The Dispatcher Agent analyzes the intent of the user's message and determines that the request is a generic one. The right agent here is the Conversation Agent (**A** icon). 
+12. **Conversation Agent**:
+The Conversation agent processes the request and replies with **"You're welcome!"**
 This response is sent back to the frontend via SignalR, and the frontend displays the message to the user.
 
 ## Requirements to run locally
