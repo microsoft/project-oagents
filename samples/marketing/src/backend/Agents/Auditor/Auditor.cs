@@ -6,6 +6,7 @@ using Microsoft.AI.Agents.Orleans;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Marketing.Agents;
 
@@ -22,24 +23,26 @@ public class Auditor : AiAgent<AuditorState>
         _logger = logger;
     }
 
-    public async override Task HandleEvent(Event item)
+    public override async Task HandleEvent(Event item)
     {
+
+        ArgumentNullException.ThrowIfNull(item);
         switch (item.Type)
         {
             case nameof(EventTypes.AuditText):
-            {
-                string text = item.Data["text"];
-                _logger.LogInformation($"[{nameof(Auditor)}] Event {nameof(EventTypes.AuditText)}. Text: {text}");
-
-                var context = new KernelArguments { ["input"] = AppendChatHistory(text) };
-                string auditorAnswer = await CallFunction(AuditorPrompts.AuditText, context);
-                if (auditorAnswer.Contains("NOTFORME"))
                 {
-                    return;
+                    string text = item.Data["text"];
+                    _logger.LogInformation($"[{nameof(Auditor)}] Event {nameof(EventTypes.AuditText)}. Text: {text}");
+
+                    var context = new KernelArguments { ["input"] = AppendChatHistory(text) };
+                    string auditorAnswer = await CallFunction(AuditorPrompts.AuditText, context);
+                    if (auditorAnswer.Contains("NOTFORME"))
+                    {
+                        return;
+                    }
+                    await SendAuditorAlertEvent(auditorAnswer, item.Data["UserId"]);
+                    break;
                 }
-                await SendAuditorAlertEvent(auditorAnswer, item.Data["UserId"]);
-                break;
-            }
             default:
                 break;
         }

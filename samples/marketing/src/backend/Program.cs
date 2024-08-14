@@ -22,7 +22,6 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ISignalRService, SignalRService>();
 
-
 // CORS is handled at the platform level (ex: Azure Container Apps)
 const string AllowAllCorsOrigin = "AllowAllCorsOrigin";
 builder.Services.AddCors(options =>
@@ -86,8 +85,8 @@ app.Run();
 
 static ISemanticTextMemory CreateMemory(IServiceProvider provider)
 {
-    OpenAIOptions openAiConfig = provider.GetService<IOptions<OpenAIOptions>>().Value;
-    QdrantOptions qdrantConfig = provider.GetService<IOptions<QdrantOptions>>().Value;
+    OpenAIOptions openAiConfig = provider.GetRequiredService<IOptions<OpenAIOptions>>().Value;
+    QdrantOptions qdrantConfig = provider.GetRequiredService<IOptions<QdrantOptions>>().Value;
 
     var loggerFactory = LoggerFactory.Create(builder =>
     {
@@ -106,7 +105,7 @@ static ISemanticTextMemory CreateMemory(IServiceProvider provider)
 
 static Kernel CreateKernel(IServiceProvider provider)
 {
-    OpenAIOptions openAiConfig = provider.GetService<IOptions<OpenAIOptions>>().Value;
+    OpenAIOptions openAiConfig = provider.GetRequiredService<IOptions<OpenAIOptions>>().Value;
     var clientOptions = new OpenAIClientOptions();
     clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
     var builder = Kernel.CreateBuilder();
@@ -127,7 +126,7 @@ static Kernel CreateKernel(IServiceProvider provider)
     openAIClient = new OpenAIClient(new Uri(openAiConfig.ImageEndpoint), new AzureKeyCredential(openAiConfig.ImageApiKey), clientOptions);
     if (openAiConfig.ImageEndpoint.Contains(".azure", StringComparison.OrdinalIgnoreCase))
     {
-        Throw.IfNullOrEmpty(nameof(openAiConfig.ImageDeploymentOrModelId), openAiConfig.ImageDeploymentOrModelId);
+        ArgumentException.ThrowIfNullOrEmpty(openAiConfig.ImageDeploymentOrModelId);
         builder.Services.AddAzureOpenAITextToImage(openAiConfig.ImageDeploymentOrModelId, openAIClient);
     }
     else
@@ -138,11 +137,11 @@ static Kernel CreateKernel(IServiceProvider provider)
     // Embeddings
     openAIClient = new OpenAIClient(new Uri(openAiConfig.EmbeddingsEndpoint), new AzureKeyCredential(openAiConfig.EmbeddingsApiKey), clientOptions);
     if (openAiConfig.EmbeddingsEndpoint.Contains(".azure", StringComparison.OrdinalIgnoreCase))
-    {  
+    {
         builder.Services.AddAzureOpenAITextEmbeddingGeneration(openAiConfig.EmbeddingsDeploymentOrModelId, openAIClient);
     }
     else
-    {       
+    {
         builder.Services.AddOpenAITextEmbeddingGeneration(openAiConfig.EmbeddingsDeploymentOrModelId, openAIClient);
     }
 

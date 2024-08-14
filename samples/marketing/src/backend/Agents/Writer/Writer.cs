@@ -21,8 +21,10 @@ public class Writer : AiAgent<WriterState>, IWriter
         _logger = logger;
     }
 
-    public async override Task HandleEvent(Event item)
+    public override async Task HandleEvent(Event item)
     {
+        ArgumentNullException.ThrowIfNull(item);
+
         KernelArguments context;
         string newArticle;
 
@@ -75,25 +77,26 @@ public class Writer : AiAgent<WriterState>, IWriter
 
     private async Task SendArticleCreatedEvent(string article, string userId)
     {
-        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
-        {
-            Type = nameof(EventTypes.ArticleCreated),
-            Data = new Dictionary<string, string> {
-                            { "UserId", userId },
-                            { nameof(article), article },
-                        }
-        });
+        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(),
+            new Event {
+                Type = nameof(EventTypes.ArticleCreated),
+                Data = new Dictionary<string, string> {
+                    { "UserId", userId },
+                    { nameof(article), article },
+                }
+            }
+        );
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
             Type = nameof(EventTypes.AuditText),
             Data = new Dictionary<string, string> {
-                            { "UserId", userId },
-                            { "text", "Article writen by the Writer: " + article },
-                        }
+                { "UserId", userId },
+                { "text", "Article writen by the Writer: " + article },
+            }
         });
     }
 
-    public Task<String> GetArticle()
+    public Task<string> GetArticle()
     {
         return Task.FromResult(_state.State.Data.WrittenArticle);
     }

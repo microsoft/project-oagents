@@ -22,8 +22,10 @@ public class SignalR : Agent
         _signalRClient = signalRClient;
     }
 
-    public async override Task HandleEvent(Event item)
+    public override async Task HandleEvent(Event item)
     {
+        ArgumentNullException.ThrowIfNull(item);
+        
         switch (item.Type)
         {
             case nameof(EventTypes.ArticleCreated):

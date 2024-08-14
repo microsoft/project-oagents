@@ -22,8 +22,9 @@ public class CommunityManager : AiAgent<CommunityManagerState>
         _logger = logger;
     }
 
-    public async override Task HandleEvent(Event item)
+    public override async Task HandleEvent(Event item)
     {
+        ArgumentNullException.ThrowIfNull(item);
         switch (item.Type)
         {
             case nameof(EventTypes.UserConnected):
@@ -84,12 +85,13 @@ public class CommunityManager : AiAgent<CommunityManagerState>
         {
             Type = nameof(EventTypes.SocialMediaPostCreated),
             Data = new Dictionary<string, string> {
-                            { "UserId", userId },
-                            { nameof(socialMediaPost), socialMediaPost}
-                        }
+                { "UserId", userId },
+                { nameof(socialMediaPost), socialMediaPost}
+            }
         });
     }
 
+    // This is just an example on how you can synchronously call an specific agent
     public Task<String> GetArticle()
     {
         return Task.FromResult(_state.State.Data.WrittenSocialMediaPost);

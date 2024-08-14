@@ -2,7 +2,7 @@
 namespace Marketing.Agents;
 public static class WriterPrompts
 {
-    public static string Write = """
+    public const string Write = """
         This is a multi agent app. You are a Marketing Campaign writer Agent.
         If the request is not for you, answer with <NOTFORME>.
         If the request is about writing or modifying an existing campaing, then you should write a campain based on the user request.
@@ -12,7 +12,7 @@ public static class WriterPrompts
         Input: {{$input}}
         """;
 
-    public static string Adjust = """
+    public const string Adjust = """
         This is a multi agent app. You are a Marketing Campaign writer Agent.
         If the request is not for you, answer with <NOTFORME>.
         If the request is about writing or modifying an existing campaing, then you should write a campain based on the user request.

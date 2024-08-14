@@ -24,15 +24,15 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
         _configuration = configuration;
     }
 
-    public async override Task HandleEvent(Event item)
+    public override async Task HandleEvent(Event item)
     {
-        string lastMessage;
+        ArgumentNullException.ThrowIfNull(item);
 
         switch (item.Type)
         {
             case nameof(EventTypes.UserConnected):
                 // The user reconnected, let's send the last message if we have one
-                lastMessage = _state.State.History.LastOrDefault()?.Message;
+                string lastMessage = _state.State.History.LastOrDefault()?.Message;
                 if (lastMessage == null)
                 {
                     return;
@@ -42,9 +42,8 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
 
                 break;
             case nameof(EventTypes.ArticleCreated):
-                //TODO
-
-                if (!String.IsNullOrEmpty(_state.State.Data.imageUrl))
+                //For demo purposes, we do not recreate images if they already exist
+                if (!String.IsNullOrEmpty(_state.State.Data.ImageUrl))
                 {
                     return;
                 }
@@ -54,7 +53,7 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
                 var dallEService = _kernel.GetRequiredService<ITextToImageService>();
                 var imageUri = await dallEService.GenerateImageAsync(article, 1024, 1024);
 
-                _state.State.Data.imageUrl = imageUri;
+                _state.State.Data.ImageUrl = imageUri;
 
                 await SendDesignedCreatedEvent(imageUri, item.Data["UserId"]);
 
@@ -67,13 +66,13 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
 
     private async Task SendDesignedCreatedEvent(string imageUri, string userId)
     {
-        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
-        {
-            Type = nameof(EventTypes.GraphicDesignCreated),
-            Data = new Dictionary<string, string> {
-                            { "UserId", userId },
-                            { nameof(imageUri), imageUri}
-                        }
+        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(),
+            new Event {
+                Type = nameof(EventTypes.GraphicDesignCreated),
+                Data = new Dictionary<string, string> {
+                                { "UserId", userId },
+                                { nameof(imageUri), imageUri}
+            }
         });
     }
 }
