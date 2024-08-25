@@ -16,13 +16,13 @@ import CostList from './costs/cost';
 import RelevantDocumentList from './docs/docs';
 import Chat from './chat/chat';
 import CommunityManager from './community-manager/community-manager';
-import { Container, Grid } from '@mui/material';
+import { Container, Grid, TextField } from '@mui/material';
 import { HubConnectionBuilder, HubConnection, LogLevel } from '@microsoft/signalr';
 
 import { v4 as uuidv4 } from 'uuid';
 
 type SignalRMessage = {
-  userId: string;
+  sessionId: string;
   message: string;
   agent: string;
 };
@@ -44,7 +44,7 @@ export default function Marketing() {
     height: '100vh',
   });
   
-  const [userId, setUserId] = React.useState<string>(uuidv4());
+  const [sessionId, setSessionId] = React.useState<string>(uuidv4());
   const [connection, setConnection] = React.useState<HubConnection>();
   const [messages, setMessages] = React.useState<{ sender: string; text: any; }[]>([]);
 
@@ -54,7 +54,7 @@ export default function Marketing() {
   const [ imgUrl, setImgUrl ] = useState<string>('');
   const [ communityManagerOpen, setCommunityManagerOpen ] = useState<boolean>(false);
 
-  const createSignalRConnection = async (userId: string) => {
+  const createSignalRConnection = async (sessionId: string) => {
     try {
       console.log(`[MainPage] Reading environment variables [${process.env.NEXT_PUBLIC_BACKEND_URI}]`);
       var uri = process.env.NEXT_PUBLIC_BACKEND_URI
@@ -66,13 +66,14 @@ export default function Marketing() {
       // initi the connection
       const connection = new HubConnectionBuilder()
         .withUrl(uri, {withCredentials: false})
+        .withAutomaticReconnect()
         .configureLogging(LogLevel.Information)
         .build();
 
       //setup handler
       connection.on('ReceiveMessage', (message: SignalRMessage) => {
-        console.log(`[MainPage][${message.userId}] Received message from ${message.agent}: ${message.message}`);
-        if (message.agent === 'Chat') {
+        console.log(`[MainPage][${message.sessionId}] Received message from ${message.agent}: ${message.message}`);
+        if (message.agent === 'Writer') {
           const newMessage = { sender: 'Writer', text: message.message };
           setMessages(prevMessages => [...prevMessages, newMessage]);
         }
@@ -98,7 +99,7 @@ export default function Marketing() {
         try {
           await connection.start();
           console.log(`Connection ID: ${connection.connectionId}`);
-          await connection.invoke('ConnectToAgent', userId);
+          await connection.invoke('ConnectToAgent', sessionId);
           console.log(`[MainPage] Connection re-established.`);
         } catch (error) {
           console.error(error);
@@ -107,7 +108,7 @@ export default function Marketing() {
 
       await connection.start();
       console.log(`Connection ID: ${connection.connectionId}`);
-      await connection.invoke('ConnectToAgent', userId);
+      await connection.invoke('ConnectToAgent', sessionId);
 
       setConnection(connection);
       console.log(`[MainPage] Connection established.`);
@@ -123,7 +124,7 @@ export default function Marketing() {
   const sendMessage = async (message: string, agent: string) => {
     if (connection) {
       const frontEndMessage:SignalRMessage = { 
-        userId: userId, 
+        sessionId: sessionId, 
         message: message,
         agent: agent
       };
@@ -136,7 +137,7 @@ export default function Marketing() {
   }
 
   React.useEffect(() => {
-    createSignalRConnection(userId);
+    createSignalRConnection(sessionId);
   }, []);
 
   const defaultTheme = createTheme({
@@ -172,8 +173,12 @@ export default function Marketing() {
     <Container maxWidth="xl" disableGutters >
       <Grid container spacing={3}>
         <Grid item xs={6}>
+          <TextField fullWidth  id="session-id" label="SessionId" variant="outlined" margin="normal" value={sessionId}
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.7)', // Grey with 50% transparency
+            }}/>
           <Paper elevation={0} style={{ border: '1px solid #000' }}>
-            <Chat messages={messages} setMessages={setMessagesInUI} sendMessage={sendMessage}/>
+            <Chat messages={messages} setMessages={setMessagesInUI} sendMessage={sendMessage} />
           </Paper>
         </Grid>
         <Grid item xs={6}>

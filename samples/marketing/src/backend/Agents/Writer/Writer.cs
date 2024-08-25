@@ -36,7 +36,7 @@ public class Writer : AiAgent<WriterState>, IWriter
                     return;
                 }
 
-                await SendArticleCreatedEvent(lastMessage, item.Data["UserId"]);
+                await SendCampaignCreatedEvent(lastMessage, item.Data["SessionId"]);
 
                 break;
 
@@ -51,7 +51,7 @@ public class Writer : AiAgent<WriterState>, IWriter
                 {
                     return;
                 }
-                await SendArticleCreatedEvent(newArticle, item.Data["UserId"]);
+                await SendCampaignCreatedEvent(newArticle, item.Data["SessionId"]);
                 break;
 
             case nameof(EventTypes.AuditorAlert):
@@ -65,7 +65,7 @@ public class Writer : AiAgent<WriterState>, IWriter
                 {
                     return;
                 }
-                await SendArticleCreatedEvent(newArticle, item.Data["UserId"]);
+                await SendCampaignCreatedEvent(newArticle, item.Data["SessionId"]);
                 break;
 
             default:
@@ -73,21 +73,21 @@ public class Writer : AiAgent<WriterState>, IWriter
         }
     }
 
-    private async Task SendArticleCreatedEvent(string article, string userId)
+    private async Task SendCampaignCreatedEvent(string article, string SessionId)
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
-            Type = nameof(EventTypes.ArticleCreated),
+            Type = nameof(EventTypes.CampaignCreated),
             Data = new Dictionary<string, string> {
-                            { "UserId", userId },
+                            { "SessionId", SessionId },
                             { nameof(article), article },
                         }
         });
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
-            Type = nameof(EventTypes.AuditText),
+            Type = nameof(EventTypes.CampaignCreated),
             Data = new Dictionary<string, string> {
-                            { "UserId", userId },
+                            { "SessionId", SessionId },
                             { "text", "Article writen by the Writer: " + article },
                         }
         });

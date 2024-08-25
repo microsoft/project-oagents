@@ -2,11 +2,13 @@ namespace Marketing.Events;
 
 public enum EventTypes
 {
-    UserChatInput,
-    ArticleCreated,
     UserConnected,
+    UserChatInput,
+    CampaignCreated,
     GraphicDesignCreated,
     SocialMediaPostCreated,
-    AuditText,
-    AuditorAlert
+    AuditorOk,
+    AuditorAlert,
+    SalesForecast,
+    ProductionForecast
 }

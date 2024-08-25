@@ -38,10 +38,10 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
                     return;
                 }
 
-                await SendDesignedCreatedEvent(lastMessage, item.Data["UserId"]);
+                await SendDesignedCreatedEvent(lastMessage, item.Data["SessionId"]);
 
                 break;
-            case nameof(EventTypes.ArticleCreated):
+            case nameof(EventTypes.CampaignCreated):
                 //TODO
 
                 if (!String.IsNullOrEmpty(_state.State.Data.imageUrl))
@@ -49,14 +49,14 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
                     return;
                 }
 
-                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}.");
+                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.CampaignCreated)}.");
                 var article = item.Data["article"];
                 var dallEService = _kernel.GetRequiredService<ITextToImageService>();
                 var imageUri = await dallEService.GenerateImageAsync(article, 1024, 1024);
 
                 _state.State.Data.imageUrl = imageUri;
 
-                await SendDesignedCreatedEvent(imageUri, item.Data["UserId"]);
+                await SendDesignedCreatedEvent(imageUri, item.Data["SessionId"]);
 
                 break;
 
@@ -65,13 +65,13 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
         }
     }
 
-    private async Task SendDesignedCreatedEvent(string imageUri, string userId)
+    private async Task SendDesignedCreatedEvent(string imageUri, string sessionId)
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
             Type = nameof(EventTypes.GraphicDesignCreated),
             Data = new Dictionary<string, string> {
-                            { "UserId", userId },
+                            { "SessionId", sessionId },
                             { nameof(imageUri), imageUri}
                         }
         });

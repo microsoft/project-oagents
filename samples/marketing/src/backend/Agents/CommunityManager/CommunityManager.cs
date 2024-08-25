@@ -34,11 +34,11 @@ public class CommunityManager : AiAgent<CommunityManagerState>
                     return;
                 }
 
-                await SendDesignedCreatedEvent(lastMessage, item.Data["UserId"]);
+                await SendDesignedCreatedEvent(lastMessage, item.Data["SessionId"]);
                 break;
 
             case nameof(EventTypes.UserChatInput):
-            case nameof(EventTypes.ArticleCreated):
+            case nameof(EventTypes.CampaignCreated):
                 {
                     string article;
                     if (item.Data.ContainsKey("article"))
@@ -60,7 +60,7 @@ public class CommunityManager : AiAgent<CommunityManagerState>
                     {
                         article += "| USER REQUEST: " + item.Data["userMessage"];
                     }
-                    _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}. Article: {article}");
+                    _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.CampaignCreated)}. Article: {article}");
 
                     var context = new KernelArguments { ["input"] = AppendChatHistory(article) };
                     string socialMediaPost = await CallFunction(CommunityManagerPrompts.WritePost, context);
@@ -70,7 +70,7 @@ public class CommunityManager : AiAgent<CommunityManagerState>
                     }
                     _state.State.Data.WrittenSocialMediaPost = socialMediaPost;
 
-                    await SendDesignedCreatedEvent(socialMediaPost, item.Data["UserId"]);
+                    await SendDesignedCreatedEvent(socialMediaPost, item.Data["SessionId"]);
                     break;
                 }
             default:
@@ -78,13 +78,13 @@ public class CommunityManager : AiAgent<CommunityManagerState>
         }
     }
 
-    private async Task SendDesignedCreatedEvent(string socialMediaPost, string userId)
+    private async Task SendDesignedCreatedEvent(string socialMediaPost, string SessionId)
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
             Type = nameof(EventTypes.SocialMediaPostCreated),
             Data = new Dictionary<string, string> {
-                            { "UserId", userId },
+                            { "SessionId", SessionId },
                             { nameof(socialMediaPost), socialMediaPost}
                         }
         });

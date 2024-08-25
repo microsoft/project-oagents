@@ -2,9 +2,9 @@
 
 public interface IArticleHub
 {
-    public Task ConnectToAgent(string UserId);
+    public Task ConnectToAgent(string SessionId);
 
     public Task ChatMessage(FrontEndMessage frontEndMessage, IClusterClient clusterClient);
 
-    public Task SendMessageToSpecificClient(string userId, string message);
+    public Task SendMessageToSpecificClient(string SessionId, string message);
 }

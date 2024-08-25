@@ -26,10 +26,10 @@ public class Auditor : AiAgent<AuditorState>
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.AuditText):
+            case nameof(EventTypes.CampaignCreated):
             {
                 string text = item.Data["text"];
-                _logger.LogInformation($"[{nameof(Auditor)}] Event {nameof(EventTypes.AuditText)}. Text: {text}");
+                _logger.LogInformation($"[{nameof(Auditor)}] Event {nameof(EventTypes.CampaignCreated)}. Text: {text}");
 
                 var context = new KernelArguments { ["input"] = AppendChatHistory(text) };
                 string auditorAnswer = await CallFunction(AuditorPrompts.AuditText, context);
@@ -37,7 +37,7 @@ public class Auditor : AiAgent<AuditorState>
                 {
                     return;
                 }
-                await SendAuditorAlertEvent(auditorAnswer, item.Data["UserId"]);
+                await SendAuditorAlertEvent(auditorAnswer, item.Data["SessionId"]);
                 break;
             }
             default:
@@ -45,13 +45,13 @@ public class Auditor : AiAgent<AuditorState>
         }
     }
 
-    private async Task SendAuditorAlertEvent(string auditorAlertMessage, string userId)
+    private async Task SendAuditorAlertEvent(string auditorAlertMessage, string sessionId)
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
             Type = nameof(EventTypes.AuditorAlert),
             Data = new Dictionary<string, string> {
-                            { "UserId", userId },
+                            { "SessionId", sessionId },
                             { nameof(auditorAlertMessage), auditorAlertMessage}
                         }
         });

@@ -26,23 +26,23 @@ public class SignalR : Agent
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.ArticleCreated):
+            case nameof(EventTypes.CampaignCreated):
                 var writenArticle = item.Data["article"]; 
-                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], writenArticle, AgentTypes.Chat);
+                await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], writenArticle, AgentTypes.Writer);
                 break;
 
             case nameof(EventTypes.GraphicDesignCreated):
                 var imageUrl = item.Data["imageUri"]; 
-                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], imageUrl, AgentTypes.GraphicDesigner);
+                await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], imageUrl, AgentTypes.GraphicDesigner);
                 break;
 
             case nameof(EventTypes.SocialMediaPostCreated):
                 var post = item.Data["socialMediaPost"]; 
-                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], post, AgentTypes.CommunityManager);
+                await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], post, AgentTypes.CommunityManager);
                 break;
             case nameof(EventTypes.AuditorAlert):
                 var auditorAlertMessage = item.Data["auditorAlertMessage"]; 
-                await _signalRClient.SendMessageToSpecificClient(item.Data["UserId"], auditorAlertMessage, AgentTypes.Auditor);
+                await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], auditorAlertMessage, AgentTypes.Auditor);
                 break;
 
             default:
