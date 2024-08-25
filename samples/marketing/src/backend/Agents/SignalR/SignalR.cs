@@ -24,29 +24,46 @@ public class SignalR : Agent
 
     public async override Task HandleEvent(Event item)
     {
-        switch (item.Type)
+        int attempt = 20;
+        while (attempt > 0)
         {
-            case nameof(EventTypes.CampaignCreated):
-                var writenArticle = item.Data["article"]; 
-                await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], writenArticle, AgentTypes.Writer);
-                break;
+            try
+            {
+                switch (item.Type)
+                {
+                    case nameof(EventTypes.CampaignCreated):
+                        var writenArticle = item.Data["article"];
+                        await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], writenArticle, AgentTypes.Writer);
+                        break;
 
-            case nameof(EventTypes.GraphicDesignCreated):
-                var imageUrl = item.Data["imageUri"]; 
-                await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], imageUrl, AgentTypes.GraphicDesigner);
-                break;
+                    case nameof(EventTypes.GraphicDesignCreated):
+                        var imageUrl = item.Data["imageUri"];
+                        await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], imageUrl, AgentTypes.GraphicDesigner);
+                        break;
 
-            case nameof(EventTypes.SocialMediaPostCreated):
-                var post = item.Data["socialMediaPost"]; 
-                await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], post, AgentTypes.CommunityManager);
-                break;
-            case nameof(EventTypes.AuditorAlert):
-                var auditorAlertMessage = item.Data["auditorAlertMessage"]; 
-                await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], auditorAlertMessage, AgentTypes.Auditor);
-                break;
-
-            default:
-                break;
+                    case nameof(EventTypes.SocialMediaPostCreated):
+                        var post = item.Data["socialMediaPost"];
+                        await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], post, AgentTypes.CommunityManager);
+                        break;
+                    case nameof(EventTypes.AuditorAlert):
+                        var auditorAlertMessage = item.Data["auditorAlertMessage"];
+                        await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], auditorAlertMessage, AgentTypes.Auditor);
+                        break;
+                    case nameof(EventTypes.SalesForecast):
+                        var salesForecast = item.Data["salesForecast"];
+                        await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], salesForecast, AgentTypes.SalesAnalyst);
+                        break;
+                    default:
+                        break;
+                }
+                attempt = 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"[{nameof(SignalR)}] Error while sending message to client.");
+                await Task.Delay(1000);
+                attempt--;
+            }
         }
     }
 }

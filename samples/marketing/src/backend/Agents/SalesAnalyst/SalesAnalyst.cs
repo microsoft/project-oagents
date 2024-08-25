@@ -51,19 +51,13 @@ public class SalesAnalyst : AiAgent<SalesAnalystState>
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.CampaignCreated):
+            case nameof(EventTypes.AuditorOk):
             {
-                string text = item.Data["text"];
-                _logger.LogInformation($"[{nameof(SalesAnalyst)}] Event {nameof(EventTypes.CampaignCreated)}. Text: {text}");
+                string article = item.Data["article"];
+                _logger.LogInformation($"[{nameof(SalesAnalyst)}] Event {nameof(EventTypes.CampaignCreated)}. Text: {article}");
 
-                AnalizeCampaign(text, item.Data["SessionId"]);
+                AnalizeCampaign(article, item.Data["SessionId"]);
 
-                //var context = new KernelArguments { ["input"] = AppendChatHistory(text) };
-                //string auditorAnswer = await CallFunction(SalesAnalyst.AuditText, context);
-                //if (auditorAnswer.Contains("NOTFORME"))
-                //{
-                //    return;
-                //}
                 break;
             }
             default:
@@ -78,14 +72,14 @@ public class SalesAnalyst : AiAgent<SalesAnalystState>
         return answer;
     }
 
-    private async Task SendSalesForecastEvent(string auditorAlertMessage, string sessionId)
+    private async Task SendSalesForecastEvent(string salesForecast, string sessionId)
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
-            Type = nameof(EventTypes.AuditorAlert),
+            Type = nameof(EventTypes.SalesForecast),
             Data = new Dictionary<string, string> {
                             { "SessionId", sessionId },
-                            { nameof(auditorAlertMessage), auditorAlertMessage}
+                            { nameof(salesForecast), salesForecast}
                         }
         });
     }

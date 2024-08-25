@@ -26,53 +26,56 @@ public class CommunityManager : AiAgent<CommunityManagerState>
     {
         switch (item.Type)
         {
-            case nameof(EventTypes.UserConnected):
-                // The user reconnected, let's send the last message if we have one
-                string lastMessage = _state.State.History.LastOrDefault()?.Message;
-                if (lastMessage == null)
+            //case nameof(EventTypes.UserConnected):
+            //    The user reconnected, let's send the last message if we have one
+            //    string lastMessage = _state.State.History.LastOrDefault()?.Message;
+            //    if (lastMessage == null)
+            //    {
+            //        return;
+            //    }
+
+            //    await SendDesignedCreatedEvent(lastMessage, item.Data["SessionId"]);
+            //    break;
+
+            case nameof(EventTypes.UserChatInput):
+                
+                break;
+
+            case nameof(EventTypes.AuditorOk):
+            {
+                string article;
+                if (item.Data.ContainsKey("article"))
                 {
+                    article = item.Data["article"];
+                    _state.State.Data.Article = article;
+                }
+                else if (_state.State.Data.Article != null)
+                {
+                    article = _state.State.Data.Article;
+                }
+                else
+                { 
+                    // No article yet
                     return;
                 }
 
-                await SendDesignedCreatedEvent(lastMessage, item.Data["SessionId"]);
-                break;
-
-            case nameof(EventTypes.UserChatInput):
-            case nameof(EventTypes.CampaignCreated):
+                if (item.Data.ContainsKey("userMessage"))
                 {
-                    string article;
-                    if (item.Data.ContainsKey("article"))
-                    {
-                        article = item.Data["article"];
-                        _state.State.Data.Article = article;
-                    }
-                    else if (_state.State.Data.Article != null)
-                    {
-                        article = _state.State.Data.Article;
-                    }
-                    else
-                    { 
-                        // No article yet
-                        return;
-                    }
-
-                    if (item.Data.ContainsKey("userMessage"))
-                    {
-                        article += "| USER REQUEST: " + item.Data["userMessage"];
-                    }
-                    _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.CampaignCreated)}. Article: {article}");
-
-                    var context = new KernelArguments { ["input"] = AppendChatHistory(article) };
-                    string socialMediaPost = await CallFunction(CommunityManagerPrompts.WritePost, context);
-                    if (socialMediaPost.Contains("NOTFORME"))
-                    {
-                        return;
-                    }
-                    _state.State.Data.WrittenSocialMediaPost = socialMediaPost;
-
-                    await SendDesignedCreatedEvent(socialMediaPost, item.Data["SessionId"]);
-                    break;
+                    article += "| USER REQUEST: " + item.Data["userMessage"];
                 }
+                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.CampaignCreated)}. Article: {article}");
+
+                var context = new KernelArguments { ["input"] = AppendChatHistory(article) };
+                string socialMediaPost = await CallFunction(CommunityManagerPrompts.WritePost, context);
+                if (socialMediaPost.Contains("NOTFORME"))
+                {
+                    return;
+                }
+                _state.State.Data.WrittenSocialMediaPost = socialMediaPost;
+
+                await SendDesignedCreatedEvent(socialMediaPost, item.Data["SessionId"]);
+                break;
+            }
             default:
                 break;
         }

@@ -27,19 +27,25 @@ public class Auditor : AiAgent<AuditorState>
         switch (item.Type)
         {
             case nameof(EventTypes.CampaignCreated):
-            {
-                string text = item.Data["text"];
-                _logger.LogInformation($"[{nameof(Auditor)}] Event {nameof(EventTypes.CampaignCreated)}. Text: {text}");
+                string article = item.Data[nameof(article)];
+                _logger.LogInformation($"[{nameof(Auditor)}] Event {nameof(EventTypes.CampaignCreated)}. {nameof(article)}: {article}");
 
-                var context = new KernelArguments { ["input"] = AppendChatHistory(text) };
+                var context = new KernelArguments { ["input"] = AppendChatHistory(article) };
                 string auditorAnswer = await CallFunction(AuditorPrompts.AuditText, context);
                 if (auditorAnswer.Contains("NOTFORME"))
                 {
                     return;
                 }
-                await SendAuditorAlertEvent(auditorAnswer, item.Data["SessionId"]);
+                if (auditorAnswer.Contains("AUDITOK"))
+                {
+                    await SendAuditorOkEvent(auditorAnswer, article, item.Data["SessionId"]);
+
+                }
+                else
+                {
+                    await SendAuditorAlertEvent(auditorAnswer, item.Data["SessionId"]);
+                }
                 break;
-            }
             default:
                 break;
         }
@@ -53,6 +59,19 @@ public class Auditor : AiAgent<AuditorState>
             Data = new Dictionary<string, string> {
                             { "SessionId", sessionId },
                             { nameof(auditorAlertMessage), auditorAlertMessage}
+                        }
+        });
+    }
+
+    private async Task SendAuditorOkEvent(string auditorOkMessage, string article, string sessionId)
+    {
+        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
+        {
+            Type = nameof(EventTypes.AuditorOk),
+            Data = new Dictionary<string, string> {
+                            { "SessionId", sessionId },
+                            { nameof(auditorOkMessage), auditorOkMessage},
+                            { "article", article}
                         }
         });
     }

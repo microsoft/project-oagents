@@ -83,14 +83,6 @@ public class Writer : AiAgent<WriterState>, IWriter
                             { nameof(article), article },
                         }
         });
-        await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
-        {
-            Type = nameof(EventTypes.CampaignCreated),
-            Data = new Dictionary<string, string> {
-                            { "SessionId", SessionId },
-                            { "text", "Article writen by the Writer: " + article },
-                        }
-        });
     }
 
     public Task<String> GetArticle()

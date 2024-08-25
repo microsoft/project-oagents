@@ -46,6 +46,7 @@ public class ArticleHub : Hub<IArticleHub>
 
     }
 
+    // This method is called when a new user connects to the hub.
     public async Task ConnectToAgent(string SessionId, IClusterClient clusterClient)
     {
         var frontEndMessage = new FrontEndMessage()

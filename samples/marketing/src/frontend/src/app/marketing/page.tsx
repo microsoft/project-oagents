@@ -66,7 +66,7 @@ export default function Marketing() {
       // initi the connection
       const connection = new HubConnectionBuilder()
         .withUrl(uri, {withCredentials: false})
-        .withAutomaticReconnect()
+        .withAutomaticReconnect(Array(3).fill(2000))
         .configureLogging(LogLevel.Information)
         .build();
 
@@ -89,6 +89,11 @@ export default function Marketing() {
         if (message.agent === 'GraphicDesigner') {
           setImgUrl(message.message);
           const newMessage = { sender: message.agent, text: 'Graphic Designer: Check the image I created!'};
+          setMessages(prevMessages => [...prevMessages, newMessage]);
+        }
+        if (message.agent === 'SalesAnalyst') {
+          setImgUrl(message.message);
+          const newMessage = { sender: message.agent, text: 'Sales Analyst:  ' + message.message };
           setMessages(prevMessages => [...prevMessages, newMessage]);
         }
       });

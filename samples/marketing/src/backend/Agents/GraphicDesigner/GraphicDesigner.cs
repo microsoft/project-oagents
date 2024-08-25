@@ -41,7 +41,7 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
                 await SendDesignedCreatedEvent(lastMessage, item.Data["SessionId"]);
 
                 break;
-            case nameof(EventTypes.CampaignCreated):
+            case nameof(EventTypes.AuditorOk):
                 //TODO
 
                 if (!String.IsNullOrEmpty(_state.State.Data.imageUrl))
@@ -49,7 +49,7 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
                     return;
                 }
 
-                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.CampaignCreated)}.");
+                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.AuditorOk)}.");
                 var article = item.Data["article"];
                 var dallEService = _kernel.GetRequiredService<ITextToImageService>();
                 var imageUri = await dallEService.GenerateImageAsync(article, 1024, 1024);

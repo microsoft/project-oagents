@@ -7,5 +7,5 @@ public enum AgentTypes
     GraphicDesigner,
     Auditor,
     Accountant,
-    Librarian
+    SalesAnalyst
 }

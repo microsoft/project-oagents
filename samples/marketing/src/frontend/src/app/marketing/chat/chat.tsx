@@ -19,7 +19,7 @@ const data = [
   { icon: <Public />, label: 'Bank vs Governnent - Public Case - chf 3.7M - 10 years' },
 ];
 
-type Sender = 'user' | 'CommunityManager' | 'GraphicDesigner' | 'Writer' | 'Auditor';
+type Sender = 'user' | 'CommunityManager' | 'GraphicDesigner' | 'Writer' | 'Auditor' | 'SalesAnalyst';
 
 const senderColors: Record<Sender, string> = {
   'user': '#d1e7dd',
@@ -27,6 +27,7 @@ const senderColors: Record<Sender, string> = {
   'GraphicDesigner': '#f0e8e8',
   'Writer': '#add8e6',
   'Auditor': '#ff7f7f',
+  'SalesAnalyst': '#fffacd',
 };
 
 
