@@ -3,9 +3,11 @@ using Marketing.Events;
 using Marketing.Options;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
+using Microsoft.Identity.Client;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 using Orleans.Runtime;
+using Polly.CircuitBreaker;
 
 namespace Marketing.Agents;
 
@@ -38,9 +40,23 @@ public class CommunityManager : AiAgent<CommunityManagerState>
             //    break;
 
             case nameof(EventTypes.UserChatInput):
-                
-                break;
+                if(_state.State?.Data?.WrittenSocialMediaPost != null)
+                {
+                    KernelArguments ka = new KernelArguments();
+                    string prompt = CommunityManagerPrompts.UpdatePost
+                        .Replace("{{$userrequest}}", item.Data["userMessage"])
+                        .Replace("{{$inprogresstweet}}", _state.State.Data.WrittenSocialMediaPost);
+                    
+                    string socialMediaPost = await CallFunction(prompt, ka);
+                    if (socialMediaPost.Contains("NOTFORME"))
+                    {
+                        return;
+                    }
+                    _state.State.Data.WrittenSocialMediaPost = socialMediaPost;
 
+                    await SendDesignedCreatedEvent(socialMediaPost, item.Data["SessionId"]);
+                }
+                break;
             case nameof(EventTypes.AuditorOk):
             {
                 string article;
@@ -63,7 +79,7 @@ public class CommunityManager : AiAgent<CommunityManagerState>
                 {
                     article += "| USER REQUEST: " + item.Data["userMessage"];
                 }
-                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.CampaignCreated)}. Article: {article}");
+                _logger.LogInformation($"[{nameof(CommunityManager)}] Event {nameof(EventTypes.CampaignCreated)}. Article: {article}");
 
                 var context = new KernelArguments { ["input"] = AppendChatHistory(article) };
                 string socialMediaPost = await CallFunction(CommunityManagerPrompts.WritePost, context);

@@ -32,14 +32,9 @@ public class Auditor : AiAgent<AuditorState>
 
                 var context = new KernelArguments { ["input"] = AppendChatHistory(article) };
                 string auditorAnswer = await CallFunction(AuditorPrompts.AuditText, context);
-                if (auditorAnswer.Contains("NOTFORME"))
-                {
-                    return;
-                }
                 if (auditorAnswer.Contains("AUDITOK"))
                 {
                     await SendAuditorOkEvent(auditorAnswer, article, item.Data["SessionId"]);
-
                 }
                 else
                 {

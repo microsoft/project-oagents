@@ -49,15 +49,21 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
                     return;
                 }
 
-                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.AuditorOk)}.");
-                var article = item.Data["article"];
-                var dallEService = _kernel.GetRequiredService<ITextToImageService>();
-                var imageUri = await dallEService.GenerateImageAsync(article, 1024, 1024);
+                try
+                {
+                    _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.AuditorOk)}.");
+                    var article = item.Data["article"];
+                    var dallEService = _kernel.GetRequiredService<ITextToImageService>();
+                    var imageUri = await dallEService.GenerateImageAsync(article, 1024, 1024);
 
-                _state.State.Data.imageUrl = imageUri;
+                    _state.State.Data.imageUrl = imageUri;
 
-                await SendDesignedCreatedEvent(imageUri, item.Data["SessionId"]);
-
+                    await SendDesignedCreatedEvent(imageUri, item.Data["SessionId"]);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.Message);
+                }
                 break;
 
             default:

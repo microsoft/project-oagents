@@ -35,17 +35,15 @@ public class SalesAnalyst : AiAgent<SalesAnalystState>
         }
 
 
-        int sales = CalculateSalesBasedOnDiscount(discountPercentage);
+        int salesExpectations = CalculateSalesBasedOnDiscount(discountPercentage);
 
 
         if (discountPercentage > 10)
         {
-            await SendSalesForecastEvent($"With a discount of {discountPercentage} we expect to sell {sales}", sessionId);
+            await SendSalesForecastEvent($"With a discount of {discountPercentage}% we expect a sales increase of {salesExpectations} in the next 4 months", salesExpectations, sessionId);
         }
         
     }
-
-
 
     public async override Task HandleEvent(Event item)
     {
@@ -72,14 +70,15 @@ public class SalesAnalyst : AiAgent<SalesAnalystState>
         return answer;
     }
 
-    private async Task SendSalesForecastEvent(string salesForecast, string sessionId)
+    private async Task SendSalesForecastEvent(string salesForecastMessage, int salesExpectations, string sessionId)
     {
         await PublishEvent(Consts.OrleansNamespace, this.GetPrimaryKeyString(), new Event
         {
             Type = nameof(EventTypes.SalesForecast),
             Data = new Dictionary<string, string> {
                             { "SessionId", sessionId },
-                            { nameof(salesForecast), salesForecast}
+                            { nameof(salesForecastMessage), salesForecastMessage},
+                            { nameof(salesExpectations) , salesExpectations.ToString() }
                         }
         });
     }

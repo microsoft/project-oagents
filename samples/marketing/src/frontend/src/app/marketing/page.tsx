@@ -16,6 +16,7 @@ import CostList from './costs/cost';
 import RelevantDocumentList from './docs/docs';
 import Chat from './chat/chat';
 import CommunityManager from './community-manager/community-manager';
+import ManufacturingManager from './manufacturing-manager/manufacturing';
 import { Container, Grid, TextField } from '@mui/material';
 import { HubConnectionBuilder, HubConnection, LogLevel } from '@microsoft/signalr';
 
@@ -66,7 +67,7 @@ export default function Marketing() {
       // initi the connection
       const connection = new HubConnectionBuilder()
         .withUrl(uri, {withCredentials: false})
-        .withAutomaticReconnect(Array(3).fill(2000))
+        .withAutomaticReconnect(Array(3).fill(1000))
         .configureLogging(LogLevel.Information)
         .build();
 
@@ -77,23 +78,30 @@ export default function Marketing() {
           const newMessage = { sender: 'Writer', text: message.message };
           setMessages(prevMessages => [...prevMessages, newMessage]);
         }
-        if (message.agent === 'Auditor') {
+        else if (message.agent === 'Auditor') {
           const newMessage = { sender: 'Auditor', text: message.message };
           setMessages(prevMessages => [...prevMessages, newMessage]);
         }
-        if (message.agent === 'CommunityManager') {
+        else if (message.agent === 'CommunityManager') {
           setArticle(message.message);
-          const newMessage = { sender: message.agent, text: 'Community Manager: ' + message.message };
+          const newMessage = { sender: 'Community Manager', text: message.message };
           setMessages(prevMessages => [...prevMessages, newMessage]);
         }
-        if (message.agent === 'GraphicDesigner') {
+        else if (message.agent === 'GraphicDesigner') {
           setImgUrl(message.message);
-          const newMessage = { sender: message.agent, text: 'Graphic Designer: Check the image I created!'};
+          const newMessage = { sender: 'Graphic Designer', text: 'Check the image I created!'};
           setMessages(prevMessages => [...prevMessages, newMessage]);
         }
-        if (message.agent === 'SalesAnalyst') {
-          setImgUrl(message.message);
-          const newMessage = { sender: message.agent, text: 'Sales Analyst:  ' + message.message };
+        else if (message.agent === 'SalesAnalyst') {
+          const newMessage = { sender: 'Sales Analyst', text: message.message };
+          setMessages(prevMessages => [...prevMessages, newMessage]);
+        }
+        else if(message.agent=='ManufacturingManager') {
+          const newMessage = { sender: 'Manufacturing Manager', text: message.message };
+          setMessages(prevMessages => [...prevMessages, newMessage]);
+        }
+        else {
+          const newMessage = { sender: 'UNKNOWN', text: message.message };
           setMessages(prevMessages => [...prevMessages, newMessage]);
         }
       });
@@ -192,6 +200,12 @@ export default function Marketing() {
               <Item>
                 <Paper elevation={0}>
                   <StakeholderList />
+                </Paper>
+                <Divider />
+              </Item>
+              <Item>
+                <Paper elevation={0}>
+                  <ManufacturingManager />
                 </Paper>
                 <Divider />
               </Item>

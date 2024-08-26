@@ -24,7 +24,7 @@ public class SignalR : Agent
 
     public async override Task HandleEvent(Event item)
     {
-        int attempt = 20;
+        int attempt = 2;
         while (attempt > 0)
         {
             try
@@ -50,8 +50,12 @@ public class SignalR : Agent
                         await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], auditorAlertMessage, AgentTypes.Auditor);
                         break;
                     case nameof(EventTypes.SalesForecast):
-                        var salesForecast = item.Data["salesForecast"];
+                        var salesForecast = item.Data["salesForecastMessage"];
                         await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], salesForecast, AgentTypes.SalesAnalyst);
+                        break;
+                    case nameof(EventTypes.ManufacturingForecast):
+                        var manufactureForecastMessage = item.Data["manufactureForecastMessage"];
+                        await _signalRClient.SendMessageToSpecificClient(item.Data["SessionId"], manufactureForecastMessage, AgentTypes.ManufacturingManager);
                         break;
                     default:
                         break;

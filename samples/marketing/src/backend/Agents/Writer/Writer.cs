@@ -29,16 +29,16 @@ public class Writer : AiAgent<WriterState>, IWriter
         switch (item.Type)
         {
             case nameof(EventTypes.UserConnected):
-                // The user reconnected, let's send the last message if we have one
-                string lastMessage = _state.State.History.LastOrDefault()?.Message;
-                if (lastMessage == null)
-                {
-                    return;
-                }
+                //// The user reconnected, let's send the last message if we have one
+                //string lastMessage = _state.State.History.LastOrDefault()?.Message;
+                //if (lastMessage == null)
+                //{
+                //    return;
+                //}
 
-                await SendCampaignCreatedEvent(lastMessage, item.Data["SessionId"]);
+                //await SendCampaignCreatedEvent(lastMessage, item.Data["SessionId"]);
 
-                break;
+                //break;
 
             case nameof(EventTypes.UserChatInput):
                 var userMessage = item.Data["userMessage"];

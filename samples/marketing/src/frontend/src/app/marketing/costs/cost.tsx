@@ -16,9 +16,9 @@ import { green, pink } from '@mui/material/colors';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 
 const data = [
-  { icon: <HandshakeTwoToneIcon sx={{ color: green[500] }} />, label: 'IPA discount form 9-9 - eur 15k' },
-  { icon: <GavelIcon  sx={{ color: green[500] }}  />, label: '2x1 brewery birthday - eur 250k' },
-  { icon: <HandshakeTwoToneIcon  sx={{ color: green[500] }}  />, label: 'Summer day 1 - CHF 180k' },
+  { icon: <HandshakeTwoToneIcon sx={{ color: green[500] }} />, label: 'Vitamin discount 10% DK only - eur 15k' },
+  { icon: <GavelIcon  sx={{ color: green[500] }}  />, label: 'Combo Vitamin+Hidratate - eur 250k' },
+  { icon: <HandshakeTwoToneIcon  sx={{ color: green[500] }}  />, label: 'Free Vitamins Summer - CHF 180k' },
   { icon: <HandshakeTwoToneIcon  sx={{ color: pink[500] }}  />, label: 'Worldcup promo 1.5M' },
 ];
 
@@ -63,7 +63,7 @@ export default function CostList() {
               <AttachMoneyIcon/>
             </ListItemIcon>
             <ListItemText
-              primary="Economy of similar cases" 
+              primary="Economy of similar campaigns" 
               primaryTypographyProps={{
                 fontSize: 15,
                 fontWeight: 'medium',

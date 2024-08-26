@@ -10,5 +10,5 @@ public enum EventTypes
     AuditorOk,
     AuditorAlert,
     SalesForecast,
-    ProductionForecast
+    ManufacturingForecast
 }
