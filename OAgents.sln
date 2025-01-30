@@ -1,4 +1,5 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -28,7 +29,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Oagents.Dapr", "src\Oagents
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Oagents.Orleans", "src\Oagents.Orleans\Oagents.Orleans.csproj", "{8E900786-270D-4010-A279-CEDDB52B7422}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupportCenter", "samples\support-center\src\backend\SupportCenter.csproj", "{A6DCD7B2-8347-4C52-A808-B5E0A5CD453D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "support-center", "support-center", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupportCenter.AppHost", "samples\support-center\src\SupportCenter.AppHost\SupportCenter.AppHost.csproj", "{6B0F5DA5-A26A-4F5B-ABFA-693277A54C71}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupportCenter.ServiceDefaults", "samples\support-center\src\SupportCenter.ServiceDefaults\SupportCenter.ServiceDefaults.csproj", "{754C1162-ABCB-3C9E-10B7-E30E9C8F6C23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupportCenter.ApiService", "samples\support-center\src\SupportCenter.ApiService\SupportCenter.ApiService.csproj", "{40B73D32-CE8E-88CB-A2DF-AC758F22BFDB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,10 +71,18 @@ Global
 		{8E900786-270D-4010-A279-CEDDB52B7422}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E900786-270D-4010-A279-CEDDB52B7422}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E900786-270D-4010-A279-CEDDB52B7422}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A6DCD7B2-8347-4C52-A808-B5E0A5CD453D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A6DCD7B2-8347-4C52-A808-B5E0A5CD453D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A6DCD7B2-8347-4C52-A808-B5E0A5CD453D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A6DCD7B2-8347-4C52-A808-B5E0A5CD453D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B0F5DA5-A26A-4F5B-ABFA-693277A54C71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B0F5DA5-A26A-4F5B-ABFA-693277A54C71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B0F5DA5-A26A-4F5B-ABFA-693277A54C71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B0F5DA5-A26A-4F5B-ABFA-693277A54C71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{754C1162-ABCB-3C9E-10B7-E30E9C8F6C23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{754C1162-ABCB-3C9E-10B7-E30E9C8F6C23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{754C1162-ABCB-3C9E-10B7-E30E9C8F6C23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{754C1162-ABCB-3C9E-10B7-E30E9C8F6C23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40B73D32-CE8E-88CB-A2DF-AC758F22BFDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40B73D32-CE8E-88CB-A2DF-AC758F22BFDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40B73D32-CE8E-88CB-A2DF-AC758F22BFDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40B73D32-CE8E-88CB-A2DF-AC758F22BFDB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -84,6 +99,12 @@ Global
 		{B05CE76A-63ED-4F94-A531-A761BD8D6E52} = {290F9824-BAD3-4703-B9B7-FE9C4BE3A1CF}
 		{3D2FDE8E-EB13-4686-B662-1DD5FFFC0366} = {290F9824-BAD3-4703-B9B7-FE9C4BE3A1CF}
 		{8E900786-270D-4010-A279-CEDDB52B7422} = {290F9824-BAD3-4703-B9B7-FE9C4BE3A1CF}
-		{A6DCD7B2-8347-4C52-A808-B5E0A5CD453D} = {943853E7-513D-45EA-870F-549CFC0AF8E8}
+		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {943853E7-513D-45EA-870F-549CFC0AF8E8}
+		{6B0F5DA5-A26A-4F5B-ABFA-693277A54C71} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{754C1162-ABCB-3C9E-10B7-E30E9C8F6C23} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{40B73D32-CE8E-88CB-A2DF-AC758F22BFDB} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B5B698EF-0ABD-4DB0-9C3B-31E9C739A00B}
 	EndGlobalSection
 EndGlobal
