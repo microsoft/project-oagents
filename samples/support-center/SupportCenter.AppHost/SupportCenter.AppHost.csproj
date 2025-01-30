@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SupportCenter.ApiService\SupportCenter.ApiService.csproj" />
+    <ProjectReference Include="..\SupportCenter.Seed.InvoiceMemory\SupportCenter.Seed.InvoiceMemory.csproj" />
+    <ProjectReference Include="..\SupportCenter.Seed.Memory\SupportCenter.Seed.Memory.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,6 +26,7 @@
     <PackageReference Include="Aspire.Hosting.NodeJs" Version="9.0.0" />
     <PackageReference Include="Aspire.Hosting.Orleans" Version="9.0.0" />
     <PackageReference Include="Aspire.Hosting.Qdrant" Version="9.0.0" />
+    <PackageReference Include="Aspire.Hosting.Azure.AppContainers" Version="9.0.0" />
   </ItemGroup>
 
 </Project>

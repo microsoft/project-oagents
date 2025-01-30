@@ -1,29 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
-name: ai-support-center
-metadata:
-    template: azd-init@1.8.2
-hooks:
-    postprovision:
-        interactive: false
-        shell: sh
-        run: infra/azd-hooks/load-envs.sh
-infra:
-    provider: bicep
-    path: infra
-    module: main
-services:
-    backend:
-        project: src/backend
-        host: containerapp
-        language: dotnet
-        docker:
-            path: Dockerfile
-            context: ../../../../
-    frontend:
-        project: src/frontend
-        host: containerapp
-        language: ts
-        dist: build
-        docker:
-            path: Dockerfile
 
+name: support-center
+services:  
+  app:
+    language: dotnet
+    project: ./SupportCenter.AppHost/SupportCenter.AppHost.csproj
+    host: containerapp
