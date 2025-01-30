@@ -36,7 +36,7 @@ namespace SupportCenter.ApiService.SemanticKernel
                 var memoryBuilder = new MemoryBuilder();
                 return memoryBuilder.WithLoggerFactory(loggerFactory)
                                 .WithMemoryStore(new AzureAISearchMemoryStore(aiSearchConfig.SearchEndpoint, aiSearchConfig.SearchKey))
-                                .WithAzureOpenAITextEmbeddingGeneration(aiSearchConfig.SearchEmbeddingDeploymentOrModelId, aiSearchConfig.SearchEmbeddingEndpoint, aiSearchConfig.SearchEmbeddingApiKey)
+                                //.WithAzureOpenAITextEmbeddingGeneration(aiSearchConfig.SearchEmbeddingDeploymentOrModelId, aiSearchConfig.SearchEmbeddingEndpoint, aiSearchConfig.SearchEmbeddingApiKey)
                                 .Build();
             }
             else
@@ -46,7 +46,7 @@ namespace SupportCenter.ApiService.SemanticKernel
 
                 return new MemoryBuilder().WithLoggerFactory(loggerFactory)
                              .WithQdrantMemoryStore(qdrantConfig.Endpoint, qdrantConfig.VectorSize)
-                             .WithAzureOpenAITextEmbeddingGeneration(openAiConfig.EmbeddingsDeploymentOrModelId, openAiConfig.EmbeddingsEndpoint, openAiConfig.EmbeddingsApiKey)
+                             //.WithAzureOpenAITextEmbeddingGeneration(openAiConfig.EmbeddingsDeploymentOrModelId, openAiConfig.EmbeddingsEndpoint, openAiConfig.EmbeddingsApiKey)
                              .Build();
             }
         }
@@ -58,13 +58,13 @@ namespace SupportCenter.ApiService.SemanticKernel
             var agentConfiguration = AgentConfiguration.GetAgentConfiguration(agent);
             agentConfiguration.ConfigureOpenAI(openAiConfig);
 
-            var clientOptions = new OpenAIClientOptions();
-            clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
+            var clientOptions = new AzureOpenAIClientOptions();
+            //clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
             var builder = Kernel.CreateBuilder();
             builder.Services.AddLogging(c => c.AddConsole().AddDebug().SetMinimumLevel(LogLevel.Debug));
 
             // Chat
-            var openAIClient = new OpenAIClient(new Uri(openAiConfig.ChatEndpoint), new AzureKeyCredential(openAiConfig.ChatApiKey), clientOptions);
+            var openAIClient = new AzureOpenAIClient(new Uri(openAiConfig.ChatEndpoint), new AzureKeyCredential(openAiConfig.ChatApiKey), clientOptions);
             if (openAiConfig.ChatEndpoint.Contains(".azure", StringComparison.OrdinalIgnoreCase))
             {
                 builder.Services.AddAzureOpenAIChatCompletion(openAiConfig.ChatDeploymentOrModelId, openAIClient);
@@ -74,7 +74,7 @@ namespace SupportCenter.ApiService.SemanticKernel
                 builder.Services.AddOpenAIChatCompletion(openAiConfig.ChatDeploymentOrModelId, openAIClient);
             }
             // Embeddings
-            openAIClient = new OpenAIClient(new Uri(openAiConfig.EmbeddingsEndpoint), new AzureKeyCredential(openAiConfig.EmbeddingsApiKey), clientOptions);
+            openAIClient = new AzureOpenAIClient(new Uri(openAiConfig.EmbeddingsEndpoint), new AzureKeyCredential(openAiConfig.EmbeddingsApiKey), clientOptions);
             if (openAiConfig.EmbeddingsEndpoint.Contains(".azure", StringComparison.OrdinalIgnoreCase))
             {
                 builder.Services.AddAzureOpenAITextEmbeddingGeneration(openAiConfig.EmbeddingsDeploymentOrModelId, openAIClient);

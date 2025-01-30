@@ -32,7 +32,7 @@ internal class MemoryProgram
         var memoryBuilder = new MemoryBuilder();
         var memory = memoryBuilder.WithLoggerFactory(loggerFactory)
                     .WithMemoryStore(new AzureAISearchMemoryStore(kernelSettings.SearchEndpoint, kernelSettings.SearchKey))
-                    .WithAzureOpenAITextEmbeddingGeneration(kernelSettings.EmbeddingDeploymentOrModelId, kernelSettings.Endpoint, kernelSettings.ApiKey)
+                    //.WithAzureOpenAITextEmbeddingGeneration(kernelSettings.EmbeddingDeploymentOrModelId, kernelSettings.Endpoint, kernelSettings.ApiKey)
                     .Build();
 
         foreach (var file in files)
@@ -70,12 +70,8 @@ internal class MemoryProgram
         Uri invoiceUri = new Uri(invoice);
 
         Console.WriteLine($"invoiceUri {invoiceUri}");
-        AnalyzeDocumentContent content = new AnalyzeDocumentContent()
-        {
-            UrlSource = invoiceUri
-        };
-
-        Operation<AnalyzeResult> operation = await client.AnalyzeDocumentAsync(WaitUntil.Completed, "prebuilt-invoice", content);
+        var content = new AnalyzeDocumentOptions(modelName, invoiceUri);
+        Operation<AnalyzeResult> operation = await client.AnalyzeDocumentAsync(WaitUntil.Completed, content);
         return operation.Value;
     }
 }

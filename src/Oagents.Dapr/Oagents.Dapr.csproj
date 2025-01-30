@@ -12,8 +12,8 @@
   </PropertyGroup>
 
    <ItemGroup>
-    <PackageReference Include="Dapr.Client" Version="1.13.0" />
-    <PackageReference Include="Dapr.Actors" Version="1.13.0" />
+    <PackageReference Include="Dapr.Client" Version="1.15.0-rc02" />
+    <PackageReference Include="Dapr.Actors" Version="1.15.0-rc02" />
   </ItemGroup>
 
    <ItemGroup>

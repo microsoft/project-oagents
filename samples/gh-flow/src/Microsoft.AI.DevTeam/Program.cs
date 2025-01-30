@@ -14,6 +14,7 @@ using Microsoft.SemanticKernel.Connectors.Qdrant;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Orleans.Configuration;
 using Orleans.Serialization;
+using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<WebhookEventProcessor, GithubWebHookProcessor>();
@@ -180,16 +181,16 @@ static ISemanticTextMemory CreateMemory(IServiceProvider provider)
     var memoryBuilder = new MemoryBuilder();
     return memoryBuilder.WithLoggerFactory(loggerFactory)
                  .WithQdrantMemoryStore(qdrantConfig.Endpoint, qdrantConfig.VectorSize)
-                 .WithAzureOpenAITextEmbeddingGeneration(openAiConfig.EmbeddingDeploymentOrModelId, openAiConfig.Endpoint, openAiConfig.ApiKey)
+                 //.WithAzureOpenAITextEmbeddingGeneration(openAiConfig.EmbeddingDeploymentOrModelId, openAiConfig.Endpoint, openAiConfig.ApiKey)
                  .Build();
 }
 
 static Kernel CreateKernel(IServiceProvider provider)
 {
     var openAiConfig = provider.GetService<IOptions<OpenAIOptions>>().Value;
-    var clientOptions = new OpenAIClientOptions();
-    clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
-    var openAIClient = new OpenAIClient(new Uri(openAiConfig.Endpoint), new AzureKeyCredential(openAiConfig.ApiKey), clientOptions);
+    var clientOptions = new AzureOpenAIClientOptions();
+    //clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
+    var openAIClient = new AzureOpenAIClient(new Uri(openAiConfig.Endpoint), new AzureKeyCredential(openAiConfig.ApiKey), clientOptions);
     var builder = Kernel.CreateBuilder();
     builder.Services.AddLogging(c => c.AddConsole().AddDebug().SetMinimumLevel(LogLevel.Debug));
     builder.Services.AddAzureOpenAIChatCompletion(openAiConfig.DeploymentOrModelId, openAIClient);

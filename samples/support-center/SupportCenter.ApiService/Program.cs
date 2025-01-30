@@ -13,6 +13,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ISignalRService, SignalRService>();
 
+builder.AddAzureCosmosClient(connectionName: "cosmos-db");
+
 // Allow any CORS origin if in DEV
 const string AllowDebugOriginPolicy = "AllowDebugOrigin";
 const string AllowOriginPolicy = "AllowOrigin";

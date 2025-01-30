@@ -26,7 +26,7 @@ class Program
         var memoryBuilder = new MemoryBuilder();
         var memory = memoryBuilder.WithLoggerFactory(loggerFactory)
                     .WithQdrantMemoryStore(kernelSettings.QdrantEndpoint, 1536)
-                    .WithAzureOpenAITextEmbeddingGeneration(kernelSettings.EmbeddingDeploymentOrModelId,kernelSettings.Endpoint, kernelSettings.ApiKey)
+                    //.WithAzureOpenAITextEmbeddingGeneration(kernelSettings.EmbeddingDeploymentOrModelId,kernelSettings.Endpoint, kernelSettings.ApiKey)
                     .Build();
 
         
