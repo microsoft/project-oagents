@@ -1,29 +1,17 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
-using Orleans.Runtime;
-using SupportCenter.ApiService.Agents.Dispatcher;
+using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
 using SupportCenter.ApiService.Options;
 
 namespace SupportCenter.ApiService.Agents.QnA;
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-public class QnA : AiAgent<QnAState>
-{
-    private readonly ILogger<QnA> _logger;
-
-    protected override string Namespace => Consts.OrleansNamespace;
-
-    public QnA([PersistentState("state", "messages")] IPersistentState<AgentState<QnAState>> state,
+public class QnA([PersistentState("state", "messages")] IPersistentState<AgentState<QnAState>> state,
         ILogger<QnA> logger,
-        [FromKeyedServices("QnAKernel")] Kernel kernel,
-        [FromKeyedServices("QnAMemory")] ISemanticTextMemory memory)
-    : base(state, memory, kernel)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+        IChatClient chatClient) : AiAgent<QnAState>(state)
+{
+    protected override string Namespace => Consts.OrleansNamespace;
 
     public async override Task HandleEvent(Event item)
     {
@@ -43,20 +31,27 @@ public class QnA : AiAgent<QnAState>
                 string? message = ssc.UserMessage;
                 string? id = ssc.Id;
 
-                _logger.LogInformation($"userId: {userId}, message: {message}");
+                logger.LogInformation($"userId: {userId}, message: {message}");
                 if (userId == null || message == null)
                 {
-                    _logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
+                    logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
                     return;
                 }
 
-                _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(QnA), nameof(EventType.QnARequested), message);
+                logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(QnA), nameof(EventType.QnARequested), message);
                 await SendAnswerEvent(id, userId, $"Please wait while I look in the documents for answers to your question...");
 
-                var context = new KernelArguments { ["input"] = AppendChatHistory(message) };
+                var input = AppendChatHistory(message);
                 var instruction = "Consider the following knowledge:!vfcon106047!";
-                var enhancedContext = await AddKnowledge(instruction, "vfcon106047", context);
-                string answer = await CallFunction(QnAPrompts.Answer, enhancedContext);
+                var documents = await AddKnowledge(instruction, "vfcon106047");
+                var prompt = $"""
+                                You are a helpful customer support/service agent at Contoso Electronics. Be polite and professional and answer briefly based on your knowledge ONLY.
+                                Input: {input}
+                                {documents}
+                                """;
+                
+                var result = await chatClient.CompleteAsync(prompt);
+                var answer = result.Message.Text!;
 
                 await SendAnswerEvent(id, userId, answer);
                 break;

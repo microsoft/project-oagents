@@ -1,25 +1,14 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Microsoft.SemanticKernel.Memory;
-using Orleans.Runtime;
+using Microsoft.Extensions.AI;
 
-namespace Microsoft.AI.DevTeam;
+namespace Microsoft.AI.DevTeam.Agents;
 
 [ImplicitStreamSubscription(Consts.MainNamespace)]
-public class Dev : AiAgent<DeveloperState>, IDevelopApps
+public class Dev([PersistentState("state", "messages")] IPersistentState<AgentState<DeveloperState>> state, IChatClient chatClient, ILogger<Dev> logger) : AiAgent<DeveloperState>(state), IDevelopApps
 {
     protected override string Namespace => Consts.MainNamespace;
-
-    private readonly ILogger<Dev> _logger;
-
-    public Dev([PersistentState("state", "messages")] IPersistentState<AgentState<DeveloperState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<Dev> logger)
-    : base(state, memory, kernel)
-    {
-        _logger = logger;
-    }
 
     public async override Task HandleEvent(Event item)
     {
@@ -65,20 +54,24 @@ public class Dev : AiAgent<DeveloperState>, IDevelopApps
         try
         {
             // TODO: ask the architect for the high level architecture as well as the files structure of the project
-            var context = new KernelArguments { ["input"] = AppendChatHistory(ask) };
+            var input = AppendChatHistory(ask);
             var instruction = "Consider the following architectural guidelines:!waf!";
-            var enhancedContext = await AddKnowledge(instruction, "waf", context);
-            var settings = new OpenAIPromptExecutionSettings{
-                 ResponseFormat = "json_object",
-                 MaxTokens = 32768, 
-                 Temperature = 0.4,
-                 TopP = 1 
-            };
-            return await CallFunction(DeveloperSkills.Implement, enhancedContext);
+            var guidelines = await AddKnowledge(instruction, "waf");
+            var prompt = $"""
+                            You are a Developer for an application. 
+                            Please output the code required to accomplish the task assigned to you below and wrap it in a bash script that creates the files.
+                            Do not use any IDE commands and do not build and run the code.
+                            Make specific choices about implementation. Do not offer a range of options.
+                            Use comments in the code to describe the intent. Do not include other text other than code and code comments.
+                            Input: {input}
+                            {guidelines}
+                            """;
+            var result = await chatClient.CompleteAsync(prompt);
+            return result.Message.Text!;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating code");
+            logger.LogError(ex, "Error generating code");
             return default;
         }
     }

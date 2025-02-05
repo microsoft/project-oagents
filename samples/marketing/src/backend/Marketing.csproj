@@ -19,14 +19,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Oagents.Core" Version="0.0.2-alpha.20240710143921" />
-    <PackageReference Include="Oagents.Orleans" Version="0.0.2-alpha.20240710143921" />
     <PackageReference Include="Octokit.Webhooks.AspNetCore" Version="2.4.1" />
     <PackageReference Include="Octokit" Version="14.0.0" />
 
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.35.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Qdrant" Version="1.35.0-preview" />
-    <PackageReference Include="Microsoft.SemanticKernel.Plugins.Memory" Version="1.35.0-alpha" />
+
+    <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.1.0-preview.1.25081.1" />
+    <PackageReference Include="Aspire.Azure.Data.Tables" Version="9.1.0-preview.1.25081.1" />
+    <PackageReference Include="Aspire.Azure.Storage.Blobs" Version="9.1.0-preview.1.25081.1" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.2.0-preview.1.25080.2" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.2.0-preview.1.25080.2" />
+    <PackageReference Include="Microsoft.Orleans.Persistence.AzureStorage" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Orleans.Clustering.AzureStorage" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Orleans.Streaming.EventHubs" Version="9.0.1" />
 
     <PackageReference Include="Microsoft.Orleans.Server" Version="9.0.1" />
     <PackageReference Include="Microsoft.Orleans.Sdk" Version="9.0.1" />
@@ -43,7 +47,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
 
     <PackageReference Include="Microsoft.Extensions.Azure" Version="1.9.0" />
-    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.2.0-preview.1.25080.1" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.2.0-preview.1.25080.2" />
     <PackageReference Include="Azure.ResourceManager.ContainerInstance" Version="1.3.0-beta.1" />
     <PackageReference Include="Azure.Storage.Files.Shares" Version="12.21.0" />
     <PackageReference Include="Azure.Data.Tables" Version="12.10.0" />
@@ -52,6 +56,10 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.1" />
     
     
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\Oagents.Orleans\Oagents.Orleans.csproj" />
   </ItemGroup>
   
 

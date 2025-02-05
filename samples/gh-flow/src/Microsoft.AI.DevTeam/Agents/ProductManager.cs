@@ -1,23 +1,14 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
-using Orleans.Runtime;
+using Microsoft.Extensions.AI;
 
 namespace Microsoft.AI.DevTeam;
 
 [ImplicitStreamSubscription(Consts.MainNamespace)]
-public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
+public class ProductManager([PersistentState("state", "messages")] IPersistentState<AgentState<ProductManagerState>> state, IChatClient chatClient, ILogger<ProductManager> logger) : AiAgent<ProductManagerState>(state), IManageProducts
 {
     protected override string Namespace => Consts.MainNamespace;
-    private readonly ILogger<ProductManager> _logger;
-
-    public ProductManager([PersistentState("state", "messages")] IPersistentState<AgentState<ProductManagerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<ProductManager> logger) 
-    : base(state, memory, kernel)
-    {
-        _logger = logger;
-    }
 
     public async override Task HandleEvent(Event item)
     {
@@ -60,14 +51,24 @@ public class ProductManager : AiAgent<ProductManagerState>, IManageProducts
     {
         try
         {
-            var context = new KernelArguments { ["input"] = AppendChatHistory(ask)};
+            var input = AppendChatHistory(ask);
             var instruction = "Consider the following architectural guidelines:!waf!";
-            var enhancedContext = await AddKnowledge(instruction, "waf",context);
-            return await CallFunction(PMSkills.Readme, enhancedContext);
+            var guidelines = await AddKnowledge(instruction, "waf");
+            var prompt = $$$""""
+                            """
+                            You are a program manager on a software development team. You are working on an app described below. 
+                             Based on the input below, and any dialog or other context, please output a raw README.MD markdown file documenting the main features of the app and the architecture or code organization. 
+                             Do not describe how to create the application. 
+                             Write the README as if it were documenting the features and architecture of the application. You may include instructions for how to run the application. 
+                            Input: {{input}}
+                            {{guidelines}}
+                            """";
+            var result = await chatClient.CompleteAsync(prompt);
+            return result.Message.Text!;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating readme");
+            logger.LogError(ex, "Error creating readme");
             return default;
         }
     }

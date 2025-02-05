@@ -1,8 +1,6 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
-using Orleans.Runtime;
+using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Options;
 
@@ -17,9 +15,8 @@ public class Discount : AiAgent<DiscountState>
 
     public Discount([PersistentState("state", "messages")] IPersistentState<AgentState<DiscountState>> state,
         ILogger<Discount> logger,
-        [FromKeyedServices("DiscountKernel")] Kernel kernel,
-        [FromKeyedServices("DiscountMemory")] ISemanticTextMemory memory)
-    : base(state, memory, kernel)
+        IChatClient chatClient)
+    : base(state)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }

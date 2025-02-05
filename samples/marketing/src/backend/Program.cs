@@ -1,21 +1,8 @@
 using System.Text.Json;
-using Azure;
-using Azure.AI.OpenAI;
-using Microsoft.Extensions.Options;
-using Microsoft.SemanticKernel;
-using Microsoft.Extensions.Http.Resilience;
-using Microsoft.SemanticKernel.Memory;
-using Microsoft.SemanticKernel.Connectors.Qdrant;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Marketing.SignalRHub;
 using Marketing.Options;
-using Marketing;
-using Orleans.Serialization;
-using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddTransient(CreateKernel);
-builder.Services.AddTransient(CreateMemory);
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddApplicationInsightsTelemetry();
@@ -84,76 +71,3 @@ app.UseSwaggerUI(c =>
 app.Map("/dashboard", x => x.UseOrleansDashboard());
 app.MapHub<ArticleHub>("/articlehub");
 app.Run();
-
-static ISemanticTextMemory CreateMemory(IServiceProvider provider)
-{
-    OpenAIOptions openAiConfig = provider.GetService<IOptions<OpenAIOptions>>().Value;
-    QdrantOptions qdrantConfig = provider.GetService<IOptions<QdrantOptions>>().Value;
-
-    var loggerFactory = LoggerFactory.Create(builder =>
-    {
-        builder
-            .SetMinimumLevel(LogLevel.Debug)
-            .AddConsole()
-            .AddDebug();
-    });
-
-    var memoryBuilder = new MemoryBuilder();
-    return memoryBuilder.WithLoggerFactory(loggerFactory)
-                 .WithQdrantMemoryStore(qdrantConfig.Endpoint, qdrantConfig.VectorSize)
-                 //.WithAzureOpenAITextEmbeddingGeneration(openAiConfig.EmbeddingsDeploymentOrModelId, openAiConfig.EmbeddingsEndpoint, openAiConfig.EmbeddingsApiKey)
-                 .Build();
-}
-
-static Kernel CreateKernel(IServiceProvider provider)
-{
-    OpenAIOptions openAiConfig = provider.GetService<IOptions<OpenAIOptions>>().Value;
-    var clientOptions = new AzureOpenAIClientOptions();
-    //clientOptions.Retry.NetworkTimeout = TimeSpan.FromMinutes(5);
-    var builder = Kernel.CreateBuilder();
-    builder.Services.AddLogging(c => c.AddConsole().AddDebug().SetMinimumLevel(LogLevel.Debug));
-
-    // Chat
-    var openAIClient = new AzureOpenAIClient(new Uri(openAiConfig.ChatEndpoint), new AzureKeyCredential(openAiConfig.ChatApiKey), clientOptions);
-    if (openAiConfig.ChatEndpoint.Contains(".azure", StringComparison.OrdinalIgnoreCase))
-    {
-        builder.Services.AddAzureOpenAIChatCompletion(openAiConfig.ChatDeploymentOrModelId, openAIClient);
-    }
-    else
-    {
-        builder.Services.AddOpenAIChatCompletion(openAiConfig.ChatDeploymentOrModelId, openAIClient);
-    }
-
-    // Text to Image
-    openAIClient = new AzureOpenAIClient(new Uri(openAiConfig.ImageEndpoint), new AzureKeyCredential(openAiConfig.ImageApiKey), clientOptions);
-    if (openAiConfig.ImageEndpoint.Contains(".azure", StringComparison.OrdinalIgnoreCase))
-    {
-        Throw.IfNullOrEmpty(nameof(openAiConfig.ImageDeploymentOrModelId), openAiConfig.ImageDeploymentOrModelId);
-        builder.Services.AddAzureOpenAITextToImage(openAiConfig.ImageDeploymentOrModelId, openAIClient);
-    }
-    else
-    {
-        builder.Services.AddOpenAITextToImage(openAiConfig.ImageApiKey);
-    }
-
-    // Embeddings
-    openAIClient = new AzureOpenAIClient(new Uri(openAiConfig.EmbeddingsEndpoint), new AzureKeyCredential(openAiConfig.EmbeddingsApiKey), clientOptions);
-    if (openAiConfig.EmbeddingsEndpoint.Contains(".azure", StringComparison.OrdinalIgnoreCase))
-    {  
-        builder.Services.AddAzureOpenAITextEmbeddingGeneration(openAiConfig.EmbeddingsDeploymentOrModelId, openAIClient);
-    }
-    else
-    {       
-        builder.Services.AddOpenAITextEmbeddingGeneration(openAiConfig.EmbeddingsDeploymentOrModelId, openAIClient);
-    }
-
-    builder.Services.ConfigureHttpClientDefaults(c =>
-    {
-        c.AddStandardResilienceHandler().Configure(o =>
-        {
-            o.Retry.MaxRetryAttempts = 5;
-            o.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
-        });
-    });
-    return builder.Build();
-}

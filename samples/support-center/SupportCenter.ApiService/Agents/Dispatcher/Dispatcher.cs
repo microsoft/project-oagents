@@ -1,7 +1,6 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
-using Microsoft.SemanticKernel;
-using Orleans.Runtime;
+using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Attributes;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
@@ -16,25 +15,15 @@ namespace SupportCenter.ApiService.Agents.Dispatcher;
 [DispatcherChoice("Invoice", "The customer is asking for an invoice.", EventType.InvoiceRequested)]
 [DispatcherChoice("CustomerInfo", "The customer is asking for reading or updating his or her personal data.", EventType.CustomerInfoRequested)]
 [DispatcherChoice("Conversation", "The customer is having a generic conversation. When the request is generic or can't be classified differently, use this choice.", EventType.ConversationRequested)]
-public class Dispatcher : AiAgent<DispatcherState>
-{
-    private readonly ILogger<Dispatcher> _logger;
-
-    protected override string Namespace => Consts.OrleansNamespace;
-
-    public Dispatcher(
+public class Dispatcher(
         ILogger<Dispatcher> logger,
         [PersistentState("state", "messages")] IPersistentState<AgentState<DispatcherState>> state,
-        [FromKeyedServices("DispatcherKernel")] Kernel kernel
-       )
-    : base(state, default, kernel)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
+        IChatClient chatClient) : AiAgent<DispatcherState>(state)
+{
+    protected override string Namespace => Consts.OrleansNamespace;
     public async override Task HandleEvent(Event item)
     {
-        _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Dispatcher), item.Type, item.Data);
+        logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Dispatcher), item.Type, item.Data);
 
         var ssc = item.GetAgentData();
         string? userId = ssc.UserId;
@@ -42,10 +31,10 @@ public class Dispatcher : AiAgent<DispatcherState>
         string? id = ssc.Id;
         string? intent;
 
-        _logger.LogInformation($"userId: {userId}, message: {message}");
+        logger.LogInformation($"userId: {userId}, message: {message}");
         if (userId == null || message == null)
         {
-            _logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
+            logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
             return;
         }
 
@@ -56,7 +45,7 @@ public class Dispatcher : AiAgent<DispatcherState>
                 string? lastMessage = _state.State.History.LastOrDefault()?.Message;
                 if (lastMessage == null)
                 {
-                    _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]. Last message is missing.", nameof(Dispatcher), item.Type, item.Data);
+                    logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]. Last message is missing.", nameof(Dispatcher), item.Type, item.Data);
                     return;
                 }
                 intent = (await ExtractIntentAsync(lastMessage))?.Trim(' ', '\"', '.') ?? string.Empty;
@@ -90,10 +79,10 @@ public class Dispatcher : AiAgent<DispatcherState>
                 var answer = item.Data.GetValueOrDefault<string>("message");
                 if (answer == null)
                 {
-                    _logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Answer from agent is missing.", nameof(Dispatcher), item.Type, item.Data);
+                    logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Answer from agent is missing.", nameof(Dispatcher), item.Type, item.Data);
                     return;
                 }
-                _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Dispatcher), item.Type, answer);
+                logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Dispatcher), item.Type, answer);
                 AddToHistory(answer, ChatUserType.Agent);
                 break;
             default:
@@ -104,12 +93,37 @@ public class Dispatcher : AiAgent<DispatcherState>
     private async Task<string> ExtractIntentAsync(string message)
     {
         var input = AppendChatHistory(message);
+        var choices = GetAndSerializeChoices();
+        var prompt = $"""
+                    You are a dispatcher agent, working with the Support Center.
+                    You can help customers with their issues, and you can also assign tickets to other AI agents.
+                    Read the customer's message carefully, and then decide the appropriate intent.
+                    A history of the conversation is available to help you make a decision.
 
-        var context = new KernelArguments { ["input"] = input };
-        context.Add("choices", GetAndSerializeChoices());
-        return await CallFunction(DispatcherPrompts.GetIntent, context);
+                    If you don't know the intent, don't guess; instead respond with "Unknown".
+                    There may be multiple intents, but you should choose the most appropriate one.
+                    If you think that the message is not clear, you can ask the customer for more information.
+
+                    You can choose between the following intents:  
+                    {choices}  
+
+                    Here are few examples:
+                    - User Input: Can you help me in updating my address?
+                    - CustomerInfo
+
+                    - User Input: Could you check whether my invoice has been correctly payed?
+                    - Invoice
+
+                    Here is the user input:
+                    User Input: {input}
+
+                    Return the intent as a string.
+                    """;
+        var result = await chatClient.CompleteAsync(prompt);
+        return result.Message.Text!;
     }
 
+    // TODO: Custom attributes should be constructed only once in the lifetime of the application.
     private string GetAndSerializeChoices()
     {
         var choices = this.GetType().GetCustomAttributes<DispatcherChoice>()
@@ -121,6 +135,7 @@ public class Dispatcher : AiAgent<DispatcherState>
 
     private async Task SendDispatcherEvent(string id, string userId, string intent, string message)
     {
+        // TODO: Custom attributes should be constructed only once in the lifetime of the application.
         var type = this.GetType()
             .GetCustomAttributes<DispatcherChoice>()
             .FirstOrDefault(attr => attr.Name == intent)?

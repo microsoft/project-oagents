@@ -1,8 +1,6 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
-using Orleans.Runtime;
+using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
 using SupportCenter.ApiService.Options;
@@ -10,20 +8,10 @@ using SupportCenter.ApiService.SignalRHub;
 
 namespace SupportCenter.ApiService.Agents.Conversation;
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-public class Conversation : AiAgent<ConversationState>
+public class Conversation([PersistentState("state", "messages")] IPersistentState<AgentState<ConversationState>> state,
+        ILogger<Conversation> logger, IChatClient chatClient) : AiAgent<ConversationState>(state)
 {
-    private readonly ILogger<Conversation> _logger;
-
     protected override string Namespace => Consts.OrleansNamespace;
-
-    public Conversation([PersistentState("state", "messages")] IPersistentState<AgentState<ConversationState>> state,
-        ILogger<Conversation> logger,
-        [FromKeyedServices("ConversationKernel")] Kernel kernel,
-        [FromKeyedServices("ConversationMemory")] ISemanticTextMemory memory)
-    : base(state, memory, kernel)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
 
     public async override Task HandleEvent(Event item)
     {
@@ -40,13 +28,20 @@ public class Conversation : AiAgent<ConversationState>
             case nameof(EventType.ConversationRequested):
                 string? userId = item.Data.GetValueOrDefault<string>("userId");
                 string? message = item.Data.GetValueOrDefault<string>("message");
+                string? input = AppendChatHistory(message);
 
                 string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
                 string id = $"{userId}/{conversationId}";
-                _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Conversation), nameof(EventType.ConversationRequested), message);
-                var context = new KernelArguments { ["input"] = AppendChatHistory(message) };
-                string answer = await CallFunction(ConversationPrompts.Answer, context);
+                logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Conversation), nameof(EventType.ConversationRequested), message);
 
+                var prompt = $""""
+                    """
+                    You are a helpful customer support/service agent at Contoso Electronics. Be polite, friendly and professional and answer briefly.
+                    Answer with a plain string ONLY, without any extra words or characters like '.
+                    Input: {input}
+                    """";
+                var result = await chatClient.CompleteAsync(prompt);
+                var answer = result.Message.Text!;
                 await SendAnswerEvent(id, userId, answer);
                 break;
 

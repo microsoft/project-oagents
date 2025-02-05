@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
+using Microsoft.AI.DevTeam.Agents;
 using Microsoft.AI.DevTeam.Events;
 
 namespace Microsoft.AI.DevTeam;

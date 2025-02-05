@@ -10,10 +10,15 @@ builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSignalR();
+builder.Services.AddSignalR()
+                .AddNamedAzureSignalR("signalr");
 builder.Services.AddSingleton<ISignalRService, SignalRService>();
 
 builder.AddAzureCosmosClient(connectionName: "cosmos-db");
+builder.AddRedisClient(connectionName: "redis");
+builder.AddAzureOpenAIClient("openAiConnection");
+builder.AddQdrantClient("qdrant");
+builder.AddAzureSearchClient("searchConnectionName");
 
 // Allow any CORS origin if in DEV
 const string AllowDebugOriginPolicy = "AllowDebugOrigin";
@@ -53,15 +58,7 @@ builder.Services.ExtendOptions();
 builder.Services.ExtendServices();
 builder.Services.RegisterSemanticKernelNativeFunctions();
 
-builder.Host.UseOrleans(siloBuilder =>
-{
-    siloBuilder.UseLocalhostClustering()
-               .AddMemoryStreams("StreamProvider")
-               .AddMemoryGrainStorage("PubSubStore")
-               .AddMemoryGrainStorage("messages");
-    siloBuilder.UseInMemoryReminderService();
-    siloBuilder.UseDashboard(x => x.HostSelf = true);
-});
+builder.UseOrleans();
 
 builder.Services.Configure<JsonSerializerOptions>(options =>
 {

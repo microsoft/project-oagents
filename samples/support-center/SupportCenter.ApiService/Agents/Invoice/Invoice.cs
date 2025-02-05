@@ -1,9 +1,6 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
-using Orleans.Runtime;
-using SupportCenter.ApiService.Agents.Dispatcher;
+using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
 using SupportCenter.ApiService.Options;
@@ -11,20 +8,11 @@ using SupportCenter.ApiService.Options;
 namespace SupportCenter.ApiService.Agents.Invoice;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-public class Invoice : AiAgent<InvoiceState>
-{
-    private readonly ILogger<Invoice> _logger;
-
-    protected override string Namespace => Consts.OrleansNamespace;
-
-    public Invoice([PersistentState("state", "messages")] IPersistentState<AgentState<InvoiceState>> state,
+public class Invoice([PersistentState("state", "messages")] IPersistentState<AgentState<InvoiceState>> state,
         ILogger<Invoice> logger,
-        [FromKeyedServices("InvoiceKernel")] Kernel kernel,
-        [FromKeyedServices("InvoiceMemory")] ISemanticTextMemory memory)
-    : base(state, memory, kernel)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+        IChatClient chatClient) : AiAgent<InvoiceState>(state)
+{
+    protected override string Namespace => Consts.OrleansNamespace;
 
     public async override Task HandleEvent(Event item)
     {
@@ -33,10 +21,10 @@ public class Invoice : AiAgent<InvoiceState>
         string? message = ssc.UserMessage;
         string? id = ssc.Id;
 
-        _logger.LogInformation($"userId: {userId}, message: {message}");
+        logger.LogInformation($"userId: {userId}, message: {message}");
         if (userId == null || message == null)
         {
-            _logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
+            logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. Input is missing.", nameof(Dispatcher), item.Type, item.Data);
             return;
         }
 
@@ -45,12 +33,21 @@ public class Invoice : AiAgent<InvoiceState>
             case nameof(EventType.InvoiceRequested):
                 {
                     await SendAnswerEvent(id, userId, $"Please wait while I look up the details for invoice...");
-                    _logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Invoice), nameof(EventType.InvoiceRequested), message);
+                    logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Invoice), nameof(EventType.InvoiceRequested), message);
 
-                    var querycontext = new KernelArguments { ["input"] = AppendChatHistory(message) };
+                    var input =  AppendChatHistory(message);
                     var instruction = "Consider the following knowledge:!invoices!";
-                    var enhancedContext = await AddKnowledge(instruction, "invoices", querycontext);
-                    string answer = await CallFunction(InvoicePrompts.InvoiceRequest, enhancedContext);
+                    var invoices = await AddKnowledge(instruction, "invoices");
+                    var prompt = $"""
+                        You are a helpful customer support/service agent that answers questions about user invoices based on your knowledge.
+                        Make sure that the invoice belongs to the specific user before providing the information. If needed, ask for the invoice id etc. 
+                        Be polite and professional and answer briefly based on your knowledge ONLY.
+                        
+                        Input: {input}
+                        {invoices}
+                        """;
+                    var result = await chatClient.CompleteAsync(prompt);
+                    var answer = result.Message.Text!;
                     await SendAnswerEvent(id, userId, answer);
                     break;
                 }

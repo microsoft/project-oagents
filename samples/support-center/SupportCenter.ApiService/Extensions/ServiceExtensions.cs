@@ -1,7 +1,6 @@
 ﻿using SupportCenter.ApiService.Data.CosmosDb;
 using SupportCenter.ApiService.Options;
 using SupportCenter.ApiService.SemanticKernel.Plugins.CustomerPlugin;
-using static Microsoft.AI.Agents.Orleans.Resolvers;
 using static SupportCenter.ApiService.SemanticKernel.Extensions;
 
 namespace SupportCenter.ApiService.Extensions
@@ -82,14 +81,14 @@ namespace SupportCenter.ApiService.Extensions
              * This is used to resolve the kernel and memory for the agent
              * The kernel is used to execute the functions and the memory is used to store the state
              */
-            services.AddSingleton<KernelResolver>(serviceProvider => agent =>
-            {
-                return CreateKernel(serviceProvider, agent);
-            });
-            services.AddSingleton<SemanticTextMemoryResolver>(serviceProvider => agent =>
-            {
-                return CreateMemory(serviceProvider, agent);
-            });
+            //services.AddSingleton<KernelResolver>(serviceProvider => agent =>
+            //{
+            //    return CreateKernel(serviceProvider, agent);
+            //});
+            //services.AddSingleton<SemanticTextMemoryResolver>(serviceProvider => agent =>
+            //{
+            //    return CreateMemory(serviceProvider, agent);
+            //});
         }
 
         public static void RegisterSemanticKernelNativeFunctions(this IServiceCollection serviceCollection)
