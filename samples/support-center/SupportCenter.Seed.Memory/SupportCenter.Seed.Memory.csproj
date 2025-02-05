@@ -9,14 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Qdrant" Version="1.35.0-preview" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Qdrant" Version="1.36.0-preview" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.1" />
-    <PackageReference Include="PdfPig" Version="0.1.10-alpha-20250122-52098" />
+    <PackageReference Include="PdfPig" Version="0.1.10-alpha-20250203-fdb88" />
   </ItemGroup>
   
   <ItemGroup>

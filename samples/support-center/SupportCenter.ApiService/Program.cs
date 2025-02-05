@@ -1,6 +1,9 @@
+using Microsoft.Extensions.AI;
+using OpenAI;
 using SupportCenter.ApiService.Extensions;
 using SupportCenter.ApiService.SignalRHub;
 using System.Text.Json;
+using static SupportCenter.ApiService.Options.Consts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +23,7 @@ builder.AddAzureOpenAIClient("openAiConnection");
 builder.AddQdrantClient("qdrant");
 builder.AddAzureSearchClient("searchConnectionName");
 
+builder.Services.AddKeyedChatClient(Gpt4oMini, s => s.GetRequiredService<OpenAIClient>().AsChatClient(Gpt4oMini));
 // Allow any CORS origin if in DEV
 const string AllowDebugOriginPolicy = "AllowDebugOrigin";
 const string AllowOriginPolicy = "AllowOrigin";

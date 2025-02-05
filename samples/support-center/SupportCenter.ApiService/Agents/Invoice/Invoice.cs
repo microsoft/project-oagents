@@ -3,16 +3,16 @@ using Microsoft.AI.Agents.Orleans;
 using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
-using SupportCenter.ApiService.Options;
+using static SupportCenter.ApiService.Options.Consts;
 
 namespace SupportCenter.ApiService.Agents.Invoice;
 
-[ImplicitStreamSubscription(Consts.OrleansNamespace)]
+[ImplicitStreamSubscription(OrleansNamespace)]
 public class Invoice([PersistentState("state", "messages")] IPersistentState<AgentState<InvoiceState>> state,
         ILogger<Invoice> logger,
-        IChatClient chatClient) : AiAgent<InvoiceState>(state)
+        [FromKeyedServices(Gpt4oMini)] IChatClient chatClient) : AiAgent<InvoiceState>(state)
 {
-    protected override string Namespace => Consts.OrleansNamespace;
+    protected override string Namespace => OrleansNamespace;
 
     public async override Task HandleEvent(Event item)
     {

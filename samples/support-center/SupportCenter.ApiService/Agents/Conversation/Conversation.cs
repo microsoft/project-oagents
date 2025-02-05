@@ -5,11 +5,12 @@ using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
 using SupportCenter.ApiService.Options;
 using SupportCenter.ApiService.SignalRHub;
+using static SupportCenter.ApiService.Options.Consts;
 
 namespace SupportCenter.ApiService.Agents.Conversation;
-[ImplicitStreamSubscription(Consts.OrleansNamespace)]
+[ImplicitStreamSubscription(OrleansNamespace)]
 public class Conversation([PersistentState("state", "messages")] IPersistentState<AgentState<ConversationState>> state,
-        ILogger<Conversation> logger, IChatClient chatClient) : AiAgent<ConversationState>(state)
+        ILogger<Conversation> logger, [FromKeyedServices(Gpt4oMini)] IChatClient chatClient) : AiAgent<ConversationState>(state)
 {
     protected override string Namespace => Consts.OrleansNamespace;
 

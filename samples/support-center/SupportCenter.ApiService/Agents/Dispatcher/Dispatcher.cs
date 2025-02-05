@@ -4,12 +4,12 @@ using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Attributes;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
-using SupportCenter.ApiService.Options;
 using System.Reflection;
+using static SupportCenter.ApiService.Options.Consts;
 
 namespace SupportCenter.ApiService.Agents.Dispatcher;
 
-[ImplicitStreamSubscription(Consts.OrleansNamespace)]
+[ImplicitStreamSubscription(OrleansNamespace)]
 [DispatcherChoice("QnA", "The customer is asking a question related to internal Contoso knowledge base.", EventType.QnARequested)]
 [DispatcherChoice("Discount", "The customer is asking for a discount about a product or service.", EventType.DiscountRequested)]
 [DispatcherChoice("Invoice", "The customer is asking for an invoice.", EventType.InvoiceRequested)]
@@ -18,9 +18,9 @@ namespace SupportCenter.ApiService.Agents.Dispatcher;
 public class Dispatcher(
         ILogger<Dispatcher> logger,
         [PersistentState("state", "messages")] IPersistentState<AgentState<DispatcherState>> state,
-        IChatClient chatClient) : AiAgent<DispatcherState>(state)
+        [FromKeyedServices(Gpt4oMini)] IChatClient chatClient) : AiAgent<DispatcherState>(state)
 {
-    protected override string Namespace => Consts.OrleansNamespace;
+    protected override string Namespace => OrleansNamespace;
     public async override Task HandleEvent(Event item)
     {
         logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Dispatcher), item.Type, item.Data);

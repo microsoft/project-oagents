@@ -4,14 +4,15 @@ using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
 using SupportCenter.ApiService.Options;
+using static SupportCenter.ApiService.Options.Consts;
 
 namespace SupportCenter.ApiService.Agents.QnA;
-[ImplicitStreamSubscription(Consts.OrleansNamespace)]
+[ImplicitStreamSubscription(OrleansNamespace)]
 public class QnA([PersistentState("state", "messages")] IPersistentState<AgentState<QnAState>> state,
         ILogger<QnA> logger,
-        IChatClient chatClient) : AiAgent<QnAState>(state)
+        [FromKeyedServices(Gpt4oMini)] IChatClient chatClient) : AiAgent<QnAState>(state)
 {
-    protected override string Namespace => Consts.OrleansNamespace;
+    protected override string Namespace => OrleansNamespace;
 
     public async override Task HandleEvent(Event item)
     {

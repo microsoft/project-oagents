@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
 
@@ -18,18 +18,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Hosting.Azure.ApplicationInsights" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Hosting.Redis" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Hosting.Azure" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Hosting.Azure.CognitiveServices" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Hosting.Azure.SignalR" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Hosting.Azure.Search" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Hosting.Azure.CosmosDB" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Hosting.Azure.AppContainers" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Hosting.NodeJs" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Hosting.Orleans" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Hosting.Qdrant" Version="9.1.0-preview.1.25080.8" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Hosting.Azure.ApplicationInsights" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Hosting.Azure" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Hosting.Azure.CognitiveServices" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Hosting.Azure.SignalR" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Hosting.Azure.Search" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Hosting.Azure.CosmosDB" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Hosting.Azure.AppContainers" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Hosting.NodeJs" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Hosting.Orleans" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Hosting.Qdrant" Version="9.1.0-preview.1.25104.6" />
     <PackageReference Include="Azure.Identity" Version="1.13.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.1" />
   </ItemGroup>

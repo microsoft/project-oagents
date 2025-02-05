@@ -16,7 +16,7 @@
     <PackageReference Include="Octokit.Webhooks.AspNetCore" Version="2.4.1" />
     <PackageReference Include="Octokit" Version="14.0.0" />
 
-    <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.1.0-preview.1.25081.1" />
+    <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.1.0-preview.1.25104.6" />
 
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
 
@@ -26,8 +26,8 @@
    
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.1" />
 
-    <PackageReference Include="Dapr.Actors.AspNetCore" Version="1.15.0-rc02" />
-    <PackageReference Include="Dapr.AspNetCore" Version="1.15.0-rc02" />
+    <PackageReference Include="Dapr.Actors.AspNetCore" Version="1.15.0-rc03" />
+    <PackageReference Include="Dapr.AspNetCore" Version="1.15.0-rc03" />
   </ItemGroup>
 
   <ItemGroup>

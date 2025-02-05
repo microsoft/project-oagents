@@ -11,26 +11,26 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Azure.Search.Documents" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Microsoft.Azure.Cosmos" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.Qdrant.Client" Version="9.1.0-preview.1.25080.8" />
-    <PackageReference Include="Aspire.StackExchange.Redis" Version="9.1.0-preview.1.25080.8" />
+    <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Azure.Search.Documents" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Microsoft.Azure.Cosmos" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.Qdrant.Client" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.StackExchange.Redis" Version="9.1.0-preview.1.25104.6" />
     <PackageReference Include="Azure.Storage.Files.Shares" Version="12.21.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0-alpha.1.24416.8" />
     <PackageReference Include="Microsoft.Azure.SignalR" Version="1.30.0" />
-    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.2.0-preview.1.25080.2" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.2.0-preview.1.25105.1" />
     <PackageReference Include="Microsoft.Orleans.Clustering.Redis" Version="9.0.1" />
     <PackageReference Include="Microsoft.Orleans.GrainDirectory.Redis" Version="9.0.1" />
     <PackageReference Include="Microsoft.Orleans.Persistence.Redis" Version="9.0.1" />
     <PackageReference Include="Microsoft.Orleans.Reminders.Redis" Version="9.0.1" />
-    <PackageReference Include="Microsoft.SemanticKernel.Planners.Handlebars" Version="1.35.0-preview" />
-    <PackageReference Include="Microsoft.SemanticKernel.Planners.OpenAI" Version="1.35.0-preview" />
+    <PackageReference Include="Microsoft.SemanticKernel.Planners.Handlebars" Version="1.36.0-preview" />
+    <PackageReference Include="Microsoft.SemanticKernel.Planners.OpenAI" Version="1.36.0-preview" />
 
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.35.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Qdrant" Version="1.35.0-preview" />
-    <PackageReference Include="Microsoft.SemanticKernel.Plugins.Memory" Version="1.35.0-alpha" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureAISearch" Version="1.35.0-preview" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.36.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Qdrant" Version="1.36.0-preview" />
+    <PackageReference Include="Microsoft.SemanticKernel.Plugins.Memory" Version="1.36.0-alpha" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureAISearch" Version="1.36.0-preview" />
     <PackageReference Include="Microsoft.Orleans.Server" Version="9.0.1" />
     <PackageReference Include="Microsoft.Orleans.Sdk" Version="9.0.1" />
     <PackageReference Include="Microsoft.Orleans.Runtime" Version="9.0.1" />

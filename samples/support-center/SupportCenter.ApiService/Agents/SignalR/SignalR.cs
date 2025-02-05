@@ -2,16 +2,16 @@ using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
-using SupportCenter.ApiService.Options;
 using SupportCenter.ApiService.SignalRHub;
 using System.Collections.Concurrent;
+using static SupportCenter.ApiService.Options.Consts;
 
 namespace SupportCenter.ApiService.Agents.SignalR;
 
-[ImplicitStreamSubscription(Consts.OrleansNamespace)]
+[ImplicitStreamSubscription(OrleansNamespace)]
 public class SignalR : Agent
 {
-    protected override string Namespace => Consts.OrleansNamespace;
+    protected override string Namespace => OrleansNamespace;
     private readonly ConcurrentDictionary<string, AgentType> _eventTypeToSenderTypeMapping = new()
     {
         [nameof(EventType.QnARetrieved)] = AgentType.QnA,

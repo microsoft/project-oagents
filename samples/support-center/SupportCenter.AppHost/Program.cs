@@ -8,8 +8,9 @@ var signalr = builder.AddAzureSignalR("signalr")
                      .RunAsEmulator();
 
 var cosmos = builder.AddAzureCosmosDB("cosmos-db")
-                    .WithDatabase("supportcenter")
-                    .RunAsEmulator();
+                    .RunAsEmulator()
+                    .AddCosmosDatabase("supportcenter")
+                    .AddContainer("items","/id");
 
 var openai = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureOpenAI("openAiConnection")

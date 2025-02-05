@@ -5,6 +5,7 @@ using SupportCenter.ApiService.Data.CosmosDb;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
 using SupportCenter.ApiService.Options;
+using static SupportCenter.ApiService.Options.Consts;
 
 namespace SupportCenter.ApiService.Agents.CustomerInfo;
 
@@ -14,7 +15,7 @@ public class CustomerInfo(
         ILogger<CustomerInfo> logger,
         IServiceProvider serviceProvider,
         ICustomerRepository customerRepository,
-       IChatClient chatClient) : AiAgent<CustomerInfoState>(state)
+       [FromKeyedServices(Gpt4oMini)] IChatClient chatClient) : AiAgent<CustomerInfoState>(state)
 {
     protected override string Namespace => Consts.OrleansNamespace;
 

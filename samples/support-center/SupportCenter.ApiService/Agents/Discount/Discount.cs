@@ -3,6 +3,7 @@ using Microsoft.AI.Agents.Orleans;
 using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Options;
+using static SupportCenter.ApiService.Options.Consts;
 
 namespace SupportCenter.ApiService.Agents.Discount;
 
