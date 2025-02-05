@@ -9,10 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.35.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.Qdrant" Version="1.35.0-preview" />
-    <PackageReference Include="Microsoft.SemanticKernel.Plugins.Memory" Version="1.35.0-alpha" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.1" />

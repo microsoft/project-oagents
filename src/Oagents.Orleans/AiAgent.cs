@@ -1,5 +1,5 @@
 using Microsoft.AI.Agents.Abstractions;
-using Microsoft.Extensions.AI;
+using Orleans.Runtime;
 
 namespace Microsoft.AI.Agents.Orleans;
 

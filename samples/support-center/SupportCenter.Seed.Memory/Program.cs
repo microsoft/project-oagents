@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Connectors.Qdrant;
 using Microsoft.SemanticKernel.Memory;
 using UglyToad.PdfPig;

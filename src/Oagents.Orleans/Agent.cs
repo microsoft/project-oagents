@@ -1,4 +1,6 @@
 ﻿using Microsoft.AI.Agents.Abstractions;
+using Orleans;
+using Orleans.Runtime;
 using Orleans.Streams;
 
 namespace Microsoft.AI.Agents.Orleans;

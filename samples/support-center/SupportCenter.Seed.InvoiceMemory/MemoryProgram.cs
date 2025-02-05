@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Connectors.AzureAISearch;
 using Azure.AI.DocumentIntelligence;

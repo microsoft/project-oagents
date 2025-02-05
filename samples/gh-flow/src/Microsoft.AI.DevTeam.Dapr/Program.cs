@@ -1,18 +1,14 @@
 using System.Text.Json;
-using Azure;
-using Azure.AI.OpenAI;
 using Microsoft.Extensions.Options;
 using Octokit.Webhooks;
 using Octokit.Webhooks.AspNetCore;
 using Azure.Identity;
 using Microsoft.Extensions.Azure;
-using Microsoft.Extensions.Http.Resilience;
 using Dapr;
 using Dapr.Actors.Client;
 using Dapr.Actors;
 using Microsoft.AI.DevTeam.Dapr;
 using Microsoft.AI.DevTeam.Dapr.Events;
-using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<WebhookEventProcessor, GithubWebHookProcessor>();
