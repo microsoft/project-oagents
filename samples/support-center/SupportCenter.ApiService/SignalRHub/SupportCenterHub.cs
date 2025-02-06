@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Orleans.Runtime;
 using Orleans;
 using SupportCenter.ApiService.Events;
-using SupportCenter.ApiService.Options;
+using SupportCenter.ApiService;
 
 public class SupportCenterHub : Hub<ISupportCenterHub>
 {

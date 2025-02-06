@@ -1,20 +1,16 @@
 ﻿using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Options;
 using SupportCenter.ApiService.Data.CosmosDb.Entities;
-using SupportCenter.ApiService.Options;
 
 namespace SupportCenter.ApiService.Data.CosmosDb
 {
-    public class CustomerRepository : CosmosDbRepository<Customer, CosmosDbOptions>, ICustomerRepository
+    public class CustomerRepository(CosmosClient client, ILogger<CustomerRepository> logger) : CosmosDbRepository<Customer>(client,logger), ICustomerRepository
     {
-        public CustomerRepository(IOptions<CosmosDbOptions> options, ILogger<CustomerRepository> logger)
-            : base(options.Value, logger) { }
-
         public async Task<Customer?> GetCustomerByIdAsync(string customerId)
         {
+            var container = GetContainer();
             var query = new QueryDefinition("SELECT * FROM c WHERE c.id = @customerId")
                 .WithParameter("@customerId", customerId);
-            var iterator = Container.GetItemQueryIterator<Customer?>(query);
+            var iterator = container.GetItemQueryIterator<Customer?>(query);
             Customer? customer = null;
             while (iterator.HasMoreResults)
             {
@@ -26,8 +22,9 @@ namespace SupportCenter.ApiService.Data.CosmosDb
 
         public async Task<IEnumerable<Customer>> GetCustomersAsync()
         {
+            var container = GetContainer();
             var query = new QueryDefinition("SELECT * FROM c");
-            var iterator = Container.GetItemQueryIterator<Customer>(query);
+            var iterator = container.GetItemQueryIterator<Customer>(query);
             var customers = new List<Customer>();
             while (iterator.HasMoreResults)
             {

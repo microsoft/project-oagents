@@ -2,17 +2,16 @@ using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Events;
-using SupportCenter.ApiService.Options;
-using static SupportCenter.ApiService.Options.Consts;
+using static SupportCenter.ApiService.Consts;
 
 namespace SupportCenter.ApiService.Agents.Discount;
 
-[ImplicitStreamSubscription(Consts.OrleansNamespace)]
+[ImplicitStreamSubscription(OrleansNamespace)]
 public class Discount : AiAgent<DiscountState>
 {
     private readonly ILogger<Discount> _logger;
 
-    protected override string Namespace => Consts.OrleansNamespace;
+    protected override string Namespace => OrleansNamespace;
 
     public Discount([PersistentState("state", "messages")] IPersistentState<AgentState<DiscountState>> state,
         ILogger<Discount> logger,

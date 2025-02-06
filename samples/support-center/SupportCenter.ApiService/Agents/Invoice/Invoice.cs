@@ -3,7 +3,7 @@ using Microsoft.AI.Agents.Orleans;
 using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
-using static SupportCenter.ApiService.Options.Consts;
+using static SupportCenter.ApiService.Consts;
 
 namespace SupportCenter.ApiService.Agents.Invoice;
 

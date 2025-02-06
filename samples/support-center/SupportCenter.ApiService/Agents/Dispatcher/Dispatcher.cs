@@ -5,7 +5,7 @@ using SupportCenter.ApiService.Attributes;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
 using System.Reflection;
-using static SupportCenter.ApiService.Options.Consts;
+using static SupportCenter.ApiService.Consts;
 
 namespace SupportCenter.ApiService.Agents.Dispatcher;
 

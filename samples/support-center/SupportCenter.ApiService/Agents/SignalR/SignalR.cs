@@ -4,7 +4,7 @@ using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
 using SupportCenter.ApiService.SignalRHub;
 using System.Collections.Concurrent;
-using static SupportCenter.ApiService.Options.Consts;
+using static SupportCenter.ApiService.Consts;
 
 namespace SupportCenter.ApiService.Agents.SignalR;
 

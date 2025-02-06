@@ -3,7 +3,9 @@ using OpenAI;
 using SupportCenter.ApiService.SignalRHub;
 using System.Text.Json;
 using Orleans.Serialization;
-using static SupportCenter.ApiService.Options.Consts;
+using SupportCenter.ApiService.Data.CosmosDb;
+using SupportCenter.ApiService.SemanticKernel.Plugins.CustomerPlugin;
+using static SupportCenter.ApiService.Consts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,8 @@ builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddSignalR()
                 .AddNamedAzureSignalR("signalr");
 builder.Services.AddSingleton<ISignalRService, SignalRService>();
+builder.Services.AddSingleton<ICustomerRepository, CustomerRepository>();
+builder.Services.AddSingleton<CustomerData>();
 
 builder.AddAzureCosmosClient(connectionName: "cosmos-db");
 builder.AddKeyedAzureTableClient("clustering");
@@ -58,10 +62,6 @@ else
     });
 
 }
-
-//builder.Services.ExtendOptions();
-//builder.Services.ExtendServices();
-//builder.Services.RegisterSemanticKernelNativeFunctions();
 
 builder.UseOrleans(siloBuilder =>
 {

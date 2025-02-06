@@ -1,48 +1,34 @@
 ﻿using Microsoft.Azure.Cosmos;
 using SupportCenter.ApiService.Data.Entities;
-using SupportCenter.ApiService.Options;
 
 namespace SupportCenter.ApiService.Data.CosmosDb
 {
-    public abstract class CosmosDbRepository<TEntity, TOptions>
-        where TEntity : Entity
-        where TOptions : CosmosDbOptions
+    public abstract class CosmosDbRepository<T>(CosmosClient client, ILogger<CosmosDbRepository<T>> logger)
+        where T : Entity
     {
-        protected readonly ILogger Logger;
-        protected readonly Container Container;
-
-        protected CosmosDbRepository(TOptions options, ILogger logger)
+        protected Container GetContainer()
         {
-            Logger = logger;
-            CosmosDbOptions configuration = options;
-
-            var containerConfiguration = configuration.Containers?.FirstOrDefault(c => c.EntityName == typeof(TEntity).Name)
-                ?? throw new InvalidOperationException($"Container configuration for {typeof(TEntity).Name} not found.");
-
-            var client = new CosmosClient(configuration.AccountUri, configuration.AccountKey);
-            client.CreateDatabaseIfNotExistsAsync(containerConfiguration.DatabaseName);
-
-            var database = client.GetDatabase(containerConfiguration.DatabaseName);
-            database.CreateContainerIfNotExistsAsync(containerConfiguration.ContainerName, containerConfiguration.PartitionKey ?? "/partitionKey");
-
-            Container = database.GetContainer(containerConfiguration.ContainerName);
+            var database = client.GetDatabase("supportcenter");
+            var container = database.GetContainer("items");
+            return container;
         }
-
         public async Task<TOutput> GetItemAsync<TOutput>(string id, string partitionKey)
         {
-            TOutput item = await Container.ReadItemAsync<TOutput>(id: id, partitionKey: new PartitionKey(partitionKey));
+            var container = GetContainer();
+            TOutput item = await container.ReadItemAsync<TOutput>(id: id, partitionKey: new PartitionKey(partitionKey));
             return item;
         }
 
-        public async Task InsertItemAsync(TEntity entity)
+        public async Task InsertItemAsync(T entity)
         {
             try
             {
-                var response = await Container.CreateItemAsync(entity, new PartitionKey(entity.GetPartitionKeyValue()));
+                var container = GetContainer();
+                var response = await container.CreateItemAsync(entity, new PartitionKey(entity.GetPartitionKeyValue()));
             }
             catch (Exception ex)
             {
-                Logger.LogCritical(
+                logger.LogCritical(
                     ex,
                     "An error occurred. MethodName: {methodName} ErrorMessage: {errorMessage}",
                     nameof(InsertItemAsync),
@@ -53,9 +39,10 @@ namespace SupportCenter.ApiService.Data.CosmosDb
             }
         }
 
-        public async Task UpsertItemAsync(TEntity entity)
+        public async Task UpsertItemAsync(T entity)
         {
-            await Container.UpsertItemAsync(entity, new PartitionKey(entity.GetPartitionKeyValue()));
+            var container = GetContainer();
+            await container.UpsertItemAsync(entity, new PartitionKey(entity.GetPartitionKeyValue()));
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using SupportCenter.ApiService.Events;
-using SupportCenter.ApiService.Options;
 
 namespace SupportCenter.ApiService.Controllers
 {

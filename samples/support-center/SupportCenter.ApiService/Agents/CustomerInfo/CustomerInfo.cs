@@ -4,8 +4,7 @@ using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Data.CosmosDb;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
-using SupportCenter.ApiService.Options;
-using static SupportCenter.ApiService.Options.Consts;
+using static SupportCenter.ApiService.Consts;
 
 namespace SupportCenter.ApiService.Agents.CustomerInfo;
 
