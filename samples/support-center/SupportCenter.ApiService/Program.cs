@@ -35,11 +35,10 @@ if (isDev)
     {
         options.AddPolicy(AllowDebugOriginPolicy, builder =>
         {
-            builder
-            .WithOrigins("http://localhost:3000", "http://localhost:3001") // client urls
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+            builder.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
+                   .AllowAnyHeader()
+                   .AllowAnyMethod()
+                   .AllowCredentials();
         });
     });
 }
@@ -77,7 +76,7 @@ builder.UseOrleans(siloBuilder =>
     {
         //HACK: until Aspire fully wires up the streming provider
         var ehConnection = builder.Configuration["ConnectionStrings:eventHubsConnectionName"];
-        
+
         configurator.ConfigureEventHub(b => b.Configure(options =>
         {
             options.ConfigureEventHubConnection(

@@ -48,8 +48,8 @@ var apiService = builder.AddProject<Projects.SupportCenter_ApiService>("apiservi
                         .WaitFor(qdrant)
                         .WaitFor(grainStorage);
 
-builder.AddNpmApp("frontend", "../SupportCenter.Frontend", "local")
-.WithReference(apiService)
+builder.AddNpmApp("frontend", "../SupportCenter.Frontend", "dev")
+    .WithReference(apiService)
     .WithEnvironment("VITE_OAGENT_BASE_URL", apiService.GetEndpoint("http"))
     .WithEnvironment("BROWSER", "none")
     .WithHttpEndpoint(env: "VITE_PORT")
