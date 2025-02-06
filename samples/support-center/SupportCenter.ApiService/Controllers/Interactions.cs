@@ -1,6 +1,5 @@
 ﻿using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AspNetCore.Mvc;
-using Orleans.Runtime;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Options;
 

@@ -1,8 +1,8 @@
 using Microsoft.Extensions.AI;
 using OpenAI;
-using SupportCenter.ApiService.Extensions;
 using SupportCenter.ApiService.SignalRHub;
 using System.Text.Json;
+using Orleans.Serialization;
 using static SupportCenter.ApiService.Options.Consts;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,22 +12,24 @@ builder.AddServiceDefaults();
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddApplicationInsightsTelemetry();
-builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR()
                 .AddNamedAzureSignalR("signalr");
 builder.Services.AddSingleton<ISignalRService, SignalRService>();
 
 builder.AddAzureCosmosClient(connectionName: "cosmos-db");
-builder.AddRedisClient(connectionName: "redis");
+builder.AddKeyedAzureTableClient("clustering");
+builder.AddKeyedAzureBlobClient("grain-state");
+builder.AddKeyedAzureTableClient("snapshot");
+
 builder.AddAzureOpenAIClient("openAiConnection");
 builder.AddQdrantClient("qdrant");
-builder.AddAzureSearchClient("searchConnectionName");
 
 builder.Services.AddKeyedChatClient(Gpt4oMini, s => s.GetRequiredService<OpenAIClient>().AsChatClient(Gpt4oMini));
 // Allow any CORS origin if in DEV
 const string AllowDebugOriginPolicy = "AllowDebugOrigin";
 const string AllowOriginPolicy = "AllowOrigin";
-if (builder.Environment.IsDevelopment())
+var isDev = builder.Environment.IsDevelopment();
+if (isDev)
 {
     builder.Services.AddCors(options =>
     {
@@ -58,21 +60,51 @@ else
 
 }
 
-builder.Services.ExtendOptions();
-builder.Services.ExtendServices();
-builder.Services.RegisterSemanticKernelNativeFunctions();
+//builder.Services.ExtendOptions();
+//builder.Services.ExtendServices();
+//builder.Services.RegisterSemanticKernelNativeFunctions();
 
-builder.UseOrleans();
+builder.UseOrleans(siloBuilder =>
+{
+    siloBuilder.UseDashboard(x => x.HostSelf = true);
+    siloBuilder.Services.AddSerializer(serializerBuilder =>
+    {
+        serializerBuilder.AddJsonSerializer(
+            isSupported: type => true);
+    });
+
+    siloBuilder.AddEventHubStreams("StreamProvider", (ISiloEventHubStreamConfigurator configurator) =>
+    {
+        //HACK: until Aspire fully wires up the streming provider
+        var ehConnection = builder.Configuration["ConnectionStrings:eventHubsConnectionName"];
+        
+        configurator.ConfigureEventHub(b => b.Configure(options =>
+        {
+            options.ConfigureEventHubConnection(
+                ehConnection,
+                "hub",
+                "orleansGroup");
+        }));
+        configurator.UseAzureTableCheckpointer(
+            b => b.Configure((options) =>
+            {
+                options.TableServiceClient = new Azure.Data.Tables.TableServiceClient(builder.Configuration["ConnectionStrings:snapshot"]);
+                options.PersistInterval = TimeSpan.FromSeconds(10);
+            }));
+    });
+});
 
 builder.Services.Configure<JsonSerializerOptions>(options =>
 {
     options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
 });
 
-WebApplication app = builder.Build();
+var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 app.UseRouting();
-if (builder.Environment.IsDevelopment())
+if (isDev)
 {
     app.UseCors(AllowDebugOriginPolicy);
 }
@@ -82,12 +114,6 @@ else
 
 }
 app.MapControllers();
-
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Support Center API v1");
-});
 
 app.Map("/dashboard", x => x.UseOrleansDashboard());
 app.MapHub<SupportCenterHub>("/supportcenterhub");
