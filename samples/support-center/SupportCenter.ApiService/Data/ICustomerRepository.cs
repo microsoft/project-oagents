@@ -1,6 +1,4 @@
-﻿using SupportCenter.ApiService.Data.CosmosDb.Entities;
-
-namespace SupportCenter.ApiService.Data.CosmosDb
+﻿namespace SupportCenter.ApiService.Data
 {
     public interface ICustomerRepository
     {

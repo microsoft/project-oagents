@@ -43,7 +43,7 @@ public class QnA([PersistentState("state", "messages")] IPersistentState<AgentSt
 
                 var input = AppendChatHistory(message);
                 var instruction = "Consider the following knowledge:!vfcon106047!";
-                var documents = await AddKnowledge(instruction, "vfcon106047");
+                var documents = ""; // TODO: Add vector store
                 var prompt = $"""
                                 You are a helpful customer support/service agent at Contoso Electronics. Be polite and professional and answer briefly based on your knowledge ONLY.
                                 Input: {input}

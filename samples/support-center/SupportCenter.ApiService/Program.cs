@@ -3,9 +3,8 @@ using OpenAI;
 using SupportCenter.ApiService.SignalRHub;
 using System.Text.Json;
 using Orleans.Serialization;
-using SupportCenter.ApiService.Data.CosmosDb;
-using SupportCenter.ApiService.SemanticKernel.Plugins.CustomerPlugin;
 using static SupportCenter.ApiService.Consts;
+using SupportCenter.ApiService.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,19 +15,25 @@ builder.Services.AddControllers();
 builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddSignalR()
                 .AddNamedAzureSignalR("signalr");
-builder.Services.AddSingleton<ISignalRService, SignalRService>();
-builder.Services.AddSingleton<ICustomerRepository, CustomerRepository>();
-builder.Services.AddSingleton<CustomerData>();
 
-builder.AddAzureCosmosClient(connectionName: "cosmos-db");
+builder.Services.AddSingleton<ISignalRService, SignalRService>();
+builder.Services.AddTransient<ICustomerRepository, CustomerRepository>();
+
+
 builder.AddKeyedAzureTableClient("clustering");
 builder.AddKeyedAzureBlobClient("grain-state");
 builder.AddKeyedAzureTableClient("snapshot");
 
-builder.AddAzureOpenAIClient("openAiConnection");
-builder.AddQdrantClient("qdrant");
+builder.AddKeyedRedisDistributedCache("redis");
 
-builder.Services.AddKeyedChatClient(Gpt4oMini, s => s.GetRequiredService<OpenAIClient>().AsChatClient(Gpt4oMini));
+builder.AddAzureOpenAIClient("openAiConnection");
+
+builder.Services.AddKeyedChatClient(Gpt4oMini, s => {
+    var innerClient = s.GetRequiredService<OpenAIClient>().AsChatClient(Gpt4oMini);
+    return new ChatClientBuilder(innerClient)
+               .UseFunctionInvocation().Build();
+    
+});
 // Allow any CORS origin if in DEV
 const string AllowDebugOriginPolicy = "AllowDebugOrigin";
 const string AllowOriginPolicy = "AllowOrigin";

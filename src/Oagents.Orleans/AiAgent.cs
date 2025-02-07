@@ -1,4 +1,6 @@
 using Microsoft.AI.Agents.Abstractions;
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.VectorData;
 using Orleans.Runtime;
 
 namespace Microsoft.AI.Agents.Orleans;
@@ -6,10 +8,14 @@ namespace Microsoft.AI.Agents.Orleans;
 public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
 {
     protected IPersistentState<AgentState<T>> _state;
+    private readonly IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator;
+    private readonly IVectorStore vectorStore;
 
     public AiAgent([PersistentState("state", "messages")] IPersistentState<AgentState<T>> state)
     {
         _state = state;
+        this.embeddingGenerator = embeddingGenerator;
+        this.vectorStore = vectorStore;
     }
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
@@ -34,9 +40,20 @@ public abstract class AiAgent<T> : Agent, IAiAgent where T : class, new()
         return string.Join("\n", _state.State.History.Select(message => $"{message.UserType}: {message.Message}"));
     }
 
-    //TODO: Implement using VectorData
-    public async ValueTask<string> AddKnowledge(string instruction, string index)
-    {
-        return "";
-    }
+    ////TODO: Implement using VectorData
+    //public async ValueTask<string> AddKnowledge(string instruction, string index)
+    //{
+    //    var query = "A family friendly movie";
+    //    var queryEmbedding = await embeddingGenerator.GenerateEmbeddingVectorAsync(query);
+    //    var collection = vectorStore.GetCollection<int, object>(index);
+
+    //    var searchOptions = new VectorSearchOptions()
+    //    {
+    //        Top = 1,
+    //        VectorPropertyName = "Vector"
+    //    };
+
+    //    var results = await collection.VectorizedSearchAsync(queryEmbedding, searchOptions);
+    //    return "";
+    //}
 }

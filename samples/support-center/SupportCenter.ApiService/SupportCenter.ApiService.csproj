@@ -14,9 +14,8 @@
     <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.1.0-preview.1.25104.6" />
     <PackageReference Include="Aspire.Azure.Data.Tables" Version="9.1.0-preview.1.25104.6" />
     <PackageReference Include="Aspire.Azure.Storage.Blobs" Version="9.1.0-preview.1.25104.6" />
-    <PackageReference Include="Aspire.Microsoft.Azure.Cosmos" Version="9.1.0-preview.1.25104.6" />
-    <PackageReference Include="Aspire.Qdrant.Client" Version="9.1.0-preview.1.25104.6" />
-    <PackageReference Include="Aspire.StackExchange.Redis" Version="9.1.0-preview.1.25104.6" />
+    <PackageReference Include="Aspire.StackExchange.Redis" Version="9.1.0-preview.1.25106.13" />
+    <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.1.0-preview.1.25106.13" />
     <PackageReference Include="Microsoft.Azure.SignalR" Version="1.30.0" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="9.2.0-preview.1.25105.2" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.2.0-preview.1.25105.2" />
@@ -26,16 +25,11 @@
     <PackageReference Include="Microsoft.Orleans.Persistence.AzureStorage" Version="9.0.1" />
     <PackageReference Include="Microsoft.Orleans.Clustering.AzureStorage" Version="9.0.1" />
     <PackageReference Include="Microsoft.Orleans.Streaming.EventHubs" Version="9.0.1" />
-    <PackageReference Include="Microsoft.Orleans.Reminders" Version="9.0.1" />
     <PackageReference Include="OrleansDashboard" Version="8.2.0" />
 
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
 
     <PackageReference Include="Microsoft.Extensions.Azure" Version="1.9.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="SemanticKernel\Plugins\DiscountPlugin\" />
   </ItemGroup>
 
   <ItemGroup>

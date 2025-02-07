@@ -56,7 +56,7 @@ public class Dev([PersistentState("state", "messages")] IPersistentState<AgentSt
             // TODO: ask the architect for the high level architecture as well as the files structure of the project
             var input = AppendChatHistory(ask);
             var instruction = "Consider the following architectural guidelines:!waf!";
-            var guidelines = await AddKnowledge(instruction, "waf");
+            var guidelines = "";// await AddKnowledge(instruction, "waf"); // TODO: fetch from Vector Store
             var prompt = $"""
                             You are a Developer for an application. 
                             Please output the code required to accomplish the task assigned to you below and wrap it in a bash script that creates the files.

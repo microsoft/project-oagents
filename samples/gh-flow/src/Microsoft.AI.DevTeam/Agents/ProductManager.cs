@@ -53,7 +53,7 @@ public class ProductManager([PersistentState("state", "messages")] IPersistentSt
         {
             var input = AppendChatHistory(ask);
             var instruction = "Consider the following architectural guidelines:!waf!";
-            var guidelines = await AddKnowledge(instruction, "waf");
+            var guidelines = "";// await AddKnowledge(instruction, "waf");
             var prompt = $$$""""
                             """
                             You are a program manager on a software development team. You are working on an app described below. 

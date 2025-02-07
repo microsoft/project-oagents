@@ -15,16 +15,14 @@ var signalr = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureSignalR("signalr")
     : builder.AddConnectionString("signalr");
 
-var cosmos = builder.AddAzureCosmosDB("cosmos-db")
-                    .RunAsEmulator()
-                    .AddCosmosDatabase("supportcenter")
-                    .AddContainer("items","/id");
+var redis = builder.AddRedis("redis")
+                    .WithRedisCommander()
+                    .WithDataVolume(isReadOnly: false)
+                    .WithPersistence( interval: TimeSpan.FromMinutes(1), keysChangedThreshold:10);
 
 var openai = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureOpenAI("openAiConnection")
     : builder.AddConnectionString("openAiConnection");
-
-var qdrant = builder.AddQdrant("qdrant");
 
 var orleans = builder.AddOrleans("default")
                      .WithClustering(clusteringTable)
@@ -37,15 +35,13 @@ var apiService = builder.AddProject<Projects.SupportCenter_ApiService>("apiservi
                         .WithReference(clusteringTable)
                         .WithReference(snapshotTable)
                         .WithReference(grainStorage)
-                        .WithReference(cosmos)
                         .WithReference(openai)
-                        .WithReference(qdrant)
                         .WithReference(signalr)
+                        .WithReference(redis)
                         .PublishAsAzureContainerApp((infra, capp) => { })
                         .WaitFor(eventHubs)
-                        .WaitFor(cosmos)
                         .WaitFor(signalr)
-                        .WaitFor(qdrant)
+                        .WaitFor(redis)
                         .WaitFor(grainStorage);
 
 builder.AddNpmApp("frontend", "../SupportCenter.Frontend", "dev")

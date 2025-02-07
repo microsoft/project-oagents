@@ -7,19 +7,10 @@ using static SupportCenter.ApiService.Consts;
 namespace SupportCenter.ApiService.Agents.Discount;
 
 [ImplicitStreamSubscription(OrleansNamespace)]
-public class Discount : AiAgent<DiscountState>
+public class Discount([PersistentState("state", "messages")] IPersistentState<AgentState<DiscountState>> state,
+        ILogger<Discount> logger, [FromKeyedServices(Gpt4oMini)] IChatClient chatClient) : AiAgent<DiscountState>(state)
 {
-    private readonly ILogger<Discount> _logger;
-
     protected override string Namespace => OrleansNamespace;
-
-    public Discount([PersistentState("state", "messages")] IPersistentState<AgentState<DiscountState>> state,
-        ILogger<Discount> logger,
-        IChatClient chatClient)
-    : base(state)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
 
     public async override Task HandleEvent(Event item)
     {

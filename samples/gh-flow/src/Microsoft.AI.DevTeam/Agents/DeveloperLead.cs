@@ -55,7 +55,7 @@ public class DeveloperLead([PersistentState("state", "messages")] IPersistentSta
             // as well as the file structure
             var input = AppendChatHistory(ask);
             var instruction = "Consider the following architectural guidelines:!waf!";
-            var guidelines = await AddKnowledge(instruction, "waf");
+            var guidelines = ""; // await AddKnowledge(instruction, "waf");
             var prompt = $$"""
                             You are a Dev Lead for an application team, building the application described below. 
                             Please break down the steps and modules required to develop the complete application, describe each step in detail.

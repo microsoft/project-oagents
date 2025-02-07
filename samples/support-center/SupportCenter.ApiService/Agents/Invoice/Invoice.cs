@@ -37,7 +37,7 @@ public class Invoice([PersistentState("state", "messages")] IPersistentState<Age
 
                     var input =  AppendChatHistory(message);
                     var instruction = "Consider the following knowledge:!invoices!";
-                    var invoices = await AddKnowledge(instruction, "invoices");
+                    var invoices = "";// await AddKnowledge(instruction, "invoices");
                     var prompt = $"""
                         You are a helpful customer support/service agent that answers questions about user invoices based on your knowledge.
                         Make sure that the invoice belongs to the specific user before providing the information. If needed, ask for the invoice id etc. 
