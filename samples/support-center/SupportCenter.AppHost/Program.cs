@@ -1,10 +1,14 @@
+using Azure.Provisioning.AppContainers;
+using Azure.Provisioning;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddAzureProvisioning();
 
 var eventHubs = builder.AddAzureEventHubs("eventHubsConnectionName")
                        .RunAsEmulator()
-                       .WithHub("hub", config => config.ConsumerGroups.Add(new("orleansGroup")));
+                       .AddHub("hub")
+                       .AddConsumerGroup("orleansGroup");
 
 var storage = builder.AddAzureStorage("storage").RunAsEmulator();
 var clusteringTable = storage.AddTables("clustering");
@@ -15,7 +19,9 @@ var signalr = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureSignalR("signalr")
     : builder.AddConnectionString("signalr");
 
-var redis = builder.AddRedis("redis")
+var passwordParam = builder.AddParameter("pass");
+
+var redis = builder.AddRedis("redis", password: passwordParam)
                     .WithRedisCommander()
                     .WithDataVolume(isReadOnly: false)
                     .WithPersistence( interval: TimeSpan.FromMinutes(1), keysChangedThreshold:10);
@@ -38,11 +44,21 @@ var apiService = builder.AddProject<Projects.SupportCenter_ApiService>("apiservi
                         .WithReference(openai)
                         .WithReference(signalr)
                         .WithReference(redis)
-                        .PublishAsAzureContainerApp((infra, capp) => { })
                         .WaitFor(eventHubs)
                         .WaitFor(signalr)
                         .WaitFor(redis)
-                        .WaitFor(grainStorage);
+                        .WaitFor(grainStorage)
+                        .WithExternalHttpEndpoints()
+                        .PublishAsAzureContainerApp((infra, capp) => {
+                            capp.Configuration.Ingress.CorsPolicy = new ContainerAppCorsPolicy
+                            {
+                                AllowCredentials = true,
+                                AllowedOrigins = new BicepList<string> { "https://*.azurecontainerapps.io" },
+                                AllowedHeaders = new BicepList<string> { "*" },
+                                AllowedMethods = new BicepList<string> { "*" },
+                            };
+                            capp.Configuration.Ingress.StickySessionsAffinity = StickySessionAffinity.Sticky;
+                        });
 
 builder.AddNpmApp("frontend", "../SupportCenter.Frontend", "dev")
     .WithReference(apiService)
@@ -54,9 +70,6 @@ builder.AddNpmApp("frontend", "../SupportCenter.Frontend", "dev")
     .WaitFor(apiService);
 
 //var memorySeeder = builder.AddProject<Projects.SupportCenter_Seed_Memory>("memoryseeder")
-//                        .WithReference(redis);
-
-//var invoiceSeeder = builder.AddProject<Projects.SupportCenter_Seed_InvoiceMemory>("invoiceseeder")
 //                        .WithReference(redis);
 
 builder.Build().Run();

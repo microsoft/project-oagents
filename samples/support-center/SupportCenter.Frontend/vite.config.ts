@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
       plugins: [react()],
       server: {
           port: parseInt(env.VITE_PORT),
+          host: '0.0.0.0'
       },
       build: {
           outDir: 'dist',

@@ -6,3 +6,18 @@ services:
     language: dotnet
     project: ./SupportCenter.AppHost/SupportCenter.AppHost.csproj
     host: containerapp
+hooks:
+  predeploy:
+    windows:
+      shell: pwsh
+      run: 'echo "VITE_OAGENT_BASE_URL=https://apiservice.$env:AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN" > ./SupportCenter.Frontend/.env.azureConfig'
+    posix:
+      shell: sh
+      run: 'echo "VITE_OAGENT_BASE_URL=https://apiservice.$AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN" > ./SupportCenter.Frontend/.env.azureConfig'
+  postdeploy:
+    windows:
+      shell: pwsh
+      run: 'rm ./SupportCenter.Frontend/.env.azureConfig'
+    posix:
+      shell: sh
+      run: 'rm ./SupportCenter.Frontend/.env.azureConfig'
