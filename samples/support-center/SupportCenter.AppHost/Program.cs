@@ -1,6 +1,5 @@
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning;
-using Aspire.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -34,7 +33,7 @@ var orleans = builder.ExecutionContext.IsPublishMode ?
                      .WithClustering(clusteringTable)
                      .WithGrainStorage("PubSubStore", grainStorage)
                      .WithGrainStorage("messages", grainStorage)
-                     .WithMemoryStreaming("StreamProvider") :
+                     .WithStreaming("StreamProvider", streamingQueue) :
               builder.AddOrleans("default")
                      .WithDevelopmentClustering()
                      .WithMemoryGrainStorage("PubSubStore")

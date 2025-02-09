@@ -23,7 +23,7 @@ builder.AddKeyedRedisDistributedCache("redis");
 builder.AddKeyedAzureTableClient("clustering");
 builder.AddKeyedAzureTableClient("snapshot");
 builder.AddKeyedAzureBlobClient("grain-state");
-//builder.AddKeyedAzureQueueClient("streaming");
+builder.AddKeyedAzureQueueClient("streaming");
 
 builder.AddAzureOpenAIClient("openAiConnection");
 
@@ -64,9 +64,7 @@ else
             .AllowCredentials();
         });
     });
-
 }
-
 
 builder.UseOrleans(siloBuilder =>
 {
