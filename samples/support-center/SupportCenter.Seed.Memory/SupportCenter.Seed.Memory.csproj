@@ -16,7 +16,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.1" />
-    <PackageReference Include="PdfPig" Version="0.1.10-alpha-20250203-fdb88" />
+    <PackageReference Include="PdfPig" Version="0.1.10-alpha-20250208-1660c" />
   </ItemGroup>
   
   <ItemGroup>

@@ -19,12 +19,11 @@ builder.Services.AddSignalR()
 builder.Services.AddSingleton<ISignalRService, SignalRService>();
 builder.Services.AddTransient<ICustomerRepository, CustomerRepository>();
 
-
-builder.AddKeyedAzureTableClient("clustering");
-builder.AddKeyedAzureBlobClient("grain-state");
-builder.AddKeyedAzureTableClient("snapshot");
-
 builder.AddKeyedRedisDistributedCache("redis");
+builder.AddKeyedAzureTableClient("clustering");
+builder.AddKeyedAzureTableClient("snapshot");
+builder.AddKeyedAzureBlobClient("grain-state");
+//builder.AddKeyedAzureQueueClient("streaming");
 
 builder.AddAzureOpenAIClient("openAiConnection");
 
@@ -68,33 +67,13 @@ else
 
 }
 
+
 builder.UseOrleans(siloBuilder =>
 {
-    siloBuilder.UseDashboard(x => x.HostSelf = true);
     siloBuilder.Services.AddSerializer(serializerBuilder =>
     {
         serializerBuilder.AddJsonSerializer(
             isSupported: type => true);
-    });
-
-    siloBuilder.AddEventHubStreams("StreamProvider", (ISiloEventHubStreamConfigurator configurator) =>
-    {
-        //HACK: until Aspire fully wires up the streming provider
-        var ehConnection = builder.Configuration["ConnectionStrings:eventHubsConnectionName"];
-
-        configurator.ConfigureEventHub(b => b.Configure(options =>
-        {
-            options.ConfigureEventHubConnection(
-                ehConnection,
-                "hub",
-                "orleansGroup");
-        }));
-        configurator.UseAzureTableCheckpointer(
-            b => b.Configure((options) =>
-            {
-                options.TableServiceClient = new Azure.Data.Tables.TableServiceClient(builder.Configuration["ConnectionStrings:snapshot"]);
-                options.PersistInterval = TimeSpan.FromSeconds(10);
-            }));
     });
 });
 
@@ -119,6 +98,6 @@ else
 }
 app.MapControllers();
 
-app.Map("/dashboard", x => x.UseOrleansDashboard());
 app.MapHub<SupportCenterHub>("/supportcenterhub");
+
 app.Run();

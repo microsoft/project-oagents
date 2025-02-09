@@ -11,30 +11,33 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.1.0-preview.1.25107.1" />
-    <PackageReference Include="Aspire.Azure.Data.Tables" Version="9.1.0-preview.1.25107.1" />
-    <PackageReference Include="Aspire.Azure.Storage.Blobs" Version="9.1.0-preview.1.25107.1" />
-    <PackageReference Include="Aspire.StackExchange.Redis" Version="9.1.0-preview.1.25107.1" />
-    <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.1.0-preview.1.25107.1" />
+    <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.1.0-preview.1.25108.2" />
+    <PackageReference Include="Aspire.Azure.Data.Tables" Version="9.1.0-preview.1.25108.2" />
+    <PackageReference Include="Aspire.Azure.Storage.Blobs" Version="9.1.0-preview.1.25108.2" />
+    <PackageReference Include="Aspire.Azure.Storage.Queues" Version="9.1.0-preview.1.25108.2" />
+    <PackageReference Include="Aspire.StackExchange.Redis" Version="9.1.0-preview.1.25108.2" />
+    <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.1.0-preview.1.25108.2" />
     <PackageReference Include="Microsoft.Azure.SignalR" Version="1.30.0" />
     <PackageReference Include="Microsoft.Azure.StackExchangeRedis" Version="3.2.1" />
-    <PackageReference Include="Microsoft.Extensions.AI" Version="9.3.0-preview.1.25106.3" />
-    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.3.0-preview.1.25106.3" />
+    <PackageReference Include="Microsoft.Extensions.AI" Version="9.3.0-preview.1.25107.9" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.3.0-preview.1.25107.9" />
+    <PackageReference Include="Microsoft.Orleans.Persistence.Memory" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Orleans.Sdk" Version="9.0.1" />
     <PackageReference Include="Microsoft.Orleans.Serialization.SystemTextJson" Version="9.0.1" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Qdrant" Version="1.36.1-preview" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureAISearch" Version="1.36.1-preview" />
+    <PackageReference Include="Microsoft.Orleans.Streaming.AzureStorage" Version="9.0.1" />
     <PackageReference Include="Microsoft.Orleans.Persistence.AzureStorage" Version="9.0.1" />
     <PackageReference Include="Microsoft.Orleans.Clustering.AzureStorage" Version="9.0.1" />
-    <PackageReference Include="Microsoft.Orleans.Streaming.EventHubs" Version="9.0.1" />
     <PackageReference Include="OrleansDashboard" Version="8.2.0" />
-
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0-beta1" />
-
     <PackageReference Include="Microsoft.Extensions.Azure" Version="1.10.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Oagents.Orleans\Oagents.Orleans.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

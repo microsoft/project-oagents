@@ -1,19 +1,18 @@
 using Azure.Provisioning.AppContainers;
 using Azure.Provisioning;
+using Aspire.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddAzureProvisioning();
 
-var eventHubs = builder.AddAzureEventHubs("eventHubsConnectionName")
-                       .RunAsEmulator()
-                       .AddHub("hub")
-                       .AddConsumerGroup("orleansGroup");
+
 
 var storage = builder.AddAzureStorage("storage").RunAsEmulator();
 var clusteringTable = storage.AddTables("clustering");
 var snapshotTable = storage.AddTables("snapshot");
 var grainStorage = storage.AddBlobs("grain-state");
+var streamingQueue = storage.AddQueues("streaming");
 
 var signalr = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureSignalR("signalr")
@@ -24,41 +23,63 @@ var passwordParam = builder.AddParameter("pass");
 var redis = builder.AddRedis("redis", password: passwordParam)
                     .WithRedisCommander()
                     .WithDataVolume(isReadOnly: false)
-                    .WithPersistence( interval: TimeSpan.FromMinutes(1), keysChangedThreshold:10);
+                    .WithPersistence(interval: TimeSpan.FromMinutes(1), keysChangedThreshold: 10);
 
 var openai = builder.ExecutionContext.IsPublishMode
-    ? builder.AddAzureOpenAI("openAiConnection")
+    ? builder.AddAzureOpenAI("openAiConnection").AddDeployment(new AzureOpenAIDeployment("gpt-4o-mini", "gpt-4o-mini", "2024-07-18"))
     : builder.AddConnectionString("openAiConnection");
 
-var orleans = builder.AddOrleans("default")
+var orleans = builder.ExecutionContext.IsPublishMode ?
+              builder.AddOrleans("default")
                      .WithClustering(clusteringTable)
                      .WithGrainStorage("PubSubStore", grainStorage)
-                     .WithGrainStorage("messages", grainStorage);
+                     .WithGrainStorage("messages", grainStorage)
+                     .WithMemoryStreaming("StreamProvider") :
+              builder.AddOrleans("default")
+                     .WithDevelopmentClustering()
+                     .WithMemoryGrainStorage("PubSubStore")
+                     .WithMemoryGrainStorage("messages")
+                     .WithMemoryStreaming("StreamProvider");
+
 
 var apiService = builder.AddProject<Projects.SupportCenter_ApiService>("apiservice")
                         .WithReference(orleans)
-                        .WithReference(eventHubs)
-                        .WithReference(clusteringTable)
-                        .WithReference(snapshotTable)
-                        .WithReference(grainStorage)
                         .WithReference(openai)
                         .WithReference(signalr)
                         .WithReference(redis)
-                        .WaitFor(eventHubs)
                         .WaitFor(signalr)
                         .WaitFor(redis)
+                        .WaitFor(openai)
+                        .WithExternalHttpEndpoints();
+if (builder.ExecutionContext.IsPublishMode)
+{
+    var insights = builder.AddAzureApplicationInsights("ServiceCenter");
+    apiService.WithReference(clusteringTable)
+                        .WithReference(snapshotTable)
+                        .WithReference(grainStorage)
+                        .WithReference(streamingQueue)
+                        .WithReference(insights)
+                        .WaitFor(clusteringTable)
+                        .WaitFor(snapshotTable)
                         .WaitFor(grainStorage)
-                        .WithExternalHttpEndpoints()
-                        .PublishAsAzureContainerApp((infra, capp) => {
+                        .WaitFor(streamingQueue)
+                        .WithEnvironment("HTTP_PORTS", "8081")
+                        .PublishAsAzureContainerApp((infra, capp) =>
+                        {
                             capp.Configuration.Ingress.CorsPolicy = new ContainerAppCorsPolicy
                             {
                                 AllowCredentials = true,
                                 AllowedOrigins = new BicepList<string> { "https://*.azurecontainerapps.io" },
                                 AllowedHeaders = new BicepList<string> { "*" },
                                 AllowedMethods = new BicepList<string> { "*" },
+                                
                             };
+                            capp.Configuration.Ingress.TargetPort = 8081; 
                             capp.Configuration.Ingress.StickySessionsAffinity = StickySessionAffinity.Sticky;
-                        });
+                        }); ;
+}
+
+
 
 builder.AddNpmApp("frontend", "../SupportCenter.Frontend", "dev")
     .WithReference(apiService)

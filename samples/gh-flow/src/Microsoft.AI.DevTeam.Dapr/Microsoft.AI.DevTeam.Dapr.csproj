@@ -16,7 +16,7 @@
     <PackageReference Include="Octokit.Webhooks.AspNetCore" Version="2.4.1" />
     <PackageReference Include="Octokit" Version="14.0.0" />
 
-    <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.1.0-preview.1.25107.1" />
+    <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.1.0-preview.1.25108.1" />
 
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0-beta1" />
 
