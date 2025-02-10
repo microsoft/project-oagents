@@ -7,7 +7,7 @@ using Orleans;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService;
 
-public class SupportCenterHub : Hub<ISupportCenterHub>
+public class SupportCenterHub(IClusterClient clusterClient) : Hub<ISupportCenterHub>
 {
     public override async Task OnConnectedAsync()
     {
@@ -16,18 +16,18 @@ public class SupportCenterHub : Hub<ISupportCenterHub>
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        SignalRConnectionsDB.ConnectionByUser.TryRemove(Context.ConnectionId, out _);
+        var registry = clusterClient.GetGrain<IStoreConnections>(Context.UserIdentifier);
+        await registry.RemoveConnection();
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task ConnectToAgent(string userId, string conversationId, IClusterClient clusterClient)
+    public async Task ConnectToAgent(string userId, string conversationId)
     {
-        SignalRConnectionsDB.ConnectionByUser.AddOrUpdate(
-            userId, new Connection(Context.ConnectionId, conversationId),
-            (key, oldValue) => new Connection(Context.ConnectionId, conversationId));
+        var registry = clusterClient.GetGrain<IStoreConnections>(userId);
+        await registry.AddConnection(new Connection { Id = Context.ConnectionId, ConversationId = conversationId });
 
         // Notify the agents that a new user got connected.
-        var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
+        var streamProvider = clusterClient.GetStreamProvider(Consts.OrleansStreamProvider);
         var streamId = StreamId.Create(Consts.OrleansNamespace, $"{userId}/{conversationId}");
         var stream = streamProvider.GetStream<Event>(streamId);
         var data = new Dictionary<string, string>
@@ -42,20 +42,23 @@ public class SupportCenterHub : Hub<ISupportCenterHub>
         });
     }
 
-    public async Task RestartConversation(string userId, string conversationId, IClusterClient clusterClient)
+    public async Task RestartConversation(string userId, string conversationId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId, nameof(userId));
         ArgumentException.ThrowIfNullOrWhiteSpace(conversationId, nameof(conversationId));
 
-        string? oldConversationId = SignalRConnectionsDB.GetConversationId(userId);
+        var registry = clusterClient.GetGrain<IStoreConnections>(userId);
+        var connection = await registry.GetConnection();
+        if (connection != null)
+        {
+            await registry.RemoveConnection();
+        }
 
-        SignalRConnectionsDB.ConnectionByUser.AddOrUpdate(
-            userId,
-            key => new Connection(Context.ConnectionId, conversationId),
-            (key, oldValue) => new Connection(oldValue.Id, conversationId));
+        var newConversationId = connection != null? connection.ConversationId : conversationId;
+        await registry.AddConnection(new Connection { Id = Context.ConnectionId, ConversationId = newConversationId });
 
-        var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
-        var streamId = StreamId.Create(Consts.OrleansNamespace, $"{userId}/{conversationId}");
+        var streamProvider = clusterClient.GetStreamProvider(Consts.OrleansStreamProvider);
+        var streamId = StreamId.Create(Consts.OrleansNamespace, $"{userId}/{newConversationId}");
         var stream = streamProvider.GetStream<Event>(streamId);
         await stream.OnNextAsync(
             new Event
@@ -71,7 +74,7 @@ public class SupportCenterHub : Hub<ISupportCenterHub>
     /// <param name="chatMessage"></param>
     /// <param name="clusterClient"></param>
     /// <returns></returns>
-    public async Task ProcessMessage(ChatMessage chatMessage, IClusterClient clusterClient)
+    public async Task ProcessMessage(ChatMessage chatMessage)
     {
         ArgumentNullException.ThrowIfNull(chatMessage, nameof(chatMessage));
         ArgumentException.ThrowIfNullOrWhiteSpace(chatMessage.UserId, nameof(chatMessage.UserId));
@@ -80,7 +83,7 @@ public class SupportCenterHub : Hub<ISupportCenterHub>
         var userId = chatMessage.UserId;
         var conversationId = chatMessage.ConversationId;
 
-        var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
+        var streamProvider = clusterClient.GetStreamProvider(Consts.OrleansStreamProvider);
         var streamId = StreamId.Create(Consts.OrleansNamespace, $"{userId}/{conversationId}");
         var stream = streamProvider.GetStream<Event>(streamId);
 

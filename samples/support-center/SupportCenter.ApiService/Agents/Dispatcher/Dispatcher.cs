@@ -1,9 +1,11 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.Extensions.AI;
+using Microsoft.Win32;
 using SupportCenter.ApiService.Attributes;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
+using SupportCenter.ApiService.SignalRHub;
 using System.Reflection;
 using static SupportCenter.ApiService.Consts;
 
@@ -21,11 +23,14 @@ public class Dispatcher(
         [FromKeyedServices(Gpt4oMini)] IChatClient chatClient) : AiAgent<DispatcherState>(state)
 {
     protected override string Namespace => OrleansNamespace;
+    protected override string StreamProvider => OrleansStreamProvider;
     public async override Task HandleEvent(Event item)
     {
         logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Dispatcher), item.Type, item.Data);
 
-        var ssc = item.GetAgentData();
+        var registry = GrainFactory.GetGrain<IStoreConnections>(item.Data.GetValueOrDefault<string>("userId"));
+        var connection = await registry.GetConnection();
+        var ssc = item.GetAgentData(connection.ConversationId);
         string? userId = ssc.UserId;
         string? message = ssc.UserMessage;
         string? id = ssc.Id;

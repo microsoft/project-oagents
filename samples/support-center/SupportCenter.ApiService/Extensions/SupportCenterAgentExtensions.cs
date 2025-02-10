@@ -1,18 +1,17 @@
 ﻿using Microsoft.AI.Agents.Abstractions;
-using SupportCenter.ApiService.SignalRHub;
 
 namespace SupportCenter.ApiService.Extensions
 {
     public static class SupportCenterAgentExtensions
     {
-        public static SupportCenterData GetAgentData(this Event item)
+        public static SupportCenterData GetAgentData(this Event item, string? conversationId)
         {
             string? userId = item.Data.GetValueOrDefault<string>("userId");
             string? userMessage = item.Data.GetValueOrDefault<string>("message")
                 ?? item.Data.GetValueOrDefault<string>("userMessage");
 
-            string? conversationId = SignalRConnectionsDB.GetConversationId(userId) ?? item.Data.GetValueOrDefault<string>("id");
-            string id = $"{userId}/{conversationId}";
+            string? cId = conversationId ?? item.Data.GetValueOrDefault<string>("id");
+            string id = $"{userId}/{cId}";
 
             return new SupportCenterData(id, userId, userMessage);
         }

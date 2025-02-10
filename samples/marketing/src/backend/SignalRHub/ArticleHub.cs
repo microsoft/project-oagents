@@ -28,7 +28,7 @@ public class ArticleHub : Hub<IArticleHub>
     /// <returns></returns>
     public async Task ProcessMessage(FrontEndMessage frontEndMessage, IClusterClient clusterClient)
     {
-        var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
+        var streamProvider = clusterClient.GetStreamProvider(Consts.StreamProvider);
         var streamId = StreamId.Create(Consts.OrleansNamespace, frontEndMessage.UserId);
         var stream = streamProvider.GetStream<Event>(streamId);
 
@@ -58,7 +58,7 @@ public class ArticleHub : Hub<IArticleHub>
         SignalRConnectionsDB.ConnectionIdByUser.AddOrUpdate(UserId, Context.ConnectionId, (key, oldValue) => Context.ConnectionId);
 
         // Notify the agents that a new user got connected.
-        var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
+        var streamProvider = clusterClient.GetStreamProvider(Consts.StreamProvider);
         var streamId = StreamId.Create(Consts.OrleansNamespace, frontEndMessage.UserId);
         var stream = streamProvider.GetStream<Event>(streamId);
         var data = new Dictionary<string, string>

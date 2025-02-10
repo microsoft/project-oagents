@@ -11,6 +11,7 @@ public class Discount([PersistentState("state", "messages")] IPersistentState<Ag
         ILogger<Discount> logger, [FromKeyedServices(Gpt4oMini)] IChatClient chatClient) : AiAgent<DiscountState>(state)
 {
     protected override string Namespace => OrleansNamespace;
+    protected override string StreamProvider => OrleansStreamProvider;
 
     public async override Task HandleEvent(Event item)
     {

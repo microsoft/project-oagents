@@ -11,7 +11,8 @@ namespace SupportCenter.ApiService.Agents.Conversation;
 public class Conversation([PersistentState("state", "messages")] IPersistentState<AgentState<ConversationState>> state,
         ILogger<Conversation> logger, [FromKeyedServices(Gpt4oMini)] IChatClient chatClient) : AiAgent<ConversationState>(state)
 {
-    protected override string Namespace => Consts.OrleansNamespace;
+    protected override string Namespace => OrleansNamespace;
+    protected override string StreamProvider => OrleansStreamProvider;
 
     public async override Task HandleEvent(Event item)
     {
@@ -30,8 +31,9 @@ public class Conversation([PersistentState("state", "messages")] IPersistentStat
                 string? message = item.Data.GetValueOrDefault<string>("message");
                 string? input = AppendChatHistory(message);
 
-                string? conversationId = SignalRConnectionsDB.GetConversationId(userId);
-                string id = $"{userId}/{conversationId}";
+                var registry = GrainFactory.GetGrain<IStoreConnections>(userId);
+                var connection = await registry.GetConnection();
+                string id = $"{userId}/{connection.ConversationId}";
                 logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Conversation), nameof(EventType.ConversationRequested), message);
 
                 var prompt = $""""

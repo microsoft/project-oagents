@@ -12,6 +12,7 @@ namespace SupportCenter.ApiService.Agents.SignalR;
 public class SignalR : Agent
 {
     protected override string Namespace => OrleansNamespace;
+    protected override string StreamProvider => OrleansStreamProvider;
     private readonly ConcurrentDictionary<string, AgentType> _eventTypeToSenderTypeMapping = new()
     {
         [nameof(EventType.QnARetrieved)] = AgentType.QnA,
@@ -56,6 +57,8 @@ public class SignalR : Agent
             message = "Sorry, I don't know how to handle this request. Try to rephrase it.";
         }
 
-        await _signalRClient.SendMessageToClient(messageId: Guid.NewGuid().ToString(), userId, message, agentType);
+        var registry = GrainFactory.GetGrain<IStoreConnections>(userId);
+        var connection =  await registry.GetConnection();
+        await _signalRClient.SendMessageToClient(messageId: Guid.NewGuid().ToString(), userId, conversationId: connection.ConversationId, connectionId: connection.Id, message, agentType);
     }
 }

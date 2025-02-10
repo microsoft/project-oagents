@@ -3,6 +3,7 @@ using Microsoft.AI.Agents.Orleans;
 using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
+using SupportCenter.ApiService.SignalRHub;
 using static SupportCenter.ApiService.Consts;
 
 namespace SupportCenter.ApiService.Agents.QnA;
@@ -12,6 +13,7 @@ public class QnA([PersistentState("state", "messages")] IPersistentState<AgentSt
         [FromKeyedServices(Gpt4oMini)] IChatClient chatClient) : AiAgent<QnAState>(state)
 {
     protected override string Namespace => OrleansNamespace;
+    protected override string StreamProvider => OrleansStreamProvider;
 
     public async override Task HandleEvent(Event item)
     {
@@ -26,7 +28,9 @@ public class QnA([PersistentState("state", "messages")] IPersistentState<AgentSt
                 }
                 break;
             case nameof(EventType.QnARequested):
-                var ssc = item.GetAgentData();
+                var registry = GrainFactory.GetGrain<IStoreConnections>(item.Data.GetValueOrDefault<string>("userId"));
+                var connection = await registry.GetConnection();
+                var ssc = item.GetAgentData(connection.ConversationId);
                 string? userId = ssc.UserId;
                 string? message = ssc.UserMessage;
                 string? id = ssc.Id;

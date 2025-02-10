@@ -19,7 +19,7 @@ namespace SupportCenter.ApiService.Controllers
         [HttpPost("{userId}")]
         public async Task<string> Post(string userId, [FromBody] string userMessage)
         {
-            var streamProvider = _client.GetStreamProvider("StreamProvider");
+            var streamProvider = _client.GetStreamProvider(Consts.OrleansStreamProvider);
             var streamId = StreamId.Create(Consts.OrleansNamespace, userId); // to change
             var stream = streamProvider.GetStream<Event>(streamId);
 

@@ -5,8 +5,6 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddAzureProvisioning();
 
-
-
 var storage = builder.AddAzureStorage("storage").RunAsEmulator();
 var clusteringTable = storage.AddTables("clustering");
 var snapshotTable = storage.AddTables("snapshot");
@@ -32,13 +30,11 @@ var orleans = builder.ExecutionContext.IsPublishMode ?
               builder.AddOrleans("default")
                      .WithClustering(clusteringTable)
                      .WithGrainStorage("PubSubStore", grainStorage)
-                     .WithGrainStorage("messages", grainStorage)
-                     .WithStreaming("StreamProvider", streamingQueue) :
+                     .WithGrainStorage("messages", grainStorage) :
               builder.AddOrleans("default")
                      .WithDevelopmentClustering()
                      .WithMemoryGrainStorage("PubSubStore")
-                     .WithMemoryGrainStorage("messages")
-                     .WithMemoryStreaming("StreamProvider");
+                     .WithMemoryGrainStorage("messages");
 
 
 var apiService = builder.AddProject<Projects.SupportCenter_ApiService>("apiservice")
@@ -46,9 +42,11 @@ var apiService = builder.AddProject<Projects.SupportCenter_ApiService>("apiservi
                         .WithReference(openai)
                         .WithReference(signalr)
                         .WithReference(redis)
+                        .WithReference(streamingQueue)
                         .WaitFor(signalr)
                         .WaitFor(redis)
                         .WaitFor(openai)
+                        .WaitFor(streamingQueue)
                         .WithExternalHttpEndpoints();
 if (builder.ExecutionContext.IsPublishMode)
 {
@@ -56,13 +54,12 @@ if (builder.ExecutionContext.IsPublishMode)
     apiService.WithReference(clusteringTable)
                         .WithReference(snapshotTable)
                         .WithReference(grainStorage)
-                        .WithReference(streamingQueue)
                         .WithReference(insights)
                         .WaitFor(clusteringTable)
                         .WaitFor(snapshotTable)
                         .WaitFor(grainStorage)
-                        .WaitFor(streamingQueue)
                         .WithEnvironment("HTTP_PORTS", "8081")
+                        .WithReplicas(3 )
                         .PublishAsAzureContainerApp((infra, capp) =>
                         {
                             capp.Configuration.Ingress.CorsPolicy = new ContainerAppCorsPolicy

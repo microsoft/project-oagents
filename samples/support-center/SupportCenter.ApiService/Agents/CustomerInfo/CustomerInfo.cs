@@ -4,6 +4,7 @@ using Microsoft.Extensions.AI;
 using SupportCenter.ApiService.Data;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
+using SupportCenter.ApiService.SignalRHub;
 using System.ComponentModel;
 using static SupportCenter.ApiService.Consts;
 
@@ -18,6 +19,7 @@ public class CustomerInfo(
        [FromKeyedServices(Gpt4oMini)] IChatClient chatClient) : AiAgent<CustomerInfoState>(state)
 {
     protected override string Namespace => OrleansNamespace;
+    protected override string StreamProvider => OrleansStreamProvider;
 
     public async override Task HandleEvent(Event item)
     {
@@ -28,24 +30,27 @@ public class CustomerInfo(
                 _state.State.History.Clear();
                 break;
             case nameof(EventType.CustomerInfoRequested):
-                var ssc = item.GetAgentData();
-                string? userId = ssc.UserId;
-                string? message = ssc.UserMessage;
-                string? id = ssc.Id;
-
-                logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(CustomerInfo), item.Type, item.Data);
-                await PublishEvent(Namespace, id, new Event
                 {
-                    Type = nameof(EventType.CustomerInfoNotification),
-                    Data = new Dictionary<string, string>
+                    var registry = GrainFactory.GetGrain<IStoreConnections>(item.Data.GetValueOrDefault<string>("userId"));
+                    var connection = await registry.GetConnection();
+                    var ssc = item.GetAgentData(connection.ConversationId);
+                    string? userId = ssc.UserId;
+                    string? message = ssc.UserMessage;
+                    string? id = ssc.Id;
+
+                    logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(CustomerInfo), item.Type, item.Data);
+                    await PublishEvent(Namespace, id, new Event
+                    {
+                        Type = nameof(EventType.CustomerInfoNotification),
+                        Data = new Dictionary<string, string>
                     {
                         { nameof(userId), userId },
                         { nameof(message), "I'm working on the user's request..." }
                     }
-                });
+                    });
 
-                // Get the customer info via the planners.
-                var prompt = $"""
+                    // Get the customer info via the planners.
+                    var prompt = $"""
                                 Here is the user message:
                                 userId: {userId}
                                 userMessage: {message}
@@ -54,17 +59,17 @@ public class CustomerInfo(
                                 {AppendChatHistory(message)}
                                 """;
 
-                
-                var chatOptions = new ChatOptions
-                {
-                    Tools = [AIFunctionFactory.Create(GetCustomerDataAsync),
+
+                    var chatOptions = new ChatOptions
+                    {
+                        Tools = [AIFunctionFactory.Create(GetCustomerDataAsync),
                         AIFunctionFactory.Create(GetAllCustomersAsync),
                         AIFunctionFactory.Create(InsertCustomerDataAsync),
                         AIFunctionFactory.Create(UpdateCustomerDataAsync)
-                    ]
-                };
+                        ]
+                    };
 
-                List<ChatMessage> chatHistory = [new(ChatRole.System, """
+                    List<Microsoft.Extensions.AI.ChatMessage> chatHistory = [new(ChatRole.System, """
                     You are a Customer Info agent, working with the Support Center.
                     You can help customers working with their own information.
                     Read the customer's message carefully, and then decide the appropriate plan to create.
@@ -73,25 +78,27 @@ public class CustomerInfo(
                     If you think that the message is not clear, you can ask the customer for more information.
                 """)];
 
-                chatHistory.Add(new ChatMessage(ChatRole.User, prompt));
+                    chatHistory.Add(new Microsoft.Extensions.AI.ChatMessage(ChatRole.User, prompt));
 
-                var response = await chatClient.CompleteAsync(chatHistory, chatOptions);
-                var result = response.Message.Contents.Last();
-                AddToHistory($"{result}", ChatUserType.Agent);
-               
-                logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(CustomerInfo), item.Type, result);
+                    var response = await chatClient.CompleteAsync(chatHistory, chatOptions);
+                    var result = response.Message.Contents.Last();
+                    AddToHistory($"{result}", ChatUserType.Agent);
 
-                await PublishEvent(Namespace, id, new Event
-                {
-                    Type = nameof(EventType.CustomerInfoRetrieved),
-                    Data = new Dictionary<string, string>
+                    logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(CustomerInfo), item.Type, result);
+
+                    await PublishEvent(Namespace, id, new Event
+                    {
+                        Type = nameof(EventType.CustomerInfoRetrieved),
+                        Data = new Dictionary<string, string>
                     {
                         { nameof(userId), userId },
                         { nameof(message), $"{result}" }
                     }
-                });
+                    });
 
-                break;
+                    break;
+                }
+                
             default:
                 break;
         }

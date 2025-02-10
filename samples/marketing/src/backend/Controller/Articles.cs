@@ -41,7 +41,7 @@ namespace Marketing.Controller
         [HttpPut("{UserId}")]
         public async Task<string> Put(string UserId, [FromBody] string userMessage)
         {
-            var streamProvider = _client.GetStreamProvider("StreamProvider");
+            var streamProvider = _client.GetStreamProvider(Consts.StreamProvider);
             var streamId = StreamId.Create(Consts.OrleansNamespace, UserId);
             var stream = streamProvider.GetStream<Event>(streamId);
 
