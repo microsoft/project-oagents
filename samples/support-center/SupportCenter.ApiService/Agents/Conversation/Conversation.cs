@@ -42,11 +42,10 @@ public class Conversation([PersistentState("state", "messages")] IPersistentStat
                     Answer with a plain string ONLY, without any extra words or characters like '.
                     Input: {input}
                     """";
-                var result = await chatClient.CompleteAsync(prompt);
+                var result = await chatClient.GetResponseAsync(prompt);
                 var answer = result.Message.Text!;
                 await SendAnswerEvent(id, userId, answer);
                 break;
-
             default:
                 break;
         }

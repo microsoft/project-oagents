@@ -80,7 +80,7 @@ public class CustomerInfo(
 
                     chatHistory.Add(new Microsoft.Extensions.AI.ChatMessage(ChatRole.User, prompt));
 
-                    var response = await chatClient.CompleteAsync(chatHistory, chatOptions);
+                    var response = await chatClient.GetResponseAsync(chatHistory, chatOptions);
                     var result = response.Message.Contents.Last();
                     AddToHistory($"{result}", ChatUserType.Agent);
 

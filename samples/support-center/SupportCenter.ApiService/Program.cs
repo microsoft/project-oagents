@@ -5,9 +5,6 @@ using System.Text.Json;
 using Orleans.Serialization;
 using static SupportCenter.ApiService.Consts;
 using SupportCenter.ApiService.Data;
-using Azure.Storage.Queues;
-using Orleans.Runtime;
-using SupportCenter.ApiService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,17 +72,6 @@ builder.UseOrleans(siloBuilder =>
     {
         serializerBuilder.AddJsonSerializer(
         isSupported: type => true);
-    });
-
-    siloBuilder.AddAzureQueueStreams(OrleansStreamProvider, (SiloAzureQueueStreamConfigurator configurator) =>
-    {
-        configurator.ConfigureAzureQueue(options =>
-        {
-            options.Configure<IServiceProvider>((queueOptions, sp) =>
-            {
-                queueOptions.QueueServiceClient = sp.GetKeyedService<QueueServiceClient>("streaming");
-            });
-        });
     });
 });
 

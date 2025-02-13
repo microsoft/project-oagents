@@ -2,6 +2,7 @@ using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.AI.DevTeam.Events;
 using Microsoft.Extensions.AI;
+using System.Text.Json;
 
 namespace Microsoft.AI.DevTeam.Agents;
 [ImplicitStreamSubscription(Consts.MainNamespace)]
@@ -18,7 +19,7 @@ public class DeveloperLead([PersistentState("state", "messages")] IPersistentSta
                     var context = item.ToGithubContext();
                     var plan = await CreatePlan(item.Data["input"]);
                     var data = context.ToData();
-                    data["result"] = plan;
+                    data["result"] = JsonSerializer.Serialize(plan);
                     await PublishEvent(Consts.MainNamespace, this.GetPrimaryKeyString(), new Event
                     {
                         Type = nameof(GithubFlowEventType.DevPlanGenerated),
@@ -47,7 +48,7 @@ public class DeveloperLead([PersistentState("state", "messages")] IPersistentSta
                 break;
         }
     }
-    public async Task<string> CreatePlan(string ask)
+    public async Task<DevLeadPlanResponse> CreatePlan(string ask)
     {
         try
         {
@@ -90,21 +91,20 @@ public class DeveloperLead([PersistentState("state", "messages")] IPersistentSta
                             Input: {{input}}
                             {{guidelines}}
                             """;
-
-            var result = await chatClient.CompleteAsync<DevLeadPlanResponse>(prompt);
-            return result.Message.Text!;
+            var result = await chatClient.GetResponseAsync<DevLeadPlanResponse>(prompt);
+            return result.Result;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating development plan");
-            return string.Empty;
+            return null;
         }
     }
 }
 
 public interface ILeadDevelopers
 {
-    public Task<string> CreatePlan(string ask);
+    public Task<DevLeadPlanResponse> CreatePlan(string ask);
 }
 
 [GenerateSerializer]

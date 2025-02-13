@@ -124,7 +124,7 @@ public class Dispatcher(
 
                     Return the intent as a string.
                     """;
-        var result = await chatClient.CompleteAsync(prompt);
+        var result = await chatClient.GetResponseAsync(prompt);
         return result.Message.Text!;
     }
 

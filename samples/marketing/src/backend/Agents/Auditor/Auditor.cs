@@ -31,7 +31,7 @@ public class Auditor([PersistentState("state", "messages")] IPersistentState<Age
                                     Input: {input}
                                     ---
                                     """;
-                    var result = await chatClient.CompleteAsync(prompt);
+                    var result = await chatClient.GetResponseAsync(prompt);
                     var auditorAnswer = result.Message.Text!;
                     if (auditorAnswer.Contains("NOTFORME"))
                     {

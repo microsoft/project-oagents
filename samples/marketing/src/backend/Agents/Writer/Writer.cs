@@ -42,7 +42,7 @@ public class Writer([PersistentState("state", "messages")] IPersistentState<Agen
                                 If the input talks about twitter or images, dismiss it and return <NOTFORME>
                                 Input: {input}
                                 """;
-                    var result = await chatClient.CompleteAsync(prompt);
+                    var result = await chatClient.GetResponseAsync(prompt);
                     var newArticle = result.Message.Text!;
 
                     if (newArticle.Contains("NOTFORME"))
@@ -68,7 +68,7 @@ public class Writer([PersistentState("state", "messages")] IPersistentState<Agen
                                     ---
                                     Return only the new campaign text but adjusted to the auditor request
                                     """;
-                    var result = await chatClient.CompleteAsync(prompt);
+                    var result = await chatClient.GetResponseAsync(prompt);
                     var newArticle = result.Message.Text!;
 
                     if (newArticle.Contains("NOTFORME"))

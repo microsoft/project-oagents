@@ -66,7 +66,7 @@ public class Dev([PersistentState("state", "messages")] IPersistentState<AgentSt
                             Input: {input}
                             {guidelines}
                             """;
-            var result = await chatClient.CompleteAsync(prompt);
+            var result = await chatClient.GetResponseAsync(prompt);
             return result.Message.Text!;
         }
         catch (Exception ex)

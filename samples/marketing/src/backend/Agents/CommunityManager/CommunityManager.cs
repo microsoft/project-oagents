@@ -63,7 +63,7 @@ public class CommunityManager([PersistentState("state", "messages")] IPersistent
                                     Input: {input}
                                     ---
                      """;
-                    var result = await chatClient.CompleteAsync(prompt);
+                    var result = await chatClient.GetResponseAsync(prompt);
                     var socialMediaPost = result.Message.Text!;
                     if (socialMediaPost.Contains("NOTFORME"))
                     {

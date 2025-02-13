@@ -63,7 +63,7 @@ public class ProductManager([PersistentState("state", "messages")] IPersistentSt
                             Input: {{input}}
                             {{guidelines}}
                             """";
-            var result = await chatClient.CompleteAsync(prompt);
+            var result = await chatClient.GetResponseAsync(prompt);
             return result.Message.Text!;
         }
         catch (Exception ex)

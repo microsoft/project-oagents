@@ -12,10 +12,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapr.Client" Version="1.15.0-rc03" />
-    <PackageReference Include="Dapr.Actors" Version="1.15.0-rc03" />
+    <PackageReference Include="Dapr.Client" Version="1.15.0-rc04" />
+    <PackageReference Include="Dapr.Actors" Version="1.15.0-rc04" />
     <PackageReference Include="Microsoft.Extensions.VectorData.Abstractions" Version="9.0.0-preview.1.25078.1" />
-    <PackageReference Include="Microsoft.Extensions.AI" Version="9.3.0-preview.1.25107.9" />
+    <PackageReference Include="Microsoft.Extensions.AI" Version="9.3.0-preview.1.25111.14" />
   </ItemGroup>
 
   <ItemGroup>

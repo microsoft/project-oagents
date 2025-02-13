@@ -45,7 +45,7 @@ public abstract class AiAgent<T>(ActorHost host, DaprClient client, IChatClient 
                 MaxOutputTokens = 4096
             };
         }
-        var response = await chatClient.CompleteAsync(prompt, chatOptions);
+        var response = await chatClient.GetResponseAsync(prompt, chatOptions);
         return response.Message.Text!;
     }
 

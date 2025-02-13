@@ -54,7 +54,7 @@ public class QnA([PersistentState("state", "messages")] IPersistentState<AgentSt
                                 {documents}
                                 """;
                 
-                var result = await chatClient.CompleteAsync(prompt);
+                var result = await chatClient.GetResponseAsync(prompt);
                 var answer = result.Message.Text!;
 
                 await SendAnswerEvent(id, userId, answer);
