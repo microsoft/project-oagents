@@ -1,61 +1,70 @@
-﻿using System.Reflection;
-using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel.Connectors.Qdrant;
-using Microsoft.SemanticKernel.Memory;
+﻿using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.VectorData;
+using Microsoft.SemanticKernel.Connectors.Redis;
+using SupportCenter.Shared;
+using OpenAI;
+using StackExchange.Redis;
+using System.Reflection;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
-class Program
+string[] files = ["Benefit_Options.pdf", "employee_handbook.pdf", "Northwind_Health_Plus_Benefits_Details.pdf", "Northwind_Standard_Benefits_Details.pdf", "role_library.pdf"];
+
+HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+
+builder.AddAzureOpenAIClient("openAiConnection");
+builder.AddRedisClient("redis");
+builder.Services.AddSingleton<IVectorStore>(sp => {
+    var db = sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase();
+    return new RedisVectorStore(db, new() { StorageType = RedisStorageType.HashSet });
+});
+
+
+builder.Services.AddEmbeddingGenerator(s => {
+    return s.GetRequiredService<OpenAIClient>().AsEmbeddingGenerator("text-embedding-3-large");
+});
+
+using IHost host = builder.Build();
+
+
+
+foreach (var file in files)
 {
-    static string[] files = { "Benefit_Options.pdf", "employee_handbook.pdf", "Northwind_Health_Plus_Benefits_Details.pdf", "Northwind_Standard_Benefits_Details.pdf", "role_library.pdf" };    
-    static async Task Main(string[] args)
+    await ImportDocumentAsync(host.Services, file);
+}
+
+await host.RunAsync();
+
+
+
+async Task ImportDocumentAsync(IServiceProvider hostProvider,  string filename)
+{
+    using IServiceScope serviceScope = hostProvider.CreateScope();
+    var provider = serviceScope.ServiceProvider;
+    var vectorStore = provider.GetRequiredService<IVectorStore>();
+    var embeddingGenerator = provider.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
+
+    var currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+    var filePath = Path.Combine(currentDirectory, filename);
+    using var pdfDocument = PdfDocument.Open(File.OpenRead(filePath));
+    var pages = pdfDocument.GetPages();
+    var collection = vectorStore.GetCollection<string, Document>("qna");
+    await collection.CreateCollectionIfNotExistsAsync();
+    foreach (var page in pages)
     {
-       var kernelSettings = KernelSettings.LoadSettings();
-
-        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+        try
         {
-            builder
-                .SetMinimumLevel(kernelSettings.LogLevel ?? LogLevel.Debug)
-                .AddConsole()
-                .AddDebug();
-        });
-       
-        var memoryBuilder = new MemoryBuilder();
-        var memory = memoryBuilder.WithLoggerFactory(loggerFactory)
-                    .WithQdrantMemoryStore(kernelSettings.QdrantEndpoint, 1536)
-                    //.WithAzureOpenAITextEmbeddingGeneration(kernelSettings.EmbeddingDeploymentOrModelId,kernelSettings.Endpoint, kernelSettings.ApiKey)
-                    .Build();
-
-        
-        foreach (var file in files)
+            var text = ContentOrderTextExtractor.GetText(page);
+            var descr = new string(text.Take(100).ToArray());
+            var vector = await embeddingGenerator.GenerateEmbeddingVectorAsync(text);
+            await collection.UpsertAsync(new Document { Key = $"{Guid.NewGuid()}", Description = $"Document: {descr}", Text = text, Vector = vector });
+        }
+        catch (Exception ex)
         {
-            await ImportDocumentAsync(memory, file);
-            Thread.Sleep(60000); //throttled to 1 request per minute
+            Console.WriteLine($"Error processing page: {ex.Message}");
         }
     }
-
-    public static async Task ImportDocumentAsync(ISemanticTextMemory memory, string filename)
-        {            
-            var currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var filePath = Path.Combine(currentDirectory, filename);
-            using var pdfDocument = PdfDocument.Open(File.OpenRead(filePath));
-            var pages = pdfDocument.GetPages();
-            foreach (var page in pages)
-            {
-                try
-                {
-                    var text = ContentOrderTextExtractor.GetText(page);
-                    var descr = text.Take(100);
-                    await memory.SaveInformationAsync(
-                        collection: "vfcon106047",
-                        text: text,
-                        id: $"{Guid.NewGuid()}",
-                        description: $"Document: {descr}");
-                }
-                catch(Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-            }
-        }
 }
+

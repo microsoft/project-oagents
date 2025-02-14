@@ -27,6 +27,7 @@
     <PackageReference Include="Microsoft.Orleans.Streaming.AzureStorage" Version="9.1.1" />
     <PackageReference Include="Microsoft.Orleans.Persistence.AzureStorage" Version="9.1.1" />
     <PackageReference Include="Microsoft.Orleans.Clustering.AzureStorage" Version="9.1.1" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.Redis" Version="1.37.0-preview" />
     <PackageReference Include="OrleansDashboard" Version="8.2.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0-beta1" />
     <PackageReference Include="Microsoft.Extensions.Azure" Version="1.10.0" />
@@ -34,6 +35,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Oagents.Orleans\Oagents.Orleans.csproj" />
+    <ProjectReference Include="..\SupportCenter.Shared\SupportCenter.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

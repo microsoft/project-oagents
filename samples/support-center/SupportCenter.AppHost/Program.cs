@@ -10,9 +10,10 @@ var signalr = builder.ExecutionContext.IsPublishMode
     : builder.AddConnectionString("signalr");
 
 var redis = builder.AddRedis("redis")
-                    .WithRedisCommander()
-                    .WithDataVolume(isReadOnly: false)
-                    .WithPersistence(interval: TimeSpan.FromMinutes(1), keysChangedThreshold: 10);
+                    .WithImage("redis/redis-stack-server")
+                    .WithRedisCommander();
+                    //.WithDataVolume(isReadOnly: false);
+                    //.WithPersistence(interval: TimeSpan.FromMinutes(1), keysChangedThreshold: 10);
 
 var openai = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureOpenAI("openAiConnection").AddDeployment(new AzureOpenAIDeployment("gpt-4o-mini", "gpt-4o-mini", "2024-07-18"))
@@ -87,7 +88,10 @@ builder.AddNpmApp("frontend", "../SupportCenter.Frontend", "dev")
     .PublishAsDockerFile()
     .WaitFor(apiService);
 
-//var memorySeeder = builder.AddProject<Projects.SupportCenter_Seed_Memory>("memoryseeder")
-//                        .WithReference(redis);
+var memorySeeder = builder.AddProject<Projects.SupportCenter_Seed_Memory>("memoryseeder")
+                         .WithReference(redis)
+                         .WithReference(openai)
+                         .WaitFor(redis)
+                         .WaitFor(openai);
 
 builder.Build().Run();

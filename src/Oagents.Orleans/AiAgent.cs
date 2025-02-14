@@ -1,6 +1,4 @@
 using Microsoft.AI.Agents.Abstractions;
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.VectorData;
 using Orleans.Runtime;
 
 namespace Microsoft.AI.Agents.Orleans;

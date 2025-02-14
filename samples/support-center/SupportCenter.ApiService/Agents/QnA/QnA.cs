@@ -1,15 +1,17 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.Extensions.AI;
+using SupportCenter.ApiService.Data;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;
 using SupportCenter.ApiService.SignalRHub;
+using System.Text;
 using static SupportCenter.ApiService.Consts;
 
 namespace SupportCenter.ApiService.Agents.QnA;
 [ImplicitStreamSubscription(OrleansNamespace)]
 public class QnA([PersistentState("state", "messages")] IPersistentState<AgentState<QnAState>> state,
-        ILogger<QnA> logger,
+        ILogger<QnA> logger, IVectorRepository vectorRepository,
         [FromKeyedServices(Gpt4oMini)] IChatClient chatClient) : AiAgent<QnAState>(state)
 {
     protected override string Namespace => OrleansNamespace;
@@ -46,12 +48,17 @@ public class QnA([PersistentState("state", "messages")] IPersistentState<AgentSt
                 await SendAnswerEvent(id, userId, $"Please wait while I look in the documents for answers to your question...");
 
                 var input = AppendChatHistory(message);
-                var instruction = "Consider the following knowledge:!vfcon106047!";
-                var documents = ""; // TODO: Add vector store
+                var kb = new StringBuilder();
+                await foreach (var doc in await vectorRepository.GetDocuments(input, "qna", 5))
+                {
+                    kb.AppendLine($"{doc.Record.Text}");
+                }
+
                 var prompt = $"""
                                 You are a helpful customer support/service agent at Contoso Electronics. Be polite and professional and answer briefly based on your knowledge ONLY.
                                 Input: {input}
-                                {documents}
+                                Consider the following knowledge and facts:
+                                {kb}
                                 """;
                 
                 var result = await chatClient.GetResponseAsync(prompt);
@@ -67,7 +74,7 @@ public class QnA([PersistentState("state", "messages")] IPersistentState<AgentSt
 
     private async Task SendAnswerEvent(string id, string userId, string message)
     {
-        await PublishEvent(Consts.OrleansNamespace, id, new Event
+        await PublishEvent(OrleansNamespace, id, new Event
         {
             Type = nameof(EventType.QnARetrieved),
             Data = new Dictionary<string, string> {

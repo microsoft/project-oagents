@@ -5,6 +5,9 @@ using System.Text.Json;
 using Orleans.Serialization;
 using static SupportCenter.ApiService.Consts;
 using SupportCenter.ApiService.Data;
+using Microsoft.Extensions.VectorData;
+using StackExchange.Redis;
+using Microsoft.SemanticKernel.Connectors.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +35,18 @@ builder.Services.AddKeyedChatClient(Gpt4oMini, s => {
     return new ChatClientBuilder(innerClient)
                .UseFunctionInvocation().Build();
     
+});
+
+builder.Services.AddSingleton<IVectorStore>(sp =>
+{
+    var db = sp.GetRequiredKeyedService<IConnectionMultiplexer>("redis").GetDatabase();
+    return new RedisVectorStore(db, new() { StorageType = RedisStorageType.HashSet });
+});
+
+builder.Services.AddSingleton<IVectorRepository, VectorRepository>();
+
+builder.Services.AddEmbeddingGenerator(s => {
+    return s.GetRequiredService<OpenAIClient>().AsEmbeddingGenerator("text-embedding-3-large");
 });
 // Allow any CORS origin if in DEV
 const string AllowDebugOriginPolicy = "AllowDebugOrigin";

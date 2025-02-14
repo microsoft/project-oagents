@@ -36,6 +36,8 @@ public class Conversation([PersistentState("state", "messages")] IPersistentStat
                 string id = $"{userId}/{connection.ConversationId}";
                 logger.LogInformation("[{Agent}]:[{EventType}]:[{EventData}]", nameof(Conversation), nameof(EventType.ConversationRequested), message);
 
+
+
                 var prompt = $""""
                     """
                     You are a helpful customer support/service agent at Contoso Electronics. Be polite, friendly and professional and answer briefly.
