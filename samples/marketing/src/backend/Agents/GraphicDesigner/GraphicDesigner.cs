@@ -2,27 +2,16 @@ using Marketing.Events;
 using Marketing.Options;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
-using Microsoft.SemanticKernel.TextToImage;
-using Orleans.Runtime;
+using Microsoft.Extensions.AI;
+using OpenAI;
+using OpenAI.Images;
 
 namespace Marketing.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-public class GraphicDesigner : AiAgent<GraphicDesignerState>
+public class GraphicDesigner([PersistentState("state", "messages")] IPersistentState<AgentState<GraphicDesignerState>> state, OpenAIClient openAiClient, ILogger<GraphicDesigner> logger, IConfiguration configuration) : AiAgent<GraphicDesignerState>(state)
 {
     protected override string Namespace => Consts.OrleansNamespace;
-
-    private readonly ILogger<GraphicDesigner> _logger;
-    private readonly IConfiguration _configuration;
-
-    public GraphicDesigner([PersistentState("state", "messages")] IPersistentState<AgentState<GraphicDesignerState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger, IConfiguration configuration)
-    : base(state, memory, kernel)
-    {
-        _logger = logger;
-        _configuration = configuration;
-    }
 
     public async override Task HandleEvent(Event item)
     {
@@ -49,10 +38,13 @@ public class GraphicDesigner : AiAgent<GraphicDesignerState>
                     return;
                 }
 
-                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}.");
+                logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.ArticleCreated)}.");
                 var article = item.Data["article"];
-                var dallEService = _kernel.GetRequiredService<ITextToImageService>();
-                var imageUri = await dallEService.GenerateImageAsync(article, 1024, 1024);
+
+                var imageClient = openAiClient.GetImageClient("dall-e");
+                var result = imageClient.GenerateImageAsync(article, new ImageGenerationOptions { Size = OpenAI.Images.GeneratedImageSize.W1024xH1024});
+
+                var imageUri = ""; // TODO: Reimplement using OpenAI directly await dallEService.GenerateImageAsync(article, 1024, 1024);
 
                 _state.State.Data.imageUrl = imageUri;
 

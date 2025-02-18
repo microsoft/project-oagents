@@ -1,45 +1,45 @@
-using Marketing.Controller;
 using Marketing.Events;
 using Marketing.Options;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
-using Orleans.Runtime;
+using Microsoft.Extensions.AI;
 
 namespace Marketing.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-public class Auditor : AiAgent<AuditorState>
+public class Auditor([PersistentState("state", "messages")] IPersistentState<AgentState<AuditorState>> state, IChatClient chatClient, ILogger<Auditor> logger) : AiAgent<AuditorState>(state)
 {
     protected override string Namespace => Consts.OrleansNamespace;
-
-    private readonly ILogger<Auditor> _logger;
-
-    public Auditor([PersistentState("state", "messages")] IPersistentState<AgentState<AuditorState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<Auditor> logger)
-    : base(state, memory, kernel)
-    {
-        _logger = logger;
-    }
 
     public async override Task HandleEvent(Event item)
     {
         switch (item.Type)
         {
             case nameof(EventTypes.AuditText):
-            {
-                string text = item.Data["text"];
-                _logger.LogInformation($"[{nameof(Auditor)}] Event {nameof(EventTypes.AuditText)}. Text: {text}");
-
-                var context = new KernelArguments { ["input"] = AppendChatHistory(text) };
-                string auditorAnswer = await CallFunction(AuditorPrompts.AuditText, context);
-                if (auditorAnswer.Contains("NOTFORME"))
                 {
-                    return;
+                    string text = item.Data["text"];
+                    logger.LogInformation($"[{nameof(Auditor)}] Event {nameof(EventTypes.AuditText)}. Text: {text}");
+
+                    var input = AppendChatHistory(text);
+                    var prompt = $"""
+                                    You are an Auditor in a Marketing team
+                                    Audit the text bello and make sure we do not give discounts larger than 10%
+                                    If the text talks about a larger than 10% discount, reply with a message to the user saying that the discount is too large, and by company policy we are not allowed.
+                                    If the message says who wrote it, add that information in the response as well
+                                    In any other case, reply with NOTFORME
+                                    ---
+                                    Input: {input}
+                                    ---
+                                    """;
+                    var result = await chatClient.GetResponseAsync(prompt);
+                    var auditorAnswer = result.Message.Text!;
+                    if (auditorAnswer.Contains("NOTFORME"))
+                    {
+                        return;
+                    }
+                    await SendAuditorAlertEvent(auditorAnswer, item.Data["UserId"]);
+                    break;
                 }
-                await SendAuditorAlertEvent(auditorAnswer, item.Data["UserId"]);
-                break;
-            }
             default:
                 break;
         }

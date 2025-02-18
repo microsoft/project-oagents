@@ -2,30 +2,17 @@ using Marketing.Events;
 using Marketing.Options;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
-using Orleans.Runtime;
+using Microsoft.Extensions.AI;
 
 namespace Marketing.Agents;
 
 [ImplicitStreamSubscription(Consts.OrleansNamespace)]
-public class Writer : AiAgent<WriterState>, IWriter
+public class Writer([PersistentState("state", "messages")] IPersistentState<AgentState<WriterState>> state, IChatClient chatClient, ILogger<GraphicDesigner> logger) : AiAgent<WriterState>(state), IWriter
 {
     protected override string Namespace => Consts.OrleansNamespace;
 
-    private readonly ILogger<GraphicDesigner> _logger;
-
-    public Writer([PersistentState("state", "messages")] IPersistentState<AgentState<WriterState>> state, Kernel kernel, ISemanticTextMemory memory, ILogger<GraphicDesigner> logger)
-    : base(state, memory, kernel)
-    {
-        _logger = logger;
-    }
-
     public async override Task HandleEvent(Event item)
     {
-        KernelArguments context;
-        string newArticle;
-
         switch (item.Type)
         {
             case nameof(EventTypes.UserConnected):
@@ -41,33 +28,56 @@ public class Writer : AiAgent<WriterState>, IWriter
                 break;
 
             case nameof(EventTypes.UserChatInput):
-                var userMessage = item.Data["userMessage"];
-                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.UserChatInput)}. UserMessage: {userMessage}");
-
-                context = new KernelArguments { ["input"] = AppendChatHistory(userMessage) };
-                newArticle = await CallFunction(WriterPrompts.Write, context);
-
-                if (newArticle.Contains("NOTFORME"))
                 {
-                    return;
-                }
-                await SendArticleCreatedEvent(newArticle, item.Data["UserId"]);
-                break;
+                    var userMessage = item.Data["userMessage"];
+                    logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.UserChatInput)}. UserMessage: {userMessage}");
 
+                    var input = AppendChatHistory(userMessage);
+                    var prompt = $"""
+                                This is a multi agent app. You are a Marketing Campaign writer Agent.
+                                If the request is not for you, answer with <NOTFORME>.
+                                If the request is about writing or modifying an existing campaing, then you should write a campain based on the user request.
+                                Write up to three paragraphs to promote the product the user is asking for.
+                                Bellow are a series of inputs from the user that you can use.
+                                If the input talks about twitter or images, dismiss it and return <NOTFORME>
+                                Input: {input}
+                                """;
+                    var result = await chatClient.GetResponseAsync(prompt);
+                    var newArticle = result.Message.Text!;
+
+                    if (newArticle.Contains("NOTFORME"))
+                    {
+                        return;
+                    }
+                    await SendArticleCreatedEvent(newArticle, item.Data["UserId"]);
+                    break;
+                }
             case nameof(EventTypes.AuditorAlert):
-                var auditorAlertMessage = item.Data["auditorAlertMessage"];
-                _logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.AuditorAlert)}. auditorAlertMessage: {auditorAlertMessage}");
-
-                context = new KernelArguments { ["input"] = AppendChatHistory(auditorAlertMessage) };
-                newArticle = await CallFunction(WriterPrompts.Adjust, context);
-
-                if (newArticle.Contains("NOTFORME"))
                 {
-                    return;
-                }
-                await SendArticleCreatedEvent(newArticle, item.Data["UserId"]);
-                break;
+                    var auditorAlertMessage = item.Data["auditorAlertMessage"];
+                    logger.LogInformation($"[{nameof(GraphicDesigner)}] Event {nameof(EventTypes.AuditorAlert)}. auditorAlertMessage: {auditorAlertMessage}");
 
+                    var input = AppendChatHistory(auditorAlertMessage);
+                    var prompt = $"""
+                                    This is a multi agent app. You are a Marketing Campaign writer Agent.
+                                    If the request is not for you, answer with <NOTFORME>.
+                                    If the request is about writing or modifying an existing campaing, then you should write a campain based on the user request.
+                                    The campaign is not compliant with the company policy, and you need to adjust it. This is the message from the automatic auditor agent regarding what is wrong with the original campaing
+                                    ---
+                                    Input: {input}
+                                    ---
+                                    Return only the new campaign text but adjusted to the auditor request
+                                    """;
+                    var result = await chatClient.GetResponseAsync(prompt);
+                    var newArticle = result.Message.Text!;
+
+                    if (newArticle.Contains("NOTFORME"))
+                    {
+                        return;
+                    }
+                    await SendArticleCreatedEvent(newArticle, item.Data["UserId"]);
+                    break;
+                }
             default:
                 break;
         }

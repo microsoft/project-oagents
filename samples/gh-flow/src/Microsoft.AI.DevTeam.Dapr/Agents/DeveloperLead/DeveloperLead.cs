@@ -1,19 +1,17 @@
-using Dapr.Actors;
 using Dapr.Actors.Runtime;
 using Dapr.Client;
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Dapr;
 using Microsoft.AI.DevTeam.Dapr.Events;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Memory;
+using Microsoft.Extensions.AI;
 
 namespace Microsoft.AI.DevTeam.Dapr;
 public class DeveloperLead : AiAgent<DeveloperLeadState>, IDaprAgent
 {
     private readonly ILogger<DeveloperLead> _logger;
 
-    public DeveloperLead(ActorHost host, DaprClient client, Kernel kernel, ISemanticTextMemory memory, ILogger<DeveloperLead> logger)
-     : base(host, client, memory, kernel)
+    public DeveloperLead(ActorHost host, DaprClient client,IChatClient chatClient, ILogger<DeveloperLead> logger)
+     : base(host, client, chatClient)
     {
         _logger = logger;
     }
@@ -58,12 +56,8 @@ public class DeveloperLead : AiAgent<DeveloperLeadState>, IDaprAgent
     {
         try
         {
-            // TODO: Ask the architect for the existing high level architecture
-            // as well as the file structure
-            var context = new KernelArguments { ["input"] = AppendChatHistory(ask) };
-            var instruction = "Consider the following architectural guidelines:!waf!";
-            var enhancedContext = await AddKnowledge(instruction, "waf", context);
-            return await CallFunction(DevLeadSkills.Plan, enhancedContext);
+
+            return await CallFunction(DevLeadSkills.Plan);
         }
         catch (Exception ex)
         {
