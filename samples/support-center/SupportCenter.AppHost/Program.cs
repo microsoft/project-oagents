@@ -1,5 +1,5 @@
-using Azure.Provisioning.AppContainers;
 using Azure.Provisioning;
+using Azure.Provisioning.AppContainers;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -12,13 +12,12 @@ var signalr = builder.ExecutionContext.IsPublishMode
 var redis = builder.AddRedis("redis")
                     .WithImage("redis/redis-stack-server")
                     .WithRedisCommander();
-                    //.WithDataVolume(isReadOnly: false);
-                    //.WithPersistence(interval: TimeSpan.FromMinutes(1), keysChangedThreshold: 10);
+//.WithDataVolume(isReadOnly: false);
+//.WithPersistence(interval: TimeSpan.FromMinutes(1), keysChangedThreshold: 10);
 
 var openai = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureOpenAI("openAiConnection").AddDeployment(new AzureOpenAIDeployment("gpt-4o-mini", "gpt-4o-mini", "2024-07-18"))
     : builder.AddConnectionString("openAiConnection");
-
 
 var apiService = builder.AddProject<Projects.SupportCenter_ApiService>("apiservice")
                         .WithReference(openai)
@@ -52,7 +51,7 @@ if (builder.ExecutionContext.IsPublishMode)
                         .WaitFor(streamingQueue)
                         .WaitFor(insights)
                         .WithEnvironment("HTTP_PORTS", "8081")
-                        .WithReplicas(3 )
+                        .WithReplicas(3)
                         .PublishAsAzureContainerApp((infra, capp) =>
                         {
                             capp.Configuration.Ingress.CorsPolicy = new ContainerAppCorsPolicy
@@ -61,11 +60,11 @@ if (builder.ExecutionContext.IsPublishMode)
                                 AllowedOrigins = new BicepList<string> { "https://*.azurecontainerapps.io" },
                                 AllowedHeaders = new BicepList<string> { "*" },
                                 AllowedMethods = new BicepList<string> { "*" },
-                                
+
                             };
-                            capp.Configuration.Ingress.TargetPort = 8081; 
+                            capp.Configuration.Ingress.TargetPort = 8081;
                             capp.Configuration.Ingress.StickySessionsAffinity = StickySessionAffinity.Sticky;
-                        }); 
+                        });
 }
 else
 {
@@ -76,8 +75,6 @@ else
                      .WithMemoryGrainStorage("messages");
     apiService.WithReference(orleans);
 }
-
-
 
 builder.AddNpmApp("frontend", "../SupportCenter.Frontend", "dev")
     .WithReference(apiService)

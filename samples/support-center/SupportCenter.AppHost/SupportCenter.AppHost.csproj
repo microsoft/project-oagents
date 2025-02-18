@@ -12,6 +12,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="appsettings.local.template.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SupportCenter.ApiService\SupportCenter.ApiService.csproj" />
     <ProjectReference Include="..\SupportCenter.Seed.Memory\SupportCenter.Seed.Memory.csproj" />
   </ItemGroup>

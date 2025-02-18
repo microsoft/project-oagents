@@ -7,7 +7,7 @@ namespace SupportCenter.ApiService.Data
     {
         // Method that gets a customer by ID from redis database
         public async Task<Customer?> GetCustomerByIdAsync(string customerId)
-        {   
+        {
             var db = redisConnection.GetDatabase();
             var key = $"customers:{customerId}";
             var customer = await db.StringGetAsync(key);
@@ -15,7 +15,7 @@ namespace SupportCenter.ApiService.Data
             {
                 return null;
             }
-            return JsonSerializer.Deserialize<Customer>(customer);
+            return JsonSerializer.Deserialize<Customer>(customer.ToString());
         }
 
         public async Task<IEnumerable<Customer>> GetCustomersAsync()
@@ -30,14 +30,13 @@ namespace SupportCenter.ApiService.Data
                 var data = await db.StringGetAsync(key);
                 if (!data.IsNullOrEmpty)
                 {
-                    var customer = JsonSerializer.Deserialize<Customer>(data);
+                    var customer = JsonSerializer.Deserialize<Customer>(data.ToString());
                     if (customer != null)
                     {
                         customers.Add(customer);
                     }
                 }
             }
-
             return customers;
         }
 
