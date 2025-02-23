@@ -106,7 +106,16 @@ interface ChatMessageProps {
   isLoading?: boolean;
   isTakingTooLong?: boolean;
   waitingMessage?: string;
+  isAudioResponse?: boolean;
 }
+
+// Add audio visualization component
+const AudioIndicator = () => (
+  <div className="audio-indicator">
+      <div className="audio-wave"></div>
+      <span>Speaking...</span>
+  </div>
+);
 
 export function ChatMessage({
   message,
@@ -120,6 +129,8 @@ export function ChatMessage({
   const positioningRef = useRef<PositioningImperativeRef>(null);
   const styles = useStyles();
   const contextHandler = useContext(ChatFeatureContextHandler);
+  const audioService = useMemo(() => new AudioService(), []);
+  const audioContext = useMemo(() => new AudioContext(), []);
 
   const parsedMessage: Message | undefined = useMemo(
     () => parseMessage(message),
@@ -175,6 +186,18 @@ export function ChatMessage({
       // Add more cases as needed
       default:
         return "A"; // Default to Agent
+    }
+  };
+
+  const playAudioResponse = async (text: string) => {
+    try {
+      const audioBuffer = await audioService.synthesizeSpeech(text);
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContext.destination);
+      source.start(0);
+    } catch (error) {
+      console.error("Error playing audio response:", error);
     }
   };
 

@@ -9,7 +9,7 @@ using static SupportCenter.ApiService.Consts;
 namespace SupportCenter.ApiService.Agents.SignalR;
 
 [ImplicitStreamSubscription(OrleansNamespace)]
-public class SignalR : Agent
+public class SignalR(ILogger<SignalR> logger, ISignalRService signalRClient) : Agent
 {
     protected override string Namespace => OrleansNamespace;
     protected override string StreamProvider => OrleansStreamProvider;
@@ -29,15 +29,6 @@ public class SignalR : Agent
         [nameof(EventType.Unknown)] = AgentType.Unknown
     };
 
-    private readonly ILogger<SignalR> _logger;
-    private readonly ISignalRService _signalRClient;
-
-    public SignalR(ILogger<SignalR> logger, ISignalRService signalRClient)
-    {
-        _logger = logger;
-        _signalRClient = signalRClient;
-    }
-
     public async override Task HandleEvent(Event item)
     {
         string? userId = item.Data.GetValueOrDefault<string>("userId");
@@ -53,12 +44,12 @@ public class SignalR : Agent
 
         if (agentType == AgentType.Unknown)
         {
-            _logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. This event is not supported.", nameof(SignalR), item.Type, item.Data);
+            logger.LogWarning("[{Agent}]:[{EventType}]:[{EventData}]. This event is not supported.", nameof(SignalR), item.Type, item.Data);
             message = "Sorry, I don't know how to handle this request. Try to rephrase it.";
         }
 
         var registry = GrainFactory.GetGrain<IStoreConnections>(userId);
         var connection =  await registry.GetConnection();
-        await _signalRClient.SendMessageToClient(messageId: Guid.NewGuid().ToString(), userId, conversationId: connection.ConversationId, connectionId: connection.Id, message, agentType);
+        await signalRClient.SendMessageToClientAsync(messageId: Guid.NewGuid().ToString(), userId, conversationId: connection.ConversationId, connectionId: connection.Id, message, agentType);
     }
 }

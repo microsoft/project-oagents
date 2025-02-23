@@ -8,6 +8,7 @@ using SupportCenter.ApiService.Data;
 using Microsoft.Extensions.VectorData;
 using StackExchange.Redis;
 using Microsoft.SemanticKernel.Connectors.Redis;
+using OpenAI.Audio;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,7 +35,10 @@ builder.Services.AddKeyedChatClient(Gpt4oMini, s => {
     var innerClient = s.GetRequiredService<OpenAIClient>().AsChatClient(Gpt4oMini);
     return new ChatClientBuilder(innerClient)
                .UseFunctionInvocation().Build();
-    
+});
+
+builder.Services.AddKeyedScoped<AudioClient>(Whisper, (s, o) => {
+    return s.GetRequiredService<OpenAIClient>().GetAudioClient(Whisper);
 });
 
 builder.Services.AddSingleton<IVectorStore>(sp =>

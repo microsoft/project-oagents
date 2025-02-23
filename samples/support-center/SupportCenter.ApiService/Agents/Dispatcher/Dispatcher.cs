@@ -1,7 +1,6 @@
 using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AI.Agents.Orleans;
 using Microsoft.Extensions.AI;
-using Microsoft.Win32;
 using SupportCenter.ApiService.Attributes;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.Extensions;

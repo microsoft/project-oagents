@@ -6,8 +6,9 @@ using Orleans.Runtime;
 using Orleans;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService;
+using SupportCenter.ApiService.RealTimeAudio;
 
-public class SupportCenterHub(IClusterClient clusterClient) : Hub<ISupportCenterHub>
+public class SupportCenterHub(IClusterClient clusterClient, IRealTimeAudioService audioService, ISignalRService signalRService) : Hub<ISupportCenterHub>
 {
     public override async Task OnConnectedAsync()
     {
@@ -98,5 +99,50 @@ public class SupportCenterHub(IClusterClient clusterClient) : Hub<ISupportCenter
             Type = nameof(EventType.UserChatInput),
             Data = data
         });
+    }
+
+    /* Audio */
+    public async Task StartVoiceInteraction(string userId, string conversationId)
+    {
+        string connectionId = Context.ConnectionId;
+
+        // Use Orleans to store the active audio session.
+        var voiceSessionStore = clusterClient.GetGrain<IStoreConnections>(userId);
+        await voiceSessionStore.AddConnection(new Connection
+        {
+            Id = connectionId,
+            ConversationId = conversationId
+        });
+
+        await signalRService.SendAsync(connectionId, "VoiceInteractionReady");
+    }
+
+    public async Task ProcessVoice(string userId, string conversationId, byte[] audioData)
+    {
+        // 1. Transcribe audio to text
+        var transcribedText = await audioService.TranscribeAudioAsync(audioData);
+
+        // 2. Create a chat message from transcribed text
+        var message = new ChatMessage
+        {
+            Id = Guid.NewGuid().ToString(),
+            ConversationId = conversationId,
+            UserId = userId,
+            Text = transcribedText,
+            Sender = "User"
+        };
+
+        // 3. Process through regular chat flow
+        await ProcessMessage(message);
+
+        // 4. Send transcription back to client
+        //await Clients.Caller.SendAsync("ReceiveTranscription", message);
+    }
+
+    public async Task EndVoiceInteraction(string userId)
+    {
+        // Remove the audio session from Orleans
+        var audioSessionStore = clusterClient.GetGrain<IStoreConnections>(userId);
+        await audioSessionStore.RemoveConnection();
     }
 }

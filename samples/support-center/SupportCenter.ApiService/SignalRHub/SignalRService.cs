@@ -4,7 +4,7 @@ namespace SupportCenter.ApiService.SignalRHub;
 
 public class SignalRService(IHubContext<SupportCenterHub> hubContext) : ISignalRService
 {
-    public async Task SendMessageToClient(string messageId, string userId, string conversationId, string connectionId, string message, AgentType senderType)
+    public async Task SendMessageToClientAsync(string messageId, string userId, string conversationId, string connectionId, string message, AgentType senderType)
     {
         var chatMessage = new ChatMessage()
         {
@@ -15,5 +15,10 @@ public class SignalRService(IHubContext<SupportCenterHub> hubContext) : ISignalR
             Sender = senderType.ToString()
         };
         await hubContext.Clients.Client(connectionId).SendAsync("ReceiveMessage", chatMessage);
+    }
+
+    public async Task SendAsync(string connectionId, string methodName, object?[]? args = null)
+    {
+        await hubContext.Clients.Client(connectionId).SendAsync(methodName, args);
     }
 }

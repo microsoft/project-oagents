@@ -14,11 +14,13 @@
   "dependencies": {
     "@azure/msal-browser": "^3.5.0",
     "@azure/msal-react": "^2.0.7",
+    "@azure/openai": "^2.0.0",
     "@fluentui/react-components": "^9.37.4",
     "@microsoft/signalr": "^8.0.0",
     "axios": "^1.6.0",
     "dotenv": "^16.4.3",
     "luxon": "^3.4.3",
+    "microsoft-cognitiveservices-speech-sdk": "^1.42.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^9.0.0",
