@@ -7,8 +7,14 @@ using Orleans;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService;
 using SupportCenter.ApiService.RealTimeAudio;
+using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
 
-public class SupportCenterHub(IClusterClient clusterClient, IRealTimeAudioService audioService, ISignalRService signalRService) : Hub<ISupportCenterHub>
+public class SupportCenterHub(
+    IClusterClient clusterClient, 
+    IRealTimeAudioService audioService, 
+    ISignalRService signalRService) : Hub<ISupportCenterHub>
 {
     public override async Task OnConnectedAsync()
     {
@@ -17,6 +23,16 @@ public class SupportCenterHub(IClusterClient clusterClient, IRealTimeAudioServic
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        // End any active voice sessions for this connection
+        try 
+        {
+            await audioService.EndStreamingSessionAsync(Context.ConnectionId);
+        }
+        catch
+        {
+            // Ignore errors if no active session exists
+        }
+
         var registry = clusterClient.GetGrain<IStoreConnections>(Context.UserIdentifier);
         await registry.RemoveConnection();
         await base.OnDisconnectedAsync(exception);
@@ -48,6 +64,16 @@ public class SupportCenterHub(IClusterClient clusterClient, IRealTimeAudioServic
         ArgumentException.ThrowIfNullOrWhiteSpace(userId, nameof(userId));
         ArgumentException.ThrowIfNullOrWhiteSpace(conversationId, nameof(conversationId));
 
+        // End any active voice sessions first
+        try
+        {
+            await audioService.EndStreamingSessionAsync(Context.ConnectionId);
+        }
+        catch
+        {
+            // Ignore errors if no active session exists
+        }
+
         var registry = clusterClient.GetGrain<IStoreConnections>(userId);
         var connection = await registry.GetConnection();
         if (connection != null)
@@ -55,7 +81,7 @@ public class SupportCenterHub(IClusterClient clusterClient, IRealTimeAudioServic
             await registry.RemoveConnection();
         }
 
-        var newConversationId = connection != null? connection.ConversationId : conversationId;
+        var newConversationId = connection?.ConversationId ?? conversationId;
         await registry.AddConnection(new Connection { Id = Context.ConnectionId, ConversationId = newConversationId });
 
         var streamProvider = clusterClient.GetStreamProvider(Consts.OrleansStreamProvider);
@@ -72,9 +98,6 @@ public class SupportCenterHub(IClusterClient clusterClient, IRealTimeAudioServic
     /// <summary>
     /// This method is called when a new message from the client arrives.
     /// </summary>
-    /// <param name="chatMessage"></param>
-    /// <param name="clusterClient"></param>
-    /// <returns></returns>
     public async Task ProcessMessage(ChatMessage chatMessage)
     {
         ArgumentNullException.ThrowIfNull(chatMessage, nameof(chatMessage));
@@ -92,6 +115,7 @@ public class SupportCenterHub(IClusterClient clusterClient, IRealTimeAudioServic
         {
             { "userId", chatMessage.UserId },
             { "userMessage", chatMessage.Text ?? string.Empty },
+            { "messageId", chatMessage.Id ?? Guid.NewGuid().ToString() }
         };
 
         await stream.OnNextAsync(new Event
@@ -101,48 +125,120 @@ public class SupportCenterHub(IClusterClient clusterClient, IRealTimeAudioServic
         });
     }
 
-    /* Audio */
+    /* Voice Interaction Methods */
     public async Task StartVoiceInteraction(string userId, string conversationId)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(userId, nameof(userId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(conversationId, nameof(conversationId));
+        
         string connectionId = Context.ConnectionId;
 
-        // Use Orleans to store the active audio session.
-        var voiceSessionStore = clusterClient.GetGrain<IStoreConnections>(userId);
-        await voiceSessionStore.AddConnection(new Connection
+        try
         {
-            Id = connectionId,
-            ConversationId = conversationId
-        });
+            // Use Orleans to store the active audio session
+            var voiceSessionStore = clusterClient.GetGrain<IStoreConnections>(userId);
+            await voiceSessionStore.AddConnection(new Connection
+            {
+                Id = connectionId,
+                ConversationId = conversationId
+            });
 
-        await signalRService.SendAsync(connectionId, "VoiceInteractionReady");
+            // Notify agents that a voice session is beginning
+            var streamProvider = clusterClient.GetStreamProvider(Consts.OrleansStreamProvider);
+            var streamId = StreamId.Create(Consts.OrleansNamespace, $"{userId}/{conversationId}");
+            var stream = streamProvider.GetStream<Event>(streamId);
+            
+            var data = new Dictionary<string, string>
+            {
+                { "userId", userId },
+                { "message", "Voice interaction started" }
+            };
+            
+            await stream.OnNextAsync(new Event
+            {
+                Type = nameof(EventType.VoiceSessionStarted),
+                Data = data
+            });
+
+            // Initialize realtime audio session
+            await audioService.StartStreamingSessionAsync(connectionId);
+
+            // Notify client that we're ready to receive audio
+            await signalRService.SendAsync(connectionId, "VoiceInteractionReady");
+            
+            await Clients.Caller.SendAsync("ReceiveMessage", new ChatMessage
+            {
+                Id = Guid.NewGuid().ToString(),
+                ConversationId = conversationId,
+                UserId = userId,
+                Text = "Voice interaction started. You can speak now.",
+                Sender = AgentType.Dispatcher.ToString()
+            });
+        }
+        catch (Exception ex)
+        {
+            // Send error message to client
+            await Clients.Caller.SendAsync("ReceiveMessage", new ChatMessage
+            {
+                Id = Guid.NewGuid().ToString(),
+                ConversationId = conversationId,
+                UserId = userId,
+                Text = "Error starting voice interaction. Please try again.",
+                Sender = AgentType.Dispatcher.ToString()
+            });
+            throw;
+        }
     }
 
-    public async Task ProcessVoice(string userId, string conversationId, byte[] audioData)
+    public async Task ProcessVoiceInput(string userId, string conversationId, byte[] audioData)
     {
-        // 1. Transcribe audio to text
-        var transcribedText = await audioService.TranscribeAudioAsync(audioData);
-
-        // 2. Create a chat message from transcribed text
-        var message = new ChatMessage
-        {
-            Id = Guid.NewGuid().ToString(),
-            ConversationId = conversationId,
-            UserId = userId,
-            Text = transcribedText,
-            Sender = "User"
-        };
-
-        // 3. Process through regular chat flow
-        await ProcessMessage(message);
-
-        // 4. Send transcription back to client
-        //await Clients.Caller.SendAsync("ReceiveTranscription", message);
+        ArgumentException.ThrowIfNullOrWhiteSpace(userId, nameof(userId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(conversationId, nameof(conversationId));
+        ArgumentNullException.ThrowIfNull(audioData, nameof(audioData));
+        
+        string connectionId = Context.ConnectionId;
+        
+        // Process the audio using the realtime API
+        await audioService.ProcessRealtimeAudioAsync(connectionId, userId, conversationId, audioData);
     }
 
-    public async Task EndVoiceInteraction(string userId)
+    public async Task EndVoiceInteraction(string userId, string conversationId)
     {
-        // Remove the audio session from Orleans
-        var audioSessionStore = clusterClient.GetGrain<IStoreConnections>(userId);
-        await audioSessionStore.RemoveConnection();
+        ArgumentException.ThrowIfNullOrWhiteSpace(userId, nameof(userId));
+        ArgumentException.ThrowIfNullOrWhiteSpace(conversationId, nameof(conversationId));
+        
+        string connectionId = Context.ConnectionId;
+        
+        try
+        {
+            // End the streaming session
+            await audioService.EndStreamingSessionAsync(connectionId);
+
+            // Send a message to the client
+            await Clients.Caller.SendAsync("ReceiveMessage", new ChatMessage
+            {
+                Id = Guid.NewGuid().ToString(),
+                ConversationId = conversationId,
+                UserId = userId,
+                Text = "Voice interaction ended. Continuing with text chat.",
+                Sender = AgentType.Dispatcher.ToString()
+            });
+
+            // The RemoveConnection will be handled in the audioService EndStreamingSessionAsync method
+            // by publishing a VoiceSessionEnded event
+        }
+        catch (Exception ex)
+        {
+            // Send error message to client
+            await Clients.Caller.SendAsync("ReceiveMessage", new ChatMessage
+            {
+                Id = Guid.NewGuid().ToString(),
+                ConversationId = conversationId,
+                UserId = userId,
+                Text = "Error ending voice interaction. Please try again.",
+                Sender = AgentType.Dispatcher.ToString()
+            });
+            throw;
+        }
     }
 }

@@ -20,6 +20,11 @@ public enum EventType
     ConversationRequested,
     ConversationRetrieved,
 
+    // Voice-related events
+    VoiceSessionStarted,
+    VoiceSessionEnded,
+    VoiceTranscription,
+
     // Notification events
     DispatcherNotification,
     CustomerInfoNotification,

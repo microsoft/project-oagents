@@ -1,8 +1,9 @@
-import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr'
+import { HubConnection } from '@microsoft/signalr'
 import axios from 'axios'
 import { v4 as uuid } from 'uuid'
 import { Configuration } from '../models/Configuration'
 import { Message, SenderType } from '../models/Message'
+import { SignalRService } from './SignalrService'
 
 const isMockEnabled = import.meta.env.VITE_IS_MOCK_ENABLED
 const supportCenterBaseUrl = import.meta.env.VITE_OAGENT_BASE_URL
@@ -21,9 +22,6 @@ export async function getConfigurationAsync(): Promise<Configuration> {
       previewContent: 'Text',
     },
   }
-
-  // const response = await axios.get<Configuration>(`${supportCenterBaseUrl}configuration/${clientId}`)
-  // return response.data
 }
 
 export async function initConversationAsync(metadata: { [key: string]: string }): Promise<string> {
@@ -42,6 +40,8 @@ export async function SendMessageAsync(conversationId: string, userId: string, m
   if (isMockEnabled) {
     return {
       id: uuid().toString(),
+      conversationId: conversationId,
+      userId: userId,
       sender: SenderType.Agent,
       text: 'Emphasis [doc1] **This is bold text** __This is bold text__ *This is italic text* _This is italic text_ ~~Strikethrough~~',
       timestamp: new Date(),
@@ -114,11 +114,8 @@ export async function SendFeedbackAsync(
 }
 
 export function GetStreamingConnection(): HubConnection {
-  const url = new URL('supportcenterhub', supportCenterBaseUrl).href;
-  return new HubConnectionBuilder()
-    .withUrl(url)
-    .withAutomaticReconnect()
-    .build();
+  const signalRService = SignalRService.getInstance();
+  return signalRService.initializeConnection();
 }
 interface InitConversationResponse {
   conversationId: string

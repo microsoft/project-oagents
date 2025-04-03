@@ -9,6 +9,10 @@ using Microsoft.Extensions.VectorData;
 using StackExchange.Redis;
 using Microsoft.SemanticKernel.Connectors.Redis;
 using OpenAI.Audio;
+using SupportCenter.ApiService.RealTimeAudio;
+using Azure.AI.OpenAI;
+using Azure;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +25,7 @@ builder.Services.AddSignalR()
                 .AddNamedAzureSignalR("signalr");
 
 builder.Services.AddSingleton<ISignalRService, SignalRService>();
+builder.Services.AddScoped<IRealTimeAudioService, RealTimeAudioService>();
 builder.Services.AddTransient<ICustomerRepository, CustomerRepository>();
 
 builder.AddKeyedRedisDistributedCache("redis");
@@ -29,16 +34,33 @@ builder.AddKeyedAzureTableClient("snapshot");
 builder.AddKeyedAzureBlobClient("grain-state");
 builder.AddKeyedAzureQueueClient("streaming");
 
+// Configure OpenAI client for GPT-4o
 builder.AddAzureOpenAIClient("openAiConnection");
 
+// Configure chat client for text-based interactions
 builder.Services.AddKeyedChatClient(Gpt4oMini, s => {
     var innerClient = s.GetRequiredService<OpenAIClient>().AsChatClient(Gpt4oMini);
     return new ChatClientBuilder(innerClient)
                .UseFunctionInvocation().Build();
 });
 
+// Configure audio client for speech synthesis (fallback for non-realtime)
 builder.Services.AddKeyedScoped<AudioClient>(Whisper, (s, o) => {
     return s.GetRequiredService<OpenAIClient>().GetAudioClient(Whisper);
+});
+
+// Configure OpenAI client for GPT-4o Realtime
+builder.Services.AddKeyedSingleton<OpenAIClient>(Gpt4oMini, (sp, _) => {
+    var connectionString = builder.Configuration.GetConnectionString("openAiConnection");
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new InvalidOperationException("Azure OpenAI connection string is missing");
+    }
+    
+    return new OpenAIClient(
+        new Uri(connectionString),
+        new AzureKeyCredential(connectionString)
+    );
 });
 
 builder.Services.AddSingleton<IVectorStore>(sp =>
