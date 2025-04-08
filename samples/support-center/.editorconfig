@@ -1,0 +1,3 @@
+# Suppress the warning for OpenAI evaluation APIs
+[*.cs]
+dotnet_diagnostic.OPENAI002.severity = none

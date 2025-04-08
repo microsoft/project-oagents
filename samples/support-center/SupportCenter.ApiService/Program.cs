@@ -45,19 +45,19 @@ builder.Services.AddKeyedChatClient(Gpt4oMini, s => {
 });
 
 // Configure audio client for speech synthesis (fallback for non-realtime)
-builder.Services.AddKeyedScoped<AudioClient>(Whisper, (s, o) => {
+builder.Services.AddKeyedScoped(Whisper, (s, o) => {
     return s.GetRequiredService<OpenAIClient>().GetAudioClient(Whisper);
 });
 
 // Configure OpenAI client for GPT-4o Realtime
-builder.Services.AddKeyedSingleton<OpenAIClient>(Gpt4oMini, (sp, _) => {
+builder.Services.AddKeyedSingleton(Gpt4oRealtime, (sp, _) => {
     var connectionString = builder.Configuration.GetConnectionString("openAiConnection");
     if (string.IsNullOrEmpty(connectionString))
     {
         throw new InvalidOperationException("Azure OpenAI connection string is missing");
     }
     
-    return new OpenAIClient(
+    return new AzureOpenAIClient(
         new Uri(connectionString),
         new AzureKeyCredential(connectionString)
     );

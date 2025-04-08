@@ -1,9 +1,12 @@
 using Azure;
+using Azure.AI.OpenAI;
 using Microsoft.AI.Agents.Abstractions;
 using OpenAI;
 using OpenAI.Audio;
+using OpenAI.RealtimeConversation;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.SignalRHub;
+using System.ClientModel;
 using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
@@ -20,23 +23,24 @@ public class RealTimeAudioService : IRealTimeAudioService
     private readonly TimeSpan _sessionTimeout = TimeSpan.FromMinutes(5);
     private readonly ILogger<RealTimeAudioService> logger;
     private readonly ISignalRService signalRService;
-    private readonly OpenAIClient openAIClient;
+    private readonly OpenAIClient azureOpenAIClient;
     private readonly AudioClient audioClient;
     private readonly IClusterClient clusterClient;
 
     private static readonly string[] agentTypes = ["Conversation", "QnA", "CustomerInfo", "Invoice", "Dispatcher"];
     private static readonly string[] eventTypes = ["UserChatInput", "ConversationRequested", "QnARequested", "CustomerInfoRequested", "InvoiceRequested"];
+    private static readonly string[] requiredParams = new[] { "agentType", "userIntent", "eventType" };
 
     public RealTimeAudioService(
         ILogger<RealTimeAudioService> logger,
         ISignalRService signalRService,
-        [FromKeyedServices(Gpt4oMini)] OpenAIClient openAIClient,
+        [FromKeyedServices(Gpt4oRealtime)] AzureOpenAIClient azureOpenAIClient,
         [FromKeyedServices(Whisper)] AudioClient audioClient,
         IClusterClient clusterClient)
     {
         this.logger = logger;
         this.signalRService = signalRService;
-        this.openAIClient = openAIClient;
+        this.azureOpenAIClient = azureOpenAIClient;
         this.audioClient = audioClient;
         this.clusterClient = clusterClient;
 
@@ -168,8 +172,11 @@ public class RealTimeAudioService : IRealTimeAudioService
     {
         try
         {
-            // Define functions for GPT-4o to call
-            var routingFunction = new FunctionDefinition()
+            // Get the RealtimeConversationClient using the GPT-4o Realtime deployment
+            var realtimeClient = azureOpenAIClient.GetRealtimeConversationClient(_realtimeDeploymentName);
+
+            // Define the function for routing queries to appropriate agents
+            var routingFunction = new ConversationFunctionTool()
             {
                 Name = "route_user_query",
                 Description = "Routes user query to the appropriate agent based on intent",
@@ -196,48 +203,171 @@ public class RealTimeAudioService : IRealTimeAudioService
                             description = "The specific event type to trigger in the Orleans event system"
                         }
                     },
-                    required = new[] { "agentType", "userIntent", "eventType" }
+                    required = requiredParams
                 })
             };
 
-            var functionTool = new ChatCompletionsFunctionToolDefinition(routingFunction);
-            var tools = new List<ChatCompletionsToolDefinition> { functionTool };
+            // Start a Realtime Conversation Session
+            using var conversationSession = await realtimeClient.StartConversationSessionAsync(
+                cancellationToken: session.CancellationToken);
 
-            // Set up GPT-4o Realtime API options with function calling
-            var options = new AudioRealtimeSessionOptions
-            {
-                // Configure with appropriate settings
-                DeploymentName = _realtimeDeploymentName,
-                Temperature = 0.7f,
-                MaxTokens = 800,
-                AudioOutputFormat = AudioRealtimeOutputFormat.Wav,
-                Voice = _speechVoice.ToString().ToLowerInvariant(),
-                // Add system prompt to inform GPT-4o about its role in the multi-agent system
-                SystemPrompt = @"You are part of a support center multi-agent system. The user is speaking with you through a voice interface. 
-You will transcribe their speech, determine the user's intent, and route their query to the appropriate agent.
-
-Available agents and their corresponding events:
-- Conversation (ConversationRequested): For general conversation, greetings, and simple interactions
-- QnA (QnARequested): For answering questions based on documentation and knowledge base
-- CustomerInfo (CustomerInfoRequested): For updating or retrieving customer information like addresses and contact details
-- Invoice (InvoiceRequested): For handling invoice-related questions and issues
-- Dispatcher (UserChatInput): If you're unsure which agent should handle the query
-
-When routing a query, you MUST call the route_user_query function with:
-1. The appropriate agentType
-2. A brief description of the userIntent
-3. The corresponding eventType from the list above
-
-Your verbal response should be helpful but brief, acknowledging the user and letting them know you're processing their request.
-For example: 'I'll help you with that invoice question. Let me connect you with our invoice specialist.'
-
-Respond in the same language the user speaks to you.",
-                Tools = tools
-            };
-
-            // Create streaming session
-            await using var sessionStream = await openAIClient.GetAudioRealtimeStreamingClientAsync(options, session.CancellationToken);
             session.IsSessionActive = true;
+            logger.LogInformation("Started GPT-4o Realtime conversation session");
+
+            // Configure the session with our options
+#pragma warning disable OPENAI002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            var sessionOptions = new ConversationSessionOptions()
+            {
+                // Use the same system prompt as before
+                Instructions = @"You are part of a support center multi-agent system. The user is speaking with you through a voice interface. 
+                                 You will transcribe their speech, determine the user's intent, and route their query to the appropriate agent.
+                                 
+                                 Available agents and their corresponding events:
+                                 - Conversation (ConversationRequested): For general conversation, greetings, and simple interactions
+                                 - QnA (QnARequested): For answering questions based on documentation and knowledge base
+                                 - CustomerInfo (CustomerInfoRequested): For updating or retrieving customer information like addresses and contact details
+                                 - Invoice (InvoiceRequested): For handling invoice-related questions and issues
+                                 - Dispatcher (UserChatInput): If you're unsure which agent should handle the query
+                                 
+                                 When routing a query, you MUST call the route_user_query function with:
+                                 1. The appropriate agentType
+                                 2. A brief description of the userIntent
+                                 3. The corresponding eventType from the list above
+                                 
+                                 Your verbal response should be helpful but brief, acknowledging the user and letting them know you're processing their request.
+                                 For example: 'I'll help you with that invoice question. Let me connect you with our invoice specialist.'
+                                 
+                                 Respond in the same language the user speaks to you.",
+
+                // Configure input audio transcription
+                InputTranscriptionOptions = new ConversationInputTranscriptionOptions
+                {
+                    Model = ConversationTranscriptionModel.Whisper1, // Use Whisper model for transcription
+                },
+
+                // Configure tools (functions)
+                Tools =
+                {
+                    routingFunction
+                },
+
+            };
+#pragma warning restore OPENAI002 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+
+            // Apply the configuration
+            await conversationSession.ConfigureSessionAsync(sessionOptions, session.CancellationToken);
+
+            // Process updates from the conversation in a separate task
+            var processingTask = Task.Run(async () =>
+            {
+                await foreach (ConversationUpdate update in conversationSession.ReceiveUpdatesAsync(session.CancellationToken))
+                {
+                    try
+                    {
+                        switch (update)
+                        {
+                            case ConversationResponseContentPartTextCompletedUpdate textUpdate:
+                                // Handle complete transcription text
+                                var completeText = textUpdate.Text;
+                                if (!string.IsNullOrEmpty(completeText))
+                                {
+                                    session.TranscribedText.Append(completeText);
+                                    await signalRService.SendAsync(session.ConnectionId, "ReceiveTranscription",
+                                        new { Text = completeText, IsComplete = true });
+                                }
+                                break;
+
+                            case ConversationResponseContentPartTextDeltaUpdate textDeltaUpdate:
+                                // Handle streaming text updates
+                                var textDelta = textDeltaUpdate.TextDelta;
+                                if (!string.IsNullOrEmpty(textDelta))
+                                {
+                                    session.TranscribedText.Append(textDelta);
+                                    await signalRService.SendAsync(session.ConnectionId, "ReceivePartialTranscription", textDelta);
+                                }
+                                break;
+
+                            case ConversationResponseContentPartAudioDeltaUpdate audioUpdate:
+                                // Handle audio responses
+                                var audioData = audioUpdate.AudioData;
+                                if (audioData != null && audioData.Length > 0)
+                                {
+                                    await signalRService.SendAsync(session.ConnectionId, "ReceiveAudioResponse", audioData);
+                                }
+                                break;
+
+                            case ConversationResponseCompletedUpdate completedUpdate:
+                                // The complete response has been processed
+                                logger.LogInformation("Response completed: {ContentParts} content parts",
+                                    completedUpdate.ContentParts.Count);
+                                break;
+
+                            case ConversationResponseStartedUpdate startedUpdate:
+                                // A new response has started
+                                logger.LogInformation("Response started");
+                                break;
+
+                            case ConversationSessionStartedUpdate sessionStartedUpdate:
+                                // Session successfully initialized
+                                logger.LogInformation("Session started with ID: {SessionId}",
+                                    sessionStartedUpdate.SessionId);
+                                break;
+
+                            case ConversationSessionConfiguredUpdate sessionConfiguredUpdate:
+                                // Session configuration applied
+                                logger.LogInformation("Session configured successfully");
+                                break;
+
+                            case ConversationItemStreamingPartToolCallUpdate toolCallUpdate:
+                                // Handle function call (routing decision)
+                                var toolCall = toolCallUpdate.ToolCall;
+
+                                if (toolCall.Type == "function" &&
+                                    toolCall.Function?.Name == "route_user_query" &&
+                                    toolCall.Function?.Arguments != null)
+                                {
+                                    // Parse the function arguments
+                                    var arguments = JsonSerializer.Deserialize<Dictionary<string, string>>(
+                                        toolCall.Function.Arguments.ToString());
+
+                                    if (arguments != null &&
+                                        arguments.TryGetValue("agentType", out var agentType) &&
+                                        arguments.TryGetValue("userIntent", out var userIntent) &&
+                                        arguments.TryGetValue("eventType", out var eventType))
+                                    {
+                                        string transcribedText = session.TranscribedText.ToString().Trim();
+
+                                        if (session.UserId != null && session.ConversationId != null && !string.IsNullOrEmpty(transcribedText))
+                                        {
+                                            // Route to the appropriate agent based on the function call
+                                            await RouteToAgentBasedOnIntent(
+                                                session.UserId,
+                                                session.ConversationId,
+                                                transcribedText,
+                                                agentType,
+                                                userIntent,
+                                                eventType);
+
+                                            // Clear the buffer after publishing
+                                            session.TranscribedText.Clear();
+                                        }
+                                    }
+                                }
+                                break;
+
+                            case ConversationInputAudioDetectedVoiceActivityUpdate vadUpdate:
+                                // Voice activity was detected in the input
+                                logger.LogDebug("Voice activity detected: {Start} to {End}",
+                                    vadUpdate.StartTimestamp, vadUpdate.EndTimestamp);
+                                break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Error processing conversation update");
+                    }
+                }
+            }, session.CancellationToken);
 
             // Handle audio chunks processing
             while (!session.CancellationToken.IsCancellationRequested && session.IsSessionActive)
@@ -246,72 +376,17 @@ Respond in the same language the user speaks to you.",
                 if (session.AudioChunks.TryDequeue(out var audioChunk))
                 {
                     // Send audio chunk to the API
-                    await sessionStream.AudioStreamAsync(
+                    await conversationSession.SendInputAudioAsync(
                         BinaryData.FromBytes(audioChunk),
                         session.CancellationToken);
-                }
-
-                // Process responses from GPT-4o
-                await foreach (var response in sessionStream.StreamResponsesAsync(session.CancellationToken))
-                {
-                    if (response.ContentUpdate != null && !string.IsNullOrEmpty(response.ContentUpdate.Text))
-                    {
-                        // Handle transcribed text
-                        var text = response.ContentUpdate.Text;
-                        session.TranscribedText.Append(text);
-
-                        // Send partial transcription to client
-                        await signalRService.SendAsync(session.ConnectionId, "ReceivePartialTranscription", text);
-                    }
-                    else if (response.AudioUpdate != null && response.AudioUpdate.AudioData != null)
-                    {
-                        // Handle audio response
-                        var audioData = response.AudioUpdate.AudioData;
-                        
-                        // Send audio response to client
-                        await signalRService.SendAsync(session.ConnectionId, "ReceiveAudioResponse", audioData.ToArray());
-                    }
-                    else if (response.ToolCallsUpdate != null && response.ToolCallsUpdate.ToolCalls.Any())
-                    {
-                        foreach (var toolCall in response.ToolCallsUpdate.ToolCalls)
-                        {
-                            // Handle function call to route to appropriate agent
-                            if (toolCall is ChatCompletionsFunctionToolCall functionCall &&
-                                functionCall.Name == "route_user_query")
-                            {
-                                var arguments = JsonSerializer.Deserialize<Dictionary<string, string>>(
-                                    functionCall.Arguments?.ToString() ?? "{}");
-
-                                if (arguments != null &&
-                                    arguments.TryGetValue("agentType", out var agentType) &&
-                                    arguments.TryGetValue("userIntent", out var userIntent) &&
-                                    arguments.TryGetValue("eventType", out var eventType))
-                                {
-                                    string transcribedText = session.TranscribedText.ToString().Trim();
-
-                                    if (session.UserId != null && session.ConversationId != null && !string.IsNullOrEmpty(transcribedText))
-                                    {
-                                        // Route to the appropriate agent based on the function call
-                                        await RouteToAgentBasedOnIntent(
-                                            session.UserId,
-                                            session.ConversationId,
-                                            transcribedText,
-                                            agentType,
-                                            userIntent,
-                                            eventType);
-
-                                        // Clear the buffer after publishing
-                                        session.TranscribedText.Clear();
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
 
                 // Small delay to prevent CPU spiking
                 await Task.Delay(10, session.CancellationToken);
             }
+
+            // Wait for the processing task to complete
+            await processingTask;
         }
         catch (OperationCanceledException)
         {
@@ -319,7 +394,8 @@ Respond in the same language the user speaks to you.",
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error in realtime audio session for connection {ConnectionId}", session.ConnectionId);
+            logger.LogError(ex, "Error in realtime audio session for connection {ConnectionId}: {Message}",
+                session.ConnectionId, ex.Message);
         }
         finally
         {
@@ -375,11 +451,14 @@ Respond in the same language the user speaks to you.",
                 if (!string.IsNullOrEmpty(finalText))
                 {
                     // Send final transcription
-                    await signalRService.SendAsync(session.ConnectionId, "ReceiveTranscription", new
-                    {
-                        Text = finalText,
-                        IsComplete = true
-                    });
+                    await signalRService.SendAsync(session.ConnectionId, "ReceiveTranscription",
+                    [
+                        new
+                        {
+                            Text = finalText,
+                            IsComplete = true
+                        }
+                    ]);
 
                     // If we have user info, also publish the final transcription to agents
                     if (session.UserId != null && session.ConversationId != null)
