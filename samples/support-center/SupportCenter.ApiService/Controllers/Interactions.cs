@@ -1,27 +1,19 @@
 ﻿using Microsoft.AI.Agents.Abstractions;
 using Microsoft.AspNetCore.Mvc;
-using Orleans;
-using Orleans.Runtime;
 using SupportCenter.ApiService.Events;
 
 namespace SupportCenter.ApiService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class Interactions : ControllerBase
+    public class Interactions(IClusterClient client) : ControllerBase
     {
-        private readonly IClusterClient _client;
-
-        public Interactions(IClusterClient client)
-        {
-            _client = client;
-        }
 
         // POST api/<Post>/5
         [HttpPost("{userId}")]
         public async Task<string> Post(string userId, [FromBody] string userMessage)
         {
-            var streamProvider = _client.GetStreamProvider(Consts.OrleansStreamProvider);
+            var streamProvider = client.GetStreamProvider(Consts.OrleansStreamProvider);
             var streamId = StreamId.Create(Consts.OrleansNamespace, userId); // to change
             var stream = streamProvider.GetStream<Event>(streamId);
 
