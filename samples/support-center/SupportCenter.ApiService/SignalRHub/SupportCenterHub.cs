@@ -13,7 +13,7 @@ using System.Collections.Generic;
 
 public class SupportCenterHub(
     IClusterClient clusterClient, 
-    IRealTimeAudioService audioService, 
+    IRealTimeAudioService realTimeAudioService, 
     ISignalRService signalRService) : Hub<ISupportCenterHub>
 {
     public override async Task OnConnectedAsync()
@@ -24,9 +24,9 @@ public class SupportCenterHub(
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         // End any active voice sessions for this connection
-        try 
+        try
         {
-            await audioService.EndStreamingSessionAsync(Context.ConnectionId);
+            await realTimeAudioService.EndStreamingSessionAsync(Context.ConnectionId);
         }
         catch
         {
@@ -67,7 +67,7 @@ public class SupportCenterHub(
         // End any active voice sessions first
         try
         {
-            await audioService.EndStreamingSessionAsync(Context.ConnectionId);
+            await realTimeAudioService.EndStreamingSessionAsync(Context.ConnectionId);
         }
         catch
         {
@@ -96,7 +96,7 @@ public class SupportCenterHub(
     }
 
     /// <summary>
-    /// This method is called when a new message from the client arrives.
+    /// This method is called when a new message (text) from the client arrives.
     /// </summary>
     public async Task ProcessMessage(ChatMessage chatMessage)
     {
@@ -132,12 +132,13 @@ public class SupportCenterHub(
         ArgumentException.ThrowIfNullOrWhiteSpace(conversationId, nameof(conversationId));
         
         string connectionId = Context.ConnectionId;
+        ChatMessage chatMessage = null!;
 
         try
         {
             // Use Orleans to store the active audio session
-            var voiceSessionStore = clusterClient.GetGrain<IStoreConnections>(userId);
-            await voiceSessionStore.AddConnection(new Connection
+            var registry = clusterClient.GetGrain<IStoreConnections>(userId);
+            await registry.AddConnection(new Connection
             {
                 Id = connectionId,
                 ConversationId = conversationId
@@ -161,31 +162,25 @@ public class SupportCenterHub(
             });
 
             // Initialize realtime audio session
-            await audioService.StartStreamingSessionAsync(connectionId);
+            await realTimeAudioService.StartStreamingSessionAsync(connectionId);
 
             // Notify client that we're ready to receive audio
             await signalRService.SendAsync(connectionId, "VoiceInteractionReady");
-            
-            await Clients.Caller.SendAsync("ReceiveMessage", new ChatMessage
+
+            chatMessage = new()
             {
                 Id = Guid.NewGuid().ToString(),
                 ConversationId = conversationId,
                 UserId = userId,
                 Text = "Voice interaction started. You can speak now.",
                 Sender = AgentType.Dispatcher.ToString()
-            });
+            };
+            await signalRService.SendAsync(connectionId, "ReceiveMessage", [chatMessage]);
         }
         catch (Exception ex)
         {
-            // Send error message to client
-            await Clients.Caller.SendAsync("ReceiveMessage", new ChatMessage
-            {
-                Id = Guid.NewGuid().ToString(),
-                ConversationId = conversationId,
-                UserId = userId,
-                Text = "Error starting voice interaction. Please try again.",
-                Sender = AgentType.Dispatcher.ToString()
-            });
+            chatMessage.Text = "Error starting voice interaction. Please try again.";
+            await signalRService.SendAsync(connectionId, "ReceiveMessage", [chatMessage]);
             throw;
         }
     }
@@ -199,7 +194,7 @@ public class SupportCenterHub(
         string connectionId = Context.ConnectionId;
         
         // Process the audio using the realtime API
-        await audioService.ProcessRealtimeAudioAsync(connectionId, userId, conversationId, audioData);
+        await realTimeAudioService.ProcessRealtimeAudioAsync(connectionId, userId, conversationId, audioData);
     }
 
     public async Task EndVoiceInteraction(string userId, string conversationId)
@@ -208,36 +203,33 @@ public class SupportCenterHub(
         ArgumentException.ThrowIfNullOrWhiteSpace(conversationId, nameof(conversationId));
         
         string connectionId = Context.ConnectionId;
+        ChatMessage chatMessage = null!; 
         
         try
         {
             // End the streaming session
-            await audioService.EndStreamingSessionAsync(connectionId);
+            await realTimeAudioService.EndStreamingSessionAsync(connectionId);
 
-            // Send a message to the client
-            await Clients.Caller.SendAsync("ReceiveMessage", new ChatMessage
+            chatMessage = new()
             {
                 Id = Guid.NewGuid().ToString(),
                 ConversationId = conversationId,
                 UserId = userId,
-                Text = "Voice interaction ended. Continuing with text chat.",
+                Text = "Voice interaction ended. You can continue with text chat.",
                 Sender = AgentType.Dispatcher.ToString()
-            });
+            };
+
+            // Send a message to the client
+            await signalRService.SendAsync(connectionId, "ReceiveMessage", [chatMessage]);
 
             // The RemoveConnection will be handled in the audioService EndStreamingSessionAsync method
             // by publishing a VoiceSessionEnded event
         }
         catch (Exception ex)
         {
+            chatMessage.Text = ex.Message;
             // Send error message to client
-            await Clients.Caller.SendAsync("ReceiveMessage", new ChatMessage
-            {
-                Id = Guid.NewGuid().ToString(),
-                ConversationId = conversationId,
-                UserId = userId,
-                Text = "Error ending voice interaction. Please try again.",
-                Sender = AgentType.Dispatcher.ToString()
-            });
+            await signalRService.SendAsync(connectionId, "ReceiveMessage", [chatMessage]);
             throw;
         }
     }

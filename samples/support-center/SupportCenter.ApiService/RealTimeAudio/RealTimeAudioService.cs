@@ -6,7 +6,6 @@ using OpenAI.Audio;
 using OpenAI.RealtimeConversation;
 using SupportCenter.ApiService.Events;
 using SupportCenter.ApiService.SignalRHub;
-using System.ClientModel;
 using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
@@ -16,7 +15,7 @@ namespace SupportCenter.ApiService.RealTimeAudio;
 
 public class RealTimeAudioService : IRealTimeAudioService
 {
-    private readonly string _realtimeDeploymentName = "gpt-4o"; // Use the appropriate deployment name
+    private readonly string _realtimeDeploymentName = Gpt4oRealtime; // Use the appropriate deployment name
     private readonly ConcurrentDictionary<string, RealtimeSession> _activeSessions = new();
     private readonly GeneratedSpeechVoice _speechVoice = GeneratedSpeechVoice.Alloy;
     // Maximum time a session can be inactive before being closed (5 minutes)
@@ -260,146 +259,173 @@ public class RealTimeAudioService : IRealTimeAudioService
             // Process updates from the conversation in a separate task
             var processingTask = Task.Run(async () =>
             {
-                await foreach (ConversationUpdate update in conversationSession.ReceiveUpdatesAsync(session.CancellationToken))
+                try
                 {
-                    try
+                    await foreach (ConversationUpdate update in conversationSession.ReceiveUpdatesAsync(session.CancellationToken))
                     {
-                        switch (update)
-                        {
-                            case ConversationResponseContentPartTextCompletedUpdate textUpdate:
-                                // Handle complete transcription text
-                                var completeText = textUpdate.Text;
-                                if (!string.IsNullOrEmpty(completeText))
-                                {
-                                    session.TranscribedText.Append(completeText);
-                                    await signalRService.SendAsync(session.ConnectionId, "ReceiveTranscription",
-                                        new { Text = completeText, IsComplete = true });
-                                }
-                                break;
-
-                            case ConversationResponseContentPartTextDeltaUpdate textDeltaUpdate:
-                                // Handle streaming text updates
-                                var textDelta = textDeltaUpdate.TextDelta;
-                                if (!string.IsNullOrEmpty(textDelta))
-                                {
-                                    session.TranscribedText.Append(textDelta);
-                                    await signalRService.SendAsync(session.ConnectionId, "ReceivePartialTranscription", textDelta);
-                                }
-                                break;
-
-                            case ConversationResponseContentPartAudioDeltaUpdate audioUpdate:
-                                // Handle audio responses
-                                var audioData = audioUpdate.AudioData;
-                                if (audioData != null && audioData.Length > 0)
-                                {
-                                    await signalRService.SendAsync(session.ConnectionId, "ReceiveAudioResponse", audioData);
-                                }
-                                break;
-
-                            case ConversationResponseCompletedUpdate completedUpdate:
-                                // The complete response has been processed
-                                logger.LogInformation("Response completed: {ContentParts} content parts",
-                                    completedUpdate.ContentParts.Count);
-                                break;
-
-                            case ConversationResponseStartedUpdate startedUpdate:
-                                // A new response has started
-                                logger.LogInformation("Response started");
-                                break;
-
-                            case ConversationSessionStartedUpdate sessionStartedUpdate:
-                                // Session successfully initialized
-                                logger.LogInformation("Session started with ID: {SessionId}",
-                                    sessionStartedUpdate.SessionId);
-                                break;
-
-                            case ConversationSessionConfiguredUpdate sessionConfiguredUpdate:
-                                // Session configuration applied
-                                logger.LogInformation("Session configured successfully");
-                                break;
-
-                            case ConversationItemStreamingPartToolCallUpdate toolCallUpdate:
-                                // Handle function call (routing decision)
-                                var toolCall = toolCallUpdate.ToolCall;
-
-                                if (toolCall.Type == "function" &&
-                                    toolCall.Function?.Name == "route_user_query" &&
-                                    toolCall.Function?.Arguments != null)
-                                {
-                                    // Parse the function arguments
-                                    var arguments = JsonSerializer.Deserialize<Dictionary<string, string>>(
-                                        toolCall.Function.Arguments.ToString());
-
-                                    if (arguments != null &&
-                                        arguments.TryGetValue("agentType", out var agentType) &&
-                                        arguments.TryGetValue("userIntent", out var userIntent) &&
-                                        arguments.TryGetValue("eventType", out var eventType))
-                                    {
-                                        string transcribedText = session.TranscribedText.ToString().Trim();
-
-                                        if (session.UserId != null && session.ConversationId != null && !string.IsNullOrEmpty(transcribedText))
-                                        {
-                                            // Route to the appropriate agent based on the function call
-                                            await RouteToAgentBasedOnIntent(
-                                                session.UserId,
-                                                session.ConversationId,
-                                                transcribedText,
-                                                agentType,
-                                                userIntent,
-                                                eventType);
-
-                                            // Clear the buffer after publishing
-                                            session.TranscribedText.Clear();
-                                        }
-                                    }
-                                }
-                                break;
-
-                            case ConversationInputAudioDetectedVoiceActivityUpdate vadUpdate:
-                                // Voice activity was detected in the input
-                                logger.LogDebug("Voice activity detected: {Start} to {End}",
-                                    vadUpdate.StartTimestamp, vadUpdate.EndTimestamp);
-                                break;
-                        }
+                        await ProcessConversationUpdateAsync(session, update, isUserSpeaking: true, routingFunction);
                     }
-                    catch (Exception ex)
-                    {
-                        logger.LogError(ex, "Error processing conversation update");
-                    }
+                    ;
+                }
+                catch (OperationCanceledException)
+                {
+                    logger.LogInformation("Update processing cancelled for session {ConnectionId}", session.connectionId);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error processing conversation updates for session {ConnectionId}: {Message}",
+                        session.connectionId, ex.Message);
                 }
             }, session.CancellationToken);
 
             // Handle audio chunks processing
             while (!session.CancellationToken.IsCancellationRequested && session.IsSessionActive)
             {
-                // Try to dequeue an audio chunk
-                if (session.AudioChunks.TryDequeue(out var audioChunk))
+                try
                 {
-                    // Send audio chunk to the API
-                    await conversationSession.SendInputAudioAsync(
-                        BinaryData.FromBytes(audioChunk),
-                        session.CancellationToken);
+                    // Try to dequeue an audio chunk
+                    if (session.AudioChunks.TryDequeue(out var audioChunk))
+                    {
+                        // Send audio chunk to the API
+                        await conversationSession.SendInputAudioAsync(
+                            BinaryData.FromBytes(audioChunk),
+                            session.CancellationToken);
+                    }
+
+                    // Small delay to prevent CPU spiking
+                    await Task.Delay(10, session.CancellationToken);
                 }
-
-                // Small delay to prevent CPU spiking
-                await Task.Delay(10, session.CancellationToken);
+                catch (OperationCanceledException)
+                {
+                    logger.LogInformation("Audio processing cancelled for session {ConnectionId}", session.connectionId);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error sending audio chunk for session {ConnectionId}: {Message}",
+                        session.connectionId, ex.Message);
+                }
             }
-
-            // Wait for the processing task to complete
+            // Wait for the processing task to complete.
             await processingTask;
         }
         catch (OperationCanceledException)
         {
-            logger.LogInformation("Realtime session {ConnectionId} was cancelled", session.ConnectionId);
+            logger.LogInformation("Realtime session {ConnectionId} was cancelled", session.connectionId);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error in realtime audio session for connection {ConnectionId}: {Message}",
-                session.ConnectionId, ex.Message);
+                session.connectionId, ex.Message);
         }
         finally
         {
             session.IsSessionActive = false;
+        }
+    }
+
+    private async Task ProcessConversationUpdateAsync(RealtimeSession session, ConversationUpdate update, bool isUserSpeaking, ConversationFunctionTool tool)
+    {
+        try
+        {
+            switch (update)
+            {
+                // [session.created] is the very first command on a session and lets us know that connection was successful.
+                case ConversationSessionStartedUpdate sessionStartedUpdate:
+                    logger.LogInformation("Session started with ID: {SessionId}",
+                        sessionStartedUpdate.SessionId);
+                    break;
+
+                case ConversationSessionConfiguredUpdate sessionConfiguredUpdate:
+                    // Session configuration applied
+                    logger.LogInformation("Session configured successfully");
+                    break;
+
+                // [input_audio_buffer.speech_started] tells us that the beginning of speech was detected in the input audio
+                // we're sending from the microphone.
+                case ConversationInputSpeechStartedUpdate speechStartedUpdate:
+                    logger.LogInformation("<<< Start of speech detected at {speechStartedUpdate.StartTimestamp}",
+                        speechStartedUpdate.AudioStartTime);
+                    break;
+
+                // [input_audio_buffer.speech_stopped] tells us that the end of speech was detected in the input audio sent
+                // from the microphone. It'll automatically tell the model to start generating a response to reply back.
+                case ConversationInputSpeechFinishedUpdate speechFinishedUpdate:
+                    logger.LogInformation(">>> End of speech detected at {speechFinishedUpdate.EndTimestamp}",
+                        speechFinishedUpdate.AudioEndTime);
+                    break;
+
+                // [conversation.item.input_audio_transcription.completed] will only arrive if input transcription was
+                // configured for the session. It provides a written representation of what the user said, which can
+                // provide good feedback about what the model will use to respond.
+                case ConversationInputTranscriptionFinishedUpdate transcriptionFinishedUpdate:
+                    logger.LogInformation("Transcription completed: {Transcription}",
+                        transcriptionFinishedUpdate.Transcript);
+                    break;
+
+                // Item streaming delta updates provide a combined view into incremental item data including output
+                // the audio response transcript, function arguments, and audio data.
+                case ConversationItemStreamingPartDeltaUpdate deltaUpdate:
+                    // Handle audio responses
+                    //Console.Write(deltaUpdate.AudioTranscript);
+                    //Console.Write(deltaUpdate.Text);
+                    //speakerOutput.EnqueueForPlayback(deltaUpdate.AudioBytes);
+                    var audioData = deltaUpdate.AudioBytes;
+                    if (audioData != null && audioData.Length > 0)
+                    {
+                        await signalRService.SendAsync(session.connectionId, "ReceiveAudioResponse", [audioData]);
+                    }
+                    break;
+
+                // [response.output_item.done] tells us that a model-generated item with streaming content is completed.
+                // That's a good signal to provide a visual break and perform final evaluation of tool calls.
+                case ConversationItemStreamingFinishedUpdate itemFinishedUpdate:
+                    // The complete response has been processed
+                    if (
+                        itemFinishedUpdate.FunctionName == tool.Name
+                        && itemFinishedUpdate.FunctionCallArguments != null)
+                    {
+                        logger.LogInformation("Function call completed: {FunctionName}",
+                            itemFinishedUpdate.FunctionName);
+                    
+                        // Parse the function arguments
+                        var arguments = JsonSerializer.Deserialize<Dictionary<string, string>>(
+                            itemFinishedUpdate.FunctionCallArguments);
+
+                        if (arguments != null &&
+                            arguments.TryGetValue("agentType", out var agentType) &&
+                            arguments.TryGetValue("userIntent", out var userIntent) &&
+                            arguments.TryGetValue("eventType", out var eventType))
+                        {
+                            string transcribedText = session.TranscribedText.ToString().Trim();
+
+                            if (session.UserId != null && session.ConversationId != null && !string.IsNullOrEmpty(transcribedText))
+                            {
+                                // Route to the appropriate agent based on the function call
+                                await RouteToAgentBasedOnIntent(
+                                    session.UserId,
+                                    session.ConversationId,
+                                    transcribedText,
+                                    agentType,
+                                    userIntent,
+                                    eventType);
+
+                                // Clear the buffer after publishing
+                                session.TranscribedText.Clear();
+                            }
+                        }
+                    }
+                    break;
+
+                case ConversationErrorUpdate errorUpdate:
+                    logger.LogInformation("Error occurred: {ErrorMessage}",
+                        errorUpdate.Message);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error processing conversation update");
         }
     }
 
@@ -451,7 +477,7 @@ public class RealTimeAudioService : IRealTimeAudioService
                 if (!string.IsNullOrEmpty(finalText))
                 {
                     // Send final transcription
-                    await signalRService.SendAsync(session.ConnectionId, "ReceiveTranscription",
+                    await signalRService.SendAsync(session.connectionId, "ReceiveTranscription",
                     [
                         new
                         {
@@ -574,21 +600,21 @@ public class RealTimeAudioService : IRealTimeAudioService
         }
     }
 
-    public record RealtimeSession(string ConnectionId)
-    {
-        public ConcurrentQueue<byte[]> AudioChunks { get; } = new();
-        public StringBuilder TranscribedText { get; } = new();
-        public CancellationTokenSource CancellationTokenSource { get; } = new();
-        public CancellationToken CancellationToken => CancellationTokenSource.Token;
-        public bool IsSessionActive { get; set; }
-        public DateTimeOffset LastActivity { get; set; } = DateTimeOffset.UtcNow;
-        public string? UserId { get; set; }
-        public string? ConversationId { get; set; }
+    public record RealtimeSession(string connectionId)
+{
+    public ConcurrentQueue<byte[]> AudioChunks { get; } = new();
+    public StringBuilder TranscribedText { get; } = new();
+    public CancellationTokenSource CancellationTokenSource { get; } = new();
+    public CancellationToken CancellationToken => CancellationTokenSource.Token;
+    public bool IsSessionActive { get; set; }
+    public DateTimeOffset LastActivity { get; set; } = DateTimeOffset.UtcNow;
+    public string? UserId { get; set; }
+    public string? ConversationId { get; set; }
 
-        public void AddAudioChunk(byte[] chunk)
-        {
-            AudioChunks.Enqueue(chunk);
-            LastActivity = DateTimeOffset.UtcNow;
-        }
+    public void AddAudioChunk(byte[] chunk)
+    {
+        AudioChunks.Enqueue(chunk);
+        LastActivity = DateTimeOffset.UtcNow;
     }
+}
 }

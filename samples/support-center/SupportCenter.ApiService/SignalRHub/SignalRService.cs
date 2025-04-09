@@ -14,7 +14,8 @@ public class SignalRService(IHubContext<SupportCenterHub> hubContext) : ISignalR
             Text = message,
             Sender = senderType.ToString()
         };
-        await hubContext.Clients.Client(connectionId).SendAsync("ReceiveMessage", chatMessage);
+
+        await this.SendAsync(connectionId, "ReceiveMessage", [chatMessage]);
     }
 
     public async Task SendAsync(string connectionId, string methodName, object?[]? args = null)

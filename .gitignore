@@ -504,3 +504,4 @@ samples/support-center/seed-invoice-memory/config/appsettings.orig.json
 samples/support-center/seed-memory/config/appsettings copy.json
 samples/support-center/seed-invoice-memory/config/appsettings.new.json
 samples/support-center/src/backend/.dockerignore.old
+/.github/prompts/realtimeapi.prompt.md
