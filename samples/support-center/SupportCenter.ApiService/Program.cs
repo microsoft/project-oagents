@@ -1,18 +1,18 @@
-using Microsoft.Extensions.AI;
-using OpenAI;
-using SupportCenter.ApiService.SignalRHub;
-using System.Text.Json;
-using Orleans.Serialization;
-using static SupportCenter.ApiService.Consts;
-using SupportCenter.ApiService.Data;
-using Microsoft.Extensions.VectorData;
-using StackExchange.Redis;
-using Microsoft.SemanticKernel.Connectors.Redis;
-using OpenAI.Audio;
-using SupportCenter.ApiService.RealTimeAudio;
-using Azure.AI.OpenAI;
 using Azure;
-using System;
+using Azure.AI.OpenAI;
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.VectorData;
+using Microsoft.SemanticKernel.Connectors.Redis;
+using OpenAI;
+using Orleans.Serialization;
+using StackExchange.Redis;
+using SupportCenter.ApiService.Data;
+using SupportCenter.ApiService.RealTimeAudio;
+using SupportCenter.ApiService.SignalRHub;
+using System.ClientModel;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using static SupportCenter.ApiService.Consts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,28 +38,41 @@ builder.AddKeyedAzureQueueClient("streaming");
 builder.AddAzureOpenAIClient("openAiConnection");
 
 // Configure chat client for text-based interactions
-builder.Services.AddKeyedChatClient(Gpt4oMini, s => {
+builder.Services.AddKeyedChatClient(Gpt4oMini, s =>
+{
     var innerClient = s.GetRequiredService<OpenAIClient>().AsChatClient(Gpt4oMini);
     return new ChatClientBuilder(innerClient)
                .UseFunctionInvocation().Build();
 });
 
 // Configure audio client for speech synthesis (fallback for non-realtime)
-builder.Services.AddKeyedScoped(Whisper, (s, o) => {
+builder.Services.AddKeyedScoped(Whisper, (s, o) =>
+{
     return s.GetRequiredService<OpenAIClient>().GetAudioClient(Whisper);
 });
 
 // Configure OpenAI client for GPT-4o Realtime
-builder.Services.AddKeyedSingleton(Gpt4oRealtime, (sp, _) => {
+builder.Services.AddKeyedSingleton(Gpt4oRealtime, (sp, _) =>
+{
     var connectionString = builder.Configuration.GetConnectionString("openAiConnection");
     if (string.IsNullOrEmpty(connectionString))
     {
         throw new InvalidOperationException("Azure OpenAI connection string is missing");
     }
-    
+
+    var oaiConnectionMatch = Regex.Match(connectionString, @"Endpoint=(https?://[^;]+);Key=([^;]+)");
+
+    if (!oaiConnectionMatch.Success)
+    {
+        throw new InvalidOperationException("Invalid Azure OpenAI connection string format. Expected 'Endpoint;Key'.");
+    }
+
+    var endpoint = oaiConnectionMatch.Groups[1].Value;
+    var key = oaiConnectionMatch.Groups[2].Value;
+
     return new AzureOpenAIClient(
-        new Uri(connectionString),
-        new AzureKeyCredential(connectionString)
+        new Uri(endpoint),
+        new ApiKeyCredential(key)
     );
 });
 
@@ -71,7 +84,8 @@ builder.Services.AddSingleton<IVectorStore>(sp =>
 
 builder.Services.AddSingleton<IVectorRepository, VectorRepository>();
 
-builder.Services.AddEmbeddingGenerator(s => {
+builder.Services.AddEmbeddingGenerator(s =>
+{
     return s.GetRequiredService<OpenAIClient>().AsEmbeddingGenerator("text-embedding-3-large");
 });
 // Allow any CORS origin if in DEV

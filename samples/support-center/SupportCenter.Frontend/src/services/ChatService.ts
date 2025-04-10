@@ -1,9 +1,9 @@
-import { HubConnection } from '@microsoft/signalr'
 import axios from 'axios'
 import { v4 as uuid } from 'uuid'
 import { Configuration } from '../models/Configuration'
 import { Message, SenderType } from '../models/Message'
-import { SignalRService } from './SignalrService'
+import { HubConnection } from '@microsoft/signalr';
+import { SignalRService } from './SignalrService';
 
 const isMockEnabled = import.meta.env.VITE_IS_MOCK_ENABLED
 const supportCenterBaseUrl = import.meta.env.VITE_OAGENT_BASE_URL
@@ -61,11 +61,9 @@ export async function SendMessageAsync(conversationId: string, userId: string, m
   }
 
   try {
-
     const url = new URL(`'/api/Interactions/${userId}`, supportCenterBaseUrl).href;
     console.log('Sending message to url: ', url);
     const response = await axios.post<Message>(url, {
-
       message: messageText,
     })
 
@@ -87,7 +85,6 @@ export async function SendMessageAsync(conversationId: string, userId: string, m
       console.log("Error", error.message);
       message.text = error.message;
     }
-
     return message;
   }
 }
@@ -113,10 +110,17 @@ export async function SendFeedbackAsync(
   await axios.post(url, request)
 }
 
-export function GetStreamingConnection(): HubConnection {
-  const signalRService = SignalRService.getInstance();
-  return signalRService.initializeConnection();
+export function StartStreamingConnection(): Promise<void> {
+  const signalrservice = SignalRService.getInstance();
+  return signalrservice.startConnection();
 }
+
+
+export function GetStreamingConnection(): HubConnection {
+  const signalrservice = SignalRService.getInstance();
+  return signalrservice.initializeConnection();
+}
+
 interface InitConversationResponse {
   conversationId: string
 }

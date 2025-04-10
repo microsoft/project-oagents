@@ -13,14 +13,19 @@ export class SignalRService {
         }
         return SignalRService.instance;
     }
-
     public initializeConnection(): HubConnection {
         if (!this.hubConnection) {
-            const url = new URL('supportcenterhub', this.supportCenterBaseUrl).href;
-            this.hubConnection = new HubConnectionBuilder()
-                .withUrl(url)
-                .withAutomaticReconnect()
-                .build();
+            try {
+                const url = new URL('supportcenterhub', this.supportCenterBaseUrl).href;
+                console.log('Initializing SignalR connection to:', url);
+                this.hubConnection = new HubConnectionBuilder()
+                    .withUrl(url)
+                    .withAutomaticReconnect()
+                    .build();
+            } catch (err) {
+                console.error('Error initializing SignalR connection:', err);
+                throw err;
+            }
         }
         return this.hubConnection;
     }

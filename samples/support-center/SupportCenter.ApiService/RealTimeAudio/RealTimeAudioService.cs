@@ -22,13 +22,13 @@ public class RealTimeAudioService : IRealTimeAudioService
     private readonly TimeSpan _sessionTimeout = TimeSpan.FromMinutes(5);
     private readonly ILogger<RealTimeAudioService> logger;
     private readonly ISignalRService signalRService;
-    private readonly OpenAIClient azureOpenAIClient;
+    private readonly AzureOpenAIClient azureOpenAIClient;
     private readonly AudioClient audioClient;
     private readonly IClusterClient clusterClient;
 
     private static readonly string[] agentTypes = ["Conversation", "QnA", "CustomerInfo", "Invoice", "Dispatcher"];
     private static readonly string[] eventTypes = ["UserChatInput", "ConversationRequested", "QnARequested", "CustomerInfoRequested", "InvoiceRequested"];
-    private static readonly string[] requiredParams = new[] { "agentType", "userIntent", "eventType" };
+    private static readonly string[] requiredParams = ["agentType", "userIntent", "eventType"];
 
     public RealTimeAudioService(
         ILogger<RealTimeAudioService> logger,
@@ -171,13 +171,11 @@ public class RealTimeAudioService : IRealTimeAudioService
     {
         try
         {
-            // Get the RealtimeConversationClient using the GPT-4o Realtime deployment
             var realtimeClient = azureOpenAIClient.GetRealtimeConversationClient(_realtimeDeploymentName);
 
-            // Define the function for routing queries to appropriate agents
-            var routingFunction = new ConversationFunctionTool()
+            // Fix for CS7036: Provide the required 'name' parameter when creating a ConversationFunctionTool instance.
+            var routingFunction = new ConversationFunctionTool("route_user_query")
             {
-                Name = "route_user_query",
                 Description = "Routes user query to the appropriate agent based on intent",
                 Parameters = BinaryData.FromObjectAsJson(new
                 {
@@ -387,7 +385,7 @@ public class RealTimeAudioService : IRealTimeAudioService
                     {
                         logger.LogInformation("Function call completed: {FunctionName}",
                             itemFinishedUpdate.FunctionName);
-                    
+
                         // Parse the function arguments
                         var arguments = JsonSerializer.Deserialize<Dictionary<string, string>>(
                             itemFinishedUpdate.FunctionCallArguments);
@@ -601,20 +599,20 @@ public class RealTimeAudioService : IRealTimeAudioService
     }
 
     public record RealtimeSession(string connectionId)
-{
-    public ConcurrentQueue<byte[]> AudioChunks { get; } = new();
-    public StringBuilder TranscribedText { get; } = new();
-    public CancellationTokenSource CancellationTokenSource { get; } = new();
-    public CancellationToken CancellationToken => CancellationTokenSource.Token;
-    public bool IsSessionActive { get; set; }
-    public DateTimeOffset LastActivity { get; set; } = DateTimeOffset.UtcNow;
-    public string? UserId { get; set; }
-    public string? ConversationId { get; set; }
-
-    public void AddAudioChunk(byte[] chunk)
     {
-        AudioChunks.Enqueue(chunk);
-        LastActivity = DateTimeOffset.UtcNow;
+        public ConcurrentQueue<byte[]> AudioChunks { get; } = new();
+        public StringBuilder TranscribedText { get; } = new();
+        public CancellationTokenSource CancellationTokenSource { get; } = new();
+        public CancellationToken CancellationToken => CancellationTokenSource.Token;
+        public bool IsSessionActive { get; set; }
+        public DateTimeOffset LastActivity { get; set; } = DateTimeOffset.UtcNow;
+        public string? UserId { get; set; }
+        public string? ConversationId { get; set; }
+
+        public void AddAudioChunk(byte[] chunk)
+        {
+            AudioChunks.Enqueue(chunk);
+            LastActivity = DateTimeOffset.UtcNow;
+        }
     }
-}
 }

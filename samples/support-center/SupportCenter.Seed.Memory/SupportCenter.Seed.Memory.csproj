@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Core" Version="1.44.1" />
-    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.1.0-preview.1.25064.3" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.3.0-preview.1.25111.14" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
     <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.2.0-preview.1.25111.5" />
     <PackageReference Include="Aspire.StackExchange.Redis" Version="9.2.0-preview.1.25111.5" />

@@ -36,6 +36,13 @@ import { Message, SenderType } from "../../../../models/Message";
 import { ChatFeatureContextHandler } from "../../../../states/ChatContext";
 import "./ChatMessage.css";
 import { parseMessage } from "./MessageParser";
+import { AudioService } from "../../../../services/AudioService";
+
+// AudioContext wrapper to handle browser differences
+const getAudioContext = () => {
+  const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+  return AudioCtx ? new AudioCtx() : null;
+}
 
 const useStyles = makeStyles({
   copilotMessage: {
@@ -129,8 +136,10 @@ export function ChatMessage({
   const positioningRef = useRef<PositioningImperativeRef>(null);
   const styles = useStyles();
   const contextHandler = useContext(ChatFeatureContextHandler);
+  
+  // Create a singleton AudioService instance for TTS functionality
   const audioService = useMemo(() => new AudioService(), []);
-  const audioContext = useMemo(() => new AudioContext(), []);
+  const audioContext = useMemo(() => getAudioContext() || new AudioContext(), []);
 
   const parsedMessage: Message | undefined = useMemo(
     () => parseMessage(message),

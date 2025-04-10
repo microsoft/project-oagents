@@ -12,8 +12,6 @@ var signalr = builder.ExecutionContext.IsPublishMode
 var redis = builder.AddRedis("redis")
                     .WithImage("redis/redis-stack-server")
                     .WithRedisCommander();
-//.WithDataVolume(isReadOnly: false);
-//.WithPersistence(interval: TimeSpan.FromMinutes(1), keysChangedThreshold: 10);
 
 var openai = builder.ExecutionContext.IsPublishMode
     ? builder.AddAzureOpenAI("openAiConnection").AddDeployment(new AzureOpenAIDeployment("gpt-4o-mini", "gpt-4o-mini", "2024-07-18"))
@@ -76,9 +74,9 @@ else
     apiService.WithReference(orleans);
 }
 
-builder.AddNpmApp("frontend", "../SupportCenter.Frontend", "dev")
+builder.AddNpmApp("frontend", "../SupportCenter.Frontend", "local")
     .WithReference(apiService)
-    .WithEnvironment("VITE_OAGENT_BASE_URL", apiService.GetEndpoint("http"))
+    .WithEnvironment("VITE_OAGENT_BASE_URL", apiService.GetEndpoint("https"))
     .WithEnvironment("BROWSER", "none")
     .WithHttpEndpoint(env: "VITE_PORT")
     .WithExternalHttpEndpoints()

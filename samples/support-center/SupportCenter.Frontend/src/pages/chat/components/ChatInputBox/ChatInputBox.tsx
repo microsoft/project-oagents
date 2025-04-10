@@ -3,6 +3,7 @@ import {
   InputOnChangeData,
   Textarea,
   makeStyles,
+  Tooltip,
 } from "@fluentui/react-components";
 import {
   AddSquareRegular,
@@ -17,7 +18,8 @@ import {
 } from "../../../../states/ChatContext";
 import "./ChatInputBox.css";
 import { AudioService } from "../../../../services/AudioService";
-import { HubConnection } from "@microsoft/signalr";
+import { HubConnection, HubConnectionState } from "@microsoft/signalr";
+import { GetStreamingConnection } from "../../../../services/ChatService";
 
 const useStyles = makeStyles({
   button: {
@@ -29,38 +31,83 @@ export function ChatInputBox() {
   const [message, setMessage] = useState("");
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [isVoiceReady, setIsVoiceReady] = useState(false);
-  const [hubConnection] = useState<HubConnection | null>(null);
+  const [hubConnection, setHubConnection] = useState<HubConnection | null>(null);
   const audioService = useRef<AudioService | null>(null);
   const contextHandler = useContext(ChatFeatureContextHandler);
-  const chatContext = useContext(ChatFeatureContext); // Add this
+  const chatContext = useContext(ChatFeatureContext);
   const styles = useStyles();
-
   useEffect(() => {
-    if (hubConnection && chatContext.conversation) {
-      audioService.current = new AudioService(
-        hubConnection,
-        chatContext.conversation.metadata.userId,
-        chatContext.conversation.id
-      );
+    // Initialize the SignalR connection for voice interaction
+    if (chatContext.conversation && chatContext.conversation.id) {
+      const connection = GetStreamingConnection();
+      
+      // Ensure we have a valid connection
+      if (connection && connection.state === HubConnectionState.Disconnected) {
+        connection.start()
+          .then(() => {
+            console.log("Voice hub connection established successfully");
+            setHubConnection(connection);
+          })
+          .catch(err => {
+            console.error("Error establishing voice hub connection:", err);
+            // Retry logic could be added here
+          });
+      } else {
+        setHubConnection(connection);
+      }
+      
+      // Create the AudioService with the connection
+      if (connection) {
+        audioService.current = new AudioService(
+          connection,
+          chatContext.conversation.metadata.userId,
+          chatContext.conversation.id
+        );
+        
+        // Set up transcription callback
+        audioService.current.onTranscription((text, isPartial) => {
+          if (!isPartial) {
+            // When we get a final transcription, display it in the conversation
+            // as a temporary message that will be replaced when the agent responds
+            console.log("Final transcription received:", text);
+          }
+        });
+        
+        // Add state handler for voice ready status
+        if (audioService.current) {
+          const originalStartRecording = audioService.current.startRecording;
+          audioService.current.startRecording = function() {
+            setIsVoiceReady(true);
+            originalStartRecording.call(this);
+          };
+        }
+      }
     }
-  }, [hubConnection, chatContext.conversation]);
-
-  useEffect(() => {
-    if (audioService.current) {
-      // Add state handler for voice ready status
-      const originalStartRecording = audioService.current.startRecording;
-      audioService.current.startRecording = () => {
-        setIsVoiceReady(true);
-        originalStartRecording.call(audioService.current);
-      };
-    }
-  }, []);
+    
+    return () => {
+      // Cleanup function to stop voice interaction when component unmounts
+      if (audioService.current && isVoiceActive) {
+        audioService.current.stopVoiceInteraction(
+          chatContext.conversation.metadata.userId,
+          chatContext.conversation.id
+        );
+        setIsVoiceActive(false);
+      }
+    };
+  }, [chatContext.conversation, isVoiceActive]);
 
   const toggleVoiceInteraction = async () => {
     if (!isVoiceActive) {
+      if (!audioService.current) {
+        console.error("AudioService not initialized");
+        return;
+      }
+      
       try {
         setIsVoiceActive(true);
-        await audioService.current?.startVoiceInteraction(
+        
+        // Start voice interaction with current conversation context
+        await audioService.current.startVoiceInteraction(
           chatContext.conversation.metadata.userId,
           chatContext.conversation.id
         );
@@ -69,10 +116,13 @@ export function ChatInputBox() {
         setIsVoiceActive(false);
       }
     } else {
-      audioService.current?.stopVoiceInteraction(
-        chatContext.conversation.metadata.userId,
-        chatContext.conversation.id
-      );
+      // Stop the voice interaction
+      if (audioService.current) {
+        await audioService.current.stopVoiceInteraction(
+          chatContext.conversation.metadata.userId,
+          chatContext.conversation.id
+        );
+      }
       setIsVoiceActive(false);
       setIsVoiceReady(false);
     }
@@ -107,6 +157,8 @@ export function ChatInputBox() {
         className="input-message"
         onChange={onMessageChanged}
         onKeyDown={onEnterPress}
+        disabled={isVoiceActive}
+        placeholder={isVoiceActive ? "Voice interaction is active..." : "Type your message here..."}
       />
       <div className="input-toolbar">
         <div>
@@ -115,6 +167,7 @@ export function ChatInputBox() {
             size="large"
             className={styles.button}
             onClick={contextHandler.onRestartConversation}
+            disabled={isVoiceActive}
           >
             Start new conversation
           </Button>

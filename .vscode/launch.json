@@ -7,6 +7,17 @@
             "projectPath": "${workspaceFolder}/samples/gh-flow/src/Microsoft.AI.DevTeam.Dapr/Microsoft.AI.DevTeam.Dapr.csproj",
             "preLaunchTask": "dapr-debug",
             "postDebugTask": "daprd-down"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch React Frontend",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/samples/support-center/SupportCenter.Frontend/src",
+            "sourceMaps": true,
+            "sourceMapPathOverrides": {
+              "webpack:///src/*": "${webRoot}/*"
+            }
         }
     ]
 }

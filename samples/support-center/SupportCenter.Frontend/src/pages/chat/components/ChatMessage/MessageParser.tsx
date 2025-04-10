@@ -5,8 +5,7 @@ export function parseMessage(message: Message | undefined): Message | undefined 
   if (!message) {
     return undefined
   }
-
-  let parsedText = message.text
+  let parsedText = message.text || ''
   const citationLinks = parsedText.match(/\[(doc\d\d?\d?)]/g)
 
   const lengthDocN = '[doc'.length

@@ -6,8 +6,8 @@ import {
   DrawerHeaderTitle,
 } from "@fluentui/react-components/unstable";
 import { Dismiss24Regular, Open24Regular } from "@fluentui/react-icons";
-import { HubConnection } from "@microsoft/signalr";
-import { useCallback, useEffect, useState } from "react";
+import { HubConnection, HubConnectionState } from "@microsoft/signalr";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { WelcomeHints } from "../../components/WelcomeHints/WelcomeHints";
 import { Conversation } from "../../models/Conversation";
@@ -15,6 +15,7 @@ import { Message, SenderType } from "../../models/Message";
 import {
   GetStreamingConnection,
   SendFeedbackAsync,
+  StartStreamingConnection,
   getConfigurationAsync,
 } from "../../services/ChatService";
 import { AppFeatureContext, appInitialContext } from "../../states/AppContext";
@@ -35,6 +36,7 @@ export function ChatPage() {
   const [contextHandler, setContextHandler] = useState(initialContextHandler);
   const [streamingConnection, setStreamingConnection] =
     useState<HubConnection | null>(null);
+  const connectionRef = useRef<HubConnection | null>(null);
 
   useEffect(() => {
     setContextHandler((h) => ({
@@ -61,42 +63,39 @@ export function ChatPage() {
     console.log("initConversation");
     const conversationId: string = uuid();
     const metadata = { userId: "1234" };
-    const connection = GetStreamingConnection();
-    // Start the SignalR connection
-    connection
-      .start()
-      .then(() =>
-        connection.invoke("ConnectToAgent", metadata.userId, conversationId)
-      )
-      .catch((err) => console.error("SignalR connection error:", err));
-    console.log("SignalR connection established");
-    setStreamingConnection(connection);
+    let connection = connectionRef.current;
 
-    // Register the ReceiveMessage event
-    connection.on("ReceiveMessage", (message: Message) => {
-      console.log("Received message:", message);
-      // if (message.sender === SenderType.Notification) {
-      //   const progressMessage = message.text;
-      //   setContext((c) => ({
-      //     ...c,
-      //     isTakingTooLong: true,
-      //     waitingMessage: progressMessage,
-      //   }));
-      // } else {
-      setContext((c) => ({
-        ...c,
-        isLoading: false,
-        isTakingTooLong: false,
-        conversation: {
-          ...c.conversation,
-          messages: [
-            ...c.conversation.messages,
-            { ...message, sender: message.sender},
-          ],
-        },
-      }));
-      // }
-    });
+    if (!connection || connection.state === HubConnectionState.Disconnected) {
+      connection = GetStreamingConnection();
+      connectionRef.current = connection;
+
+      // Start the SignalR connection
+      connection
+        .start()
+        .then(() =>
+          connection?.invoke("ConnectToAgent", metadata.userId, conversationId)
+        )
+        .catch((err) => console.error("SignalR connection error:", err));
+      console.log("SignalR connection established");
+      setStreamingConnection(connection);
+
+      // Register the ReceiveMessage event
+      connection.on("ReceiveMessage", (message: Message) => {
+        console.log("Received message:", message);
+        setContext((c) => ({
+          ...c,
+          isLoading: false,
+          isTakingTooLong: false,
+          conversation: {
+            ...c.conversation,
+            messages: [
+              ...c.conversation.messages,
+              { ...message, sender: message.sender },
+            ],
+          },
+        }));
+      });
+    }
 
     setContext((c) => ({
       ...c,
