@@ -171,7 +171,7 @@ public class GithubService : IManageGithub
     {
         try
         {
-            await _ghClient.Issue.Comment.Create(org, repo, (int)issueNumber, comment);
+            await _ghClient.Issue.Comment.Create(org, repo, issueNumber, comment);
         }
         catch (Exception ex)
         {
