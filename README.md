@@ -45,3 +45,32 @@ Privacy information can be found at <https://privacy.microsoft.com/en-us/>
 
 Microsoft and any contributors reserve all other rights, whether under their respective copyrights, patents,
 or trademarks, whether by implication, estoppel or otherwise.
+
+# VGI notes
+
+## Missing devtunnel
+```shell
+curl -sL https://aka.ms/DevTunnelCliInstall | bash
+source ~/.profile [or ~/.zshrc]
+devtunnel user login
+devtunnel host gh-flow-demo
+```
+Update webhook at https://github.com/settings/apps/demo-gh-flow-app
+with https://xxxxxxxxx-xxxx.uks1.devtunnels.ms/api/github/webhooks
+
+Debug webhook at https://github.com/settings/apps/demo-gh-flow-app/advanced
+
+## Run app
+
+Under solution explorer: Right-click OAgents>samples>Microsoft.AI.DevTeam>Debug>Start an new instance
+
+## Create issue
+
+Todo scaffold
+
+I’d like to build a typical Todo List Application: a simple productivity tool that allows users to create, manage, and track tasks or to‑do items.
+Key features of the Todo List application include the ability to add, edit, and delete tasks, set due dates and reminders, categorize tasks by project or priority, and mark tasks as complete.
+The Todo List application also offer collaboration features, such as sharing tasks with others or assigning tasks to team members.
+Additionally, the Todo List application will offer mobile and web‑based interfaces, allowing users to access their tasks from anywhere.
+Use C# as the language.
+The app needs to be deployed to Azure, be highly performant, cost effective and secure, following the rules of Well Architected Framework.
