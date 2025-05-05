@@ -15,7 +15,7 @@ public class ArticleHub : Hub<IArticleHub>
 
     public override async Task OnDisconnectedAsync(Exception exception)
     {
-        string removedUserId;
+        string removedSessionId;
         SignalRConnectionsDB.ConnectionIdByUser.TryRemove(Context.ConnectionId, out _);
         await base.OnDisconnectedAsync(exception);
     }
@@ -29,12 +29,12 @@ public class ArticleHub : Hub<IArticleHub>
     public async Task ProcessMessage(FrontEndMessage frontEndMessage, IClusterClient clusterClient)
     {
         var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
-        var streamId = StreamId.Create(Consts.OrleansNamespace, frontEndMessage.UserId);
+        var streamId = StreamId.Create(Consts.OrleansNamespace, frontEndMessage.SessionId);
         var stream = streamProvider.GetStream<Event>(streamId);
 
         var data = new Dictionary<string, string>
             {
-                { "UserId", frontEndMessage.UserId },
+                { "SessionId", frontEndMessage.SessionId },
                 { "userMessage", frontEndMessage.Message},
             };
 
@@ -46,24 +46,25 @@ public class ArticleHub : Hub<IArticleHub>
 
     }
 
-    public async Task ConnectToAgent(string UserId, IClusterClient clusterClient)
+    // This method is called when a new user connects to the hub.
+    public async Task ConnectToAgent(string SessionId, IClusterClient clusterClient)
     {
         var frontEndMessage = new FrontEndMessage()
         {
-            UserId = UserId,
+            SessionId = SessionId,
             Message = "Connected to agents",
-            Agent = AgentTypes.Chat.ToString()
+            Agent = AgentTypes.Writer.ToString()
         };
 
-        SignalRConnectionsDB.ConnectionIdByUser.AddOrUpdate(UserId, Context.ConnectionId, (key, oldValue) => Context.ConnectionId);
+        SignalRConnectionsDB.ConnectionIdByUser.AddOrUpdate(SessionId, Context.ConnectionId, (key, oldValue) => Context.ConnectionId);
 
         // Notify the agents that a new user got connected.
         var streamProvider = clusterClient.GetStreamProvider("StreamProvider");
-        var streamId = StreamId.Create(Consts.OrleansNamespace, frontEndMessage.UserId);
+        var streamId = StreamId.Create(Consts.OrleansNamespace, frontEndMessage.SessionId);
         var stream = streamProvider.GetStream<Event>(streamId);
         var data = new Dictionary<string, string>
             {
-                { "UserId", frontEndMessage.UserId },
+                { "SessionId", frontEndMessage.SessionId },
                 { "userMessage", frontEndMessage.Message},
             };
         await stream.OnNextAsync(new Event

@@ -129,7 +129,7 @@ export default function RelevantDocumentList() {
                         <ListItemIcon sx={{ pl: 4 }}>
                           <img src="/static/icons/pdf.png" height={20} width={20} />
                         </ListItemIcon>
-                        <ListItemText primary="Marketing regulations in Belgium" />
+                        <ListItemText primary="Marketing regulations in Denmark" />
                       </ListItemButton>
                     </List>
                   </Collapse>
@@ -155,7 +155,7 @@ export default function RelevantDocumentList() {
                         <ListItemIcon sx={{ pl: 4 }}>
                           <img src="/static/icons/edge.png" height={20} width={20} />
                         </ListItemIcon>
-                        <ListItemText primary="Color week - T-Shitrs 2022" />
+                        <ListItemText primary="Regulations" />
                       </ListItemButton>
                     </List>
                   </Collapse>

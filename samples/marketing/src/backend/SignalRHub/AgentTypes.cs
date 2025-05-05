@@ -2,10 +2,11 @@
 
 public enum AgentTypes
 {
-    Chat,
+    Writer,
     CommunityManager,
     GraphicDesigner,
     Auditor,
     Accountant,
-    Librarian
+    SalesAnalyst,
+    ManufacturingManager
 }

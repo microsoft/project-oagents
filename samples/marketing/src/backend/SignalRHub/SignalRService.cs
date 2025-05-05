@@ -11,12 +11,12 @@ public class SignalRService : ISignalRService
         _hubContext = hubContext;
     }
 
-    public async Task SendMessageToSpecificClient(string userId, string message, AgentTypes agentType)
+    public async Task SendMessageToSpecificClient(string sessionId, string message, AgentTypes agentType)
     {
-        var connectionId = SignalRConnectionsDB.ConnectionIdByUser[userId];
+        var connectionId = SignalRConnectionsDB.ConnectionIdByUser[sessionId];
         var frontEndMessage = new FrontEndMessage()
         {
-            UserId = userId,
+            SessionId = sessionId,
             Message = message,
             Agent = agentType.ToString()
         };

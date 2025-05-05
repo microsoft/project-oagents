@@ -5,6 +5,10 @@ VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Marketing", "Marketing.csproj", "{491A6E2F-A0D0-4723-80A2-B0F60091E39D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Oagents.Core", "..\..\..\..\src\Oagents.Core\Oagents.Core.csproj", "{D224B11A-783B-472F-8D45-AA22746D5D34}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Oagents.Orleans", "..\..\..\..\src\Oagents.Orleans\Oagents.Orleans.csproj", "{9D00AE07-C120-4F45-88F3-BC9920B5A297}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{491A6E2F-A0D0-4723-80A2-B0F60091E39D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{491A6E2F-A0D0-4723-80A2-B0F60091E39D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{491A6E2F-A0D0-4723-80A2-B0F60091E39D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D224B11A-783B-472F-8D45-AA22746D5D34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D224B11A-783B-472F-8D45-AA22746D5D34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D224B11A-783B-472F-8D45-AA22746D5D34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D224B11A-783B-472F-8D45-AA22746D5D34}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D00AE07-C120-4F45-88F3-BC9920B5A297}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D00AE07-C120-4F45-88F3-BC9920B5A297}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D00AE07-C120-4F45-88F3-BC9920B5A297}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D00AE07-C120-4F45-88F3-BC9920B5A297}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

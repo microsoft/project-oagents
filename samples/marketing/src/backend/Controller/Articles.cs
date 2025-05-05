@@ -38,16 +38,16 @@ namespace Marketing.Controller
         }
 
         // PUT api/<Post>/5
-        [HttpPut("{UserId}")]
-        public async Task<string> Put(string UserId, [FromBody] string userMessage)
+        [HttpPut("{sessionId}")]
+        public async Task<string> Put(string sessionId, [FromBody] string userMessage)
         {
             var streamProvider = _client.GetStreamProvider("StreamProvider");
-            var streamId = StreamId.Create(Consts.OrleansNamespace, UserId);
+            var streamId = StreamId.Create(Consts.OrleansNamespace, sessionId);
             var stream = streamProvider.GetStream<Event>(streamId);
 
             var data = new Dictionary<string, string>
             {
-                { nameof(UserId), UserId.ToString() },
+                { nameof(sessionId), sessionId },
                 { nameof(userMessage), userMessage },
             };
 
@@ -57,7 +57,7 @@ namespace Marketing.Controller
                 Data = data
             });
 
-            return $"Task {UserId} accepted";
+            return $"Task {sessionId} accepted";
         }
     }
 }

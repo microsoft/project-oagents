@@ -19,7 +19,7 @@ const data = [
   { icon: <Public />, label: 'Bank vs Governnent - Public Case - chf 3.7M - 10 years' },
 ];
 
-type Sender = 'user' | 'CommunityManager' | 'GraphicDesigner' | 'Writer' | 'Auditor';
+type Sender = 'user' | 'CommunityManager' | 'GraphicDesigner' | 'Writer' | 'Auditor' | 'SalesAnalyst';
 
 const senderColors: Record<Sender, string> = {
   'user': '#d1e7dd',
@@ -27,6 +27,7 @@ const senderColors: Record<Sender, string> = {
   'GraphicDesigner': '#f0e8e8',
   'Writer': '#add8e6',
   'Auditor': '#ff7f7f',
+  'SalesAnalyst': '#fffacd',
 };
 
 
@@ -65,7 +66,9 @@ export default function Chat({ messages, setMessages, sendMessage }: ChatProps) 
   };
 
   return (
-    <FireNav component="nav" disablePadding>
+    <FireNav component="nav" disablePadding style={{
+      backgroundColor: 'rgba(255, 255, 255, 0.8)', // Grey with 50% transparency
+    }}>
       <ListItemButton
         alignItems="flex-start"
         onClick={() => setOpen(!open)}
@@ -74,9 +77,10 @@ export default function Chat({ messages, setMessages, sendMessage }: ChatProps) 
           pt: 2.5,
           pb: open ? 0 : 2.5,
           '&:hover, &:focus': { '& #arrowdownicon': { opacity: open ? 1 : 0 } },
+          backgroundColor: 'rgba(255, 255, 255, 0.8)', // Grey with 50% transparency
         }}
       >
-        <ListItemIcon sx={{ my: 0, opacity: 1, class: "menuicon" }}>
+        <ListItemIcon sx={{ my: 0, opacity: 0.5, class: "menuicon" }}>
           <LightbulbIcon />
         </ListItemIcon>
         <ListItemText
@@ -107,9 +111,9 @@ export default function Chat({ messages, setMessages, sendMessage }: ChatProps) 
         />
       </ListItemButton>
       {open && (
-        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 50px)' }}>
-        <Container maxWidth={false} style={{ overflowY: 'auto', flex: '1 0 auto' }}>
-          <div style={{ margin: '0 auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 50px)'}}>
+        <Container maxWidth={false} style={{ overflowY: 'auto', flex: '1 0 auto', maxHeight: 'calc(100vh - 300px)'}}>
+          <div style={{ margin: '0 auto', fontFamily: "sans-serif" }}>
             {messages.map((message, index) => (
               <div key={index} style={{
                 margin: '10px',
