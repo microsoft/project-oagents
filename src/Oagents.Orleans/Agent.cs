@@ -1,6 +1,7 @@
 ﻿using Microsoft.AI.Agents.Abstractions;
 using Orleans.Runtime;
 using Orleans.Streams;
+using CloudNative.CloudEvents;
 
 namespace Microsoft.AI.Agents.Orleans;
 
@@ -8,6 +9,12 @@ public abstract class Agent : Grain, IGrainWithStringKey, IAgent
 {
     protected virtual string Namespace { get; set; }
     public abstract Task HandleEvent(Event item);
+
+    // CloudEvent overload - default implementation converts to Event
+    public virtual Task HandleEvent(CloudEvent item)
+    {
+        return HandleEvent(new Event(item));
+    }
 
     private async Task HandleEvent(Event item, StreamSequenceToken? token)
     {
@@ -20,6 +27,12 @@ public abstract class Agent : Grain, IGrainWithStringKey, IAgent
         var streamId = StreamId.Create(ns, id);
         var stream = streamProvider.GetStream<Event>(streamId);
         await stream.OnNextAsync(item);
+    }
+
+    // CloudEvent overload - converts to Event and publishes
+    public Task PublishEvent(string ns, string id, CloudEvent item)
+    {
+        return PublishEvent(ns, id, new Event(item));
     }
 
     public async override Task OnActivateAsync(CancellationToken cancellationToken)

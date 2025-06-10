@@ -16,6 +16,7 @@
 </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CloudNative.CloudEvents" Version="2.8.0" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.10.0" />
   </ItemGroup>
 

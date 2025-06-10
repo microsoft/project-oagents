@@ -12,6 +12,7 @@
   </PropertyGroup>
 
    <ItemGroup>
+    <PackageReference Include="CloudNative.CloudEvents" Version="2.8.0" />
     <PackageReference Include="Microsoft.Orleans.Sdk" Version="8.1.0" />
     <PackageReference Include="Microsoft.Orleans.Streaming" Version="8.1.0" />
   </ItemGroup>
