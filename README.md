@@ -45,3 +45,41 @@ Privacy information can be found at <https://privacy.microsoft.com/en-us/>
 
 Microsoft and any contributors reserve all other rights, whether under their respective copyrights, patents,
 or trademarks, whether by implication, estoppel or otherwise.
+
+## ❓ FAQ
+
+### What is this project?
+This is an experimental .NET framework built on top of Semantic Kernel and Orleans for creating and hosting event-driven AI Agents. It helps you build multi-agent systems where each agent has its own domain expertise.
+
+### Is this production-ready?
+No. This project is still in an experimentation phase and is not intended for production use yet. The team plans to publish the library as a NuGet package in the future.
+
+### What is the difference between Semantic Kernel and this framework?
+Semantic Kernel provides the core AI integration primitives. This framework adds an opinionated architecture on top, specifically designed for event-driven multi-agent scenarios using Orleans for distributed computing.
+
+### How do I get started?
+Check out the [examples](samples/) directory:
+- [GitHub Dev Team Sample](samples/gh-flow/README.md): AI Developer Team for requirements engineering and coding
+- [Marketing Team Sample](samples/marketing/README.md): Content writer, designer, and social media manager agents
+- [Support Center Sample](samples/support-center/README.md): Call center team with domain experts
+
+### What is Orleans and why is it used?
+Orleans is a cross-platform framework for building distributed applications. It provides virtual actors (grains) that make it easy to build scalable, stateful agent systems without managing complex concurrency.
+
+### Can I use my own LLM models?
+Yes. Since it is built on Semantic Kernel, you can configure any LLM provider that Semantic Kernel supports, including OpenAI, Azure OpenAI, and local models.
+
+### How do agents communicate?
+Agents communicate through events. Each agent is an independent grain that can publish and subscribe to events, enabling loose coupling and scalable multi-agent orchestration.
+
+### What skills do the agents have?
+Each agent in the samples has domain-specific skills. For example, the GitHub Dev Team includes agents for requirements analysis, planning, and coding. The Marketing Team includes content writer, graphic designer, and social media manager agents.
+
+### How do I contribute?
+Contributions are welcome! Most contributions require a Contributor License Agreement (CLA). See the [Contributing](#contributing) section above for details.
+
+### Where can I get help?
+- Open an [Issue](https://github.com/microsoft/project-oagents/issues) for bugs or feature requests
+- Join the [Discussions](https://github.com/microsoft/project-oagents/discussions) community
+- Contact [opencode@microsoft.com](mailto:opencode@microsoft.com) for questions about the CLA
+
