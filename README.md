@@ -15,6 +15,83 @@ We have created a few examples to help you get started with the framework and to
 
 - [Support center sample](samples/support-center/README.md): Model a call center team, each member is an expert in it's own domain and one is orchestrating the asks of the user based on the intent.
 
+## FAQ
+
+### What is this framework?
+
+An opinionated .NET framework for creating and hosting **event-driven AI Agents**, built on:
+- **Semantic Kernel** - Microsoft's AI orchestration SDK
+- **Orleans** - Distributed actor framework for .NET
+
+### Why event-driven agents?
+
+Event-driven architecture allows agents to:
+- Respond to external events (messages, user input, system events)
+- Process asynchronously with better scalability
+- Maintain state across distributed nodes
+- Coordinate with other agents through event streams
+
+### Is this production-ready?
+
+⚠️ **Not yet** - This is still in experimentation phase. Use for:
+- Learning event-driven agent patterns
+- Prototyping agent systems
+- Exploring Semantic Kernel + Orleans integration
+
+### What .NET version is required?
+
+.NET 8 or later (required by Orleans and Semantic Kernel).
+
+### How do I get started?
+
+1. Clone the repository
+2. Explore the sample projects in `samples/`:
+   - `gh-flow` - GitHub automation agents
+   - `marketing` - Marketing campaign agents
+   - `support-center` - Call center simulation
+
+### What is Semantic Kernel?
+
+Semantic Kernel is Microsoft's lightweight SDK that lets you:
+- Connect AI models to your code
+- Define skills and functions
+- Orchestrate AI calls with planners
+
+Learn more: [Semantic Kernel Documentation](https://learn.microsoft.com/semantic-kernel/)
+
+### What is Orleans?
+
+Orleans is a framework for building distributed systems using the **virtual actor model**:
+- Actors (grains) are automatically managed
+- Built-in state persistence
+- Automatic scaling and recovery
+- Ideal for distributed agent systems
+
+Learn more: [Orleans Documentation](https://learn.microsoft.com/orleans/)
+
+### Can I use other LLM providers?
+
+Yes! Semantic Kernel supports:
+- Azure OpenAI
+- OpenAI.com
+- Google Gemini
+- Anthropic Claude
+- Local models (via Ollama or other endpoints)
+
+### How do agents communicate?
+
+Through Orleans grains and event streams:
+- Direct grain calls for synchronous requests
+- Event streams for asynchronous messaging
+- Observer patterns for pub/sub
+
+### Where can I get help?
+
+- Explore the sample code in `samples/`
+- Check [Semantic Kernel docs](https://learn.microsoft.com/semantic-kernel/)
+- Check [Orleans docs](https://learn.microsoft.com/orleans/)
+- Open an issue in this repository
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
