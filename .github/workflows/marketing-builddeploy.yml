@@ -59,10 +59,10 @@ jobs:
       # AZURE_CREDENTIALS: ${{ secrets.MARKETING_AZURE_CREDENTIALS }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Install azd
-        uses: Azure/setup-azd@v1.0.0
+        uses: Azure/setup-azd@e0f7ef82e0fc80bab7170ec70e55fc3a6bc5cb4e # v1.0.0
 
       # https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Cwindows#use-the-azure-login-action-with-openid-connect
       - name: Log in with Azure (Federated Credentials)
