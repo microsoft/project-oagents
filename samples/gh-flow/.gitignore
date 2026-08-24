@@ -1,0 +1,3 @@
+# Generated bicep files
+infra/main.json
+infra/main.local.json

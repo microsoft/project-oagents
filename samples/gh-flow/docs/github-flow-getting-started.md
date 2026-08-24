@@ -102,6 +102,8 @@ Let's start by logging in to Azure using
 azd auth login
 ```
 
+### Option 1: Full Azure Deployment
+
 After we've logged in, we need to create a new environment provision the azure bits.
 
 ```bash
@@ -109,10 +111,31 @@ ENVIRONMENT=_name_of_your_env
 azd env new $ENVIRONMENT
 azd provision -e $ENVIRONMENT
 ```
+
+This provisions all Azure resources including Container Apps, Cosmos DB, Qdrant on Azure, monitoring, etc.
+
+### Option 2: Minimal Provisioning for Local Development
+
+If you're developing locally and only need the essential Azure resources (storage account for file shares), you can use the minimal provisioning option:
+
+```bash
+./provision-local.sh your-environment-name
+```
+
+This will:
+- Provision only a storage account with file shares needed for Azure Container Instances
+- Skip expensive resources like Container Apps, Cosmos DB, Azure-hosted Qdrant, etc.
+- Use the local bicep template (`main.local.bicep`) instead of the full template
+
+For local development, you'll use:
+- The containerized Qdrant (already running in devcontainer at `http://qdrant:6333`)
+- Your local application instance
+- Only the Azure storage account for file shares
+
 After the provisioning is done, you can inspect the outputs with the following command
 
 ```bash
-azd env get-values -e dev
+azd env get-values -e $ENVIRONMENT
 ```
 As the last step, we also need to [load the WAF into the vector DB](#load-the-waf-into-qdrant)
 
