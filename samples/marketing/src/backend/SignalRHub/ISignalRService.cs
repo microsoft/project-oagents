@@ -1,5 +1,5 @@
 ﻿namespace Marketing.SignalRHub;
 public interface ISignalRService
 {
-    Task SendMessageToSpecificClient(string userId, string message, AgentTypes agentType);
+    Task SendMessageToSpecificClient(string SessionId, string message, AgentTypes agentType);
 }

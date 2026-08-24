@@ -78,10 +78,10 @@ const RedStyledBadge = styled(Badge)(({ theme }) => ({
     },
 }));
 
-export default function StakeholderList() {
+export default function ManufacturingManager() {
     const [open, setOpen] = React.useState(false);
 
-    console.log(`[Marketing] Rendering.`);
+    console.log(`[Marketing] Rendering ManufactureManager.`);
     return (
         <Box sx={{ display: 'flex' }}>
             <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
@@ -99,14 +99,14 @@ export default function StakeholderList() {
                         <PersonIcon />
                     </ListItemIcon>
                     <ListItemText
-                        primary="Auditor"
+                        primary="Manufacturing Manager"
                         primaryTypographyProps={{
                             fontSize: 15,
                             fontWeight: 'medium',
                             lineHeight: '20px',
                             mb: '2px',
                         }}
-                        secondary="Auditing rules"
+                        secondary="Production manager"
                         secondaryTypographyProps={{
                             noWrap: true,
                             fontSize: 12,
@@ -127,30 +127,58 @@ export default function StakeholderList() {
                 </ListItemButton>
                 {open && (
                     <Box>
-                        <ListItemButton alignItems="flex-start">
-                            <ListItemAvatar>
-                                <Avatar alt="Language check" src="/static/check.png" />
-                            </ListItemAvatar>
-                            <ListItemText
-                                primary="Language check"
-                            />
-                        </ListItemButton>
-                        <ListItemButton alignItems="flex-start">
-                            <ListItemAvatar>
-                                <Avatar alt="Financial check" src="/static/check.png" />
-                            </ListItemAvatar>
-                            <ListItemText
-                                primary="Financial check"
-                            />
-                        </ListItemButton>
-                        <ListItemButton alignItems="flex-start">
-                            <ListItemAvatar>
-                                <Avatar alt="Auto approval" src="/static/check.png" />
-                            </ListItemAvatar>
-                            <ListItemText
-                                primary="Auto approval"
-                            />
-                        </ListItemButton>
+                    <ListItemButton alignItems="flex-start">
+                        <ListItemAvatar>
+                            <RedStyledBadge
+                                overlap="circular"
+                                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                variant="dot"
+                            >
+                                <Avatar alt="Lavanya Mehrotra Na" src="/static/face2.jpg" />
+                            </RedStyledBadge>
+                        </ListItemAvatar>
+                        <ListItemText
+                            primary="Lavanya Mehrotra Na"
+                            secondary={
+                                <React.Fragment>
+                                    <Typography
+                                        sx={{ display: 'inline' }}
+                                        component="span"
+                                        variant="body2"
+                                        color="text.primary"
+                                    >
+                                        Manufacturing Director
+                                    </Typography>
+                                </React.Fragment>
+                            }
+                        />
+                    </ListItemButton>
+                    <ListItemButton alignItems="flex-start">
+                        <ListItemAvatar>
+                            <GreenStyledBadge
+                                overlap="circular"
+                                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                variant="dot"
+                            >
+                                <Avatar alt="Remy Sharp" src="/static/face.jpg" />
+                            </GreenStyledBadge>
+                        </ListItemAvatar>
+                        <ListItemText
+                            primary="Noa Nielsen"
+                            secondary={
+                                <React.Fragment>
+                                    <Typography
+                                        sx={{ display: 'inline' }}
+                                        component="span"
+                                        variant="body2"
+                                        color="text.primary"
+                                    >
+                                        Production Manager
+                                    </Typography>
+                                </React.Fragment>
+                            }
+                        />
+                    </ListItemButton>
                     </Box>
                 )}
             </List>
